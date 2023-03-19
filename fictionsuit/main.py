@@ -4,6 +4,8 @@ from bot import Bot
 
 from commands.command_group import command_split
 from commands.basics import Basics
+from chains import reply_chain
+from utils import send_long_message
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -32,6 +34,9 @@ async def on_message(message):
     if cmd == 'help':
         await message.channel.send(f'Sorry, there\'s no command called "{args}"')
     
+    # Prefix and text, but no command found. Just reply
+    reply = await reply_chain.arun(args)
+    await send_long_message(message.channel, reply)
 
 def main():
     global command_groups

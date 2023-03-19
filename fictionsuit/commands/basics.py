@@ -1,7 +1,7 @@
 import time
 from commands.command_group import CommandGroup
 from utils import send_long_message
-
+from chains import reply_chain
 class Basics(CommandGroup):
     async def cmd_ping(self, message, args):
         """**__Ping__**
@@ -18,4 +18,11 @@ class Basics(CommandGroup):
         `prefix summarize` - returns a summary of the linked article
         """
         response = "This command is not yet implemented. Sorry!"
+        await send_long_message(message.channel, response)
+
+    async def cmd_reply(self, message, args):
+        """**__Reply__**
+        `prefix reply` - returns a response to rest of the message
+        """
+        response = await reply_chain.arun(args)
         await send_long_message(message.channel, response)
