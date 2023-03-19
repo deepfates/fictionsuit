@@ -18,4 +18,4 @@ class Basics(CommandGroup):
         `prefix summarize` - returns a summary of the linked article
         """
         response = "This command is not yet implemented. Sorry!"
-        await send_long_message(message.channel.send(response))
+        await send_long_message(message.channel, response)
