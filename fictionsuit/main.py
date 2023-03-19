@@ -18,7 +18,7 @@ async def on_message(message):
         return
     
     for group in command_groups:
-        if group.handle(message):
+        if await group.handle(message):
             return
     
 

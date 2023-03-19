@@ -1,5 +1,5 @@
 class CommandGroup():
-    def handle(self, message):
+    async def handle(self, message):
         if not message.content.startswith(prompts.COMMAND_PREFIX):
             return
 
@@ -12,7 +12,7 @@ class CommandGroup():
             args = cmd_split[1]
 
         try:
-            cmd_handler = f'cmd_{cmd[1:]}'
+            cmd_handler = f'cmd_{cmd[len(prompts.COMMAND_PREFIX):]}'
 
             if not hasattr(self, cmd_handler):
                 # No handler
