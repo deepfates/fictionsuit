@@ -4,7 +4,7 @@ class CommandGroup():
     """ Extend this class to create a group of command handlers for the bot.
     A handler consists of: a function whose name starts with "cmd_" that accepts the arguments (self, message, args) 
     The rest of the function name is the command name.
-    "message" is the discord message that contains the command
+    "message" is the UserMessage that contains the command
     "args" is everything in the message after the command prefix and command name
     A handler's name should not contain any upper-case characters. Usage will not be case-sensitive.
 
@@ -55,7 +55,7 @@ class CommandGroup():
         if response is None:
             return False # This command group has no documentation for this command, but another group might.
 
-        await message.channel.send(response)
+        await message.reply(response)
         return True
 
     def get_all_commands(self):
