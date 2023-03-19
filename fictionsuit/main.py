@@ -4,6 +4,7 @@ from bot import Bot
 import prompts
 import time
 
+from commands.command_group import command_split
 from commands.basics import Basics
 
 intents = discord.Intents.default()
@@ -17,14 +18,31 @@ async def on_message(message):
         # Don't self-reply
         return
     
+    if not message.content.startswith(prompts.COMMAND_PREFIX):
+        return # Not handling non-command messages, for now
+
+    (cmd, args) = command_split(message.content)
+
+    if cmd is None:
+        return # Prefix, but no command. Nothing to do.
+
     for group in command_groups:
-        if await group.handle(message):
+        if await group.handle(message, cmd, args):
             return
+
+    if cmd == 'help':
+        await message.channel.send(f'Sorry, there\'s no command called "{args}"')
     
 
 def main():
     global command_groups
     command_groups = [Basics()]
+
+    all_commands = [command for group in command_groups for command in group.get_all_commands()]
+
+    if len(all_commands) != len(set(all_commands)):
+        # TODO: Print out more useful information, like where the name collision actually is.
+        print(f'{"!"*20}\n\nWARNING: MULTIPLE COMMANDS WITH OVERLAPPING COMMAND NAMES\n\n{"!"*20}')
 
     if config.SERVER == "dev":
         bot.run(config.DEV_TOKEN)
