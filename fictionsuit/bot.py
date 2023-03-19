@@ -1,7 +1,7 @@
 import openai
 import config
 import prompts
-from utils import make_stats_str
+from utils import make_stats_str, read_url, split_text
 from discord.ext import commands
 import time
 import discord
@@ -32,15 +32,26 @@ class Bot(commands.Bot):
         response = f"Pong! Latency {latency} ms"
         await ctx.send(response)
 
-    #@commands.Cog.listener()
+    # Summarize text
+    async def summarize(text):
+        chunks = split_text(text)
+        summaries = []
+        for chunk in chunks:
+            summaries.append(
+                openai.Summarization.create(
+                    model=config.OA_MODEL, documents=[chunk], max_tokens=100
+                )
+            )
+
+    @commands.Cog.listener()
     async def on_message(self, message):
         if message.author == self.user:
             return
 
         if message.content.startswith(self.command_prefix):
             await self.process_commands(message)
-            # res = bot.respond(message.content)
-            # await message.channel.send(res)
+            res = self.respond(message.content)
+            await message.channel.send(res)
 
     def toggle_stats_ui(self, content, messages):
         if self.stats_ui:

@@ -1,5 +1,6 @@
 import tiktoken
 import config
+import goose3
 
 # will likely change w api update
 # https://platform.openai.com/docs/guides/chat/managing-tokens
@@ -46,3 +47,19 @@ async def send_long_message(channel, message):
         chunks = [message[i:i+2000] for i in range(0, len(message), 2000)]
         for chunk in chunks:
             await channel.send(chunk)
+# read a url
+def read_url(url):
+    g = goose3.Goose()
+    article = g.extract(url=url)
+    return article.cleaned_text
+
+# split text into chunks of specified length
+def split_text(text, length=1000):
+    chunks = []
+    while len(text) > length:
+        chunk = text[:length]
+        chunks.append(chunk)
+        text = text[length:]
+    chunks.append(text)
+    print(chunks)
+    return chunks
