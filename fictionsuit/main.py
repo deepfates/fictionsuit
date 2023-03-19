@@ -1,9 +1,6 @@
 import config
 import discord
 from bot import Bot
-import prompts
-import time
-
 from commands.basics import Basics
 
 intents = discord.Intents.default()
@@ -33,64 +30,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# @bot.command(help = "Responds with a pong and the latency in ms")
-# async def ping(ctx):
-    # await bot.pingCommand(ctx)
-
-# @bot.command(help = "Responds with the bot's current status")
-# async def status(ctx):
-    # pass
-
-# @bot.command(help = "Toggles token use stats on or off")
-# async def stats(ctx):
-    # pass
-
-# @bot.command(help = "Repeats a message back to the user")
-# async def echo(ctx, message):
-    # await ctx.send(message)
-
-# @bot.command(help = "Prevents the bot from responding to chats until awoken")
-# async def sleep(ctx):
-    # pass
-
-# @bot.command(help = "Wakes the bot from its slumber")
-# async def wake(ctx):
-    # pass
-
-# @bot.command(help = "Summarizes the linked article")
-# async def summarize(ctx, link):
-    # pass
-
-# @bot.command(help = "Reads the given user's twitter account and reports a vibecheck")
-# async def vibecheck(ctx, user):
-    # pass
-
-# @bot.command(help = "Shifts the bot's prompt and face for that channel (note: are face-changes discord wide??)")
-# async def shift(ctx, prompt):
-    # pass
-
-# @bot.command(help = "Get article and add to vector store")
-# async def read(ctx, link):
-    # pass
-
-# @bot.command(help = "Remove an article from vector store (if it exists)")
-# async def unread(ctx, link):
-    # pass
-
-# @bot.command(help = "Clear chat history from memory and reset to original prompt state")
-# async def forget(ctx):
-    # pass
-
-# @bot.command(help = "Switch between stateless, chat history, tool use, etc")
-# async def mode(ctx, mode):
-    # pass
-
-# @bot.command(help = "Show three of the likeliest completions to the prompt and let you select which one it adds to the history (selecting 1,2, or 3) , then generate three more from that one")
-# async def loom(ctx):
-    # pass
-
-# @bot.command(help = "Generate a meme of the given text")
-# async def meme(ctx, text):
-    # pass
 

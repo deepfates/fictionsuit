@@ -3,7 +3,6 @@ import config
 import prompts
 from utils import make_stats_str
 from discord.ext import commands
-from discord.ext.commands import CommandNotFound
 import time
 import discord
 
