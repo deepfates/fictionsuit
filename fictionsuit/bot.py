@@ -13,7 +13,7 @@ class Bot(commands.Bot):
         self,
         system_msg=prompts.SYSTEM_MSG,
         stats_ui=True,
-        command_prefix=prompts.COMMAND_PREFIX,
+        command_prefix=config.COMMAND_PREFIX,
         mode="chat",
         intents=discord.Intents.default()
     ):
