@@ -1,7 +1,7 @@
-import prompts
+import config
 class CommandGroup():
     async def handle(self, message):
-        if not message.content.startswith(prompts.COMMAND_PREFIX):
+        if not message.content.startswith(config.COMMAND_PREFIX):
             return
         cmd_split = message.content.split(' ', 1)
         cmd = cmd_split[1]
