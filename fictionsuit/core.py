@@ -1,5 +1,4 @@
 import openai
-from utils import split_text
 import config
 import langchain
 from langchain import OpenAI, PromptTemplate, LLMChain
@@ -21,27 +20,11 @@ def get_openai_response(messages_list):
 
 # summarize text
 async def summarize(text):
-    # chunks = split_text(text)
-    # summaries = []
-    # prompt = []
-    # prompt.append({"role": "system", "content": prompts.SYSTEM_MSG})
-    # prompt.append({"role": "user", "content": prompts.SUMMARIZE_MSG})
-    # for chunk in chunks:
-    #     prompt.append({"role": "user", "content": chunk})
-    #     summaries.append(
-    #         openai.ChatCompletion.create(
-    #             model=config.OAI_MODEL, messages=prompt, max_tokens=100
-    #         )["choices"][0]["message"]["content"]
-    #     )
-    #     # print(summaries)
-    #     prompt.pop()
-    prompt = PromptTemplate(template=config.SYSTEM_MSG+config.SUMMARIZE_MSG, input_variables=["text"])
-    llm = OpenAI(temperature=1.3)
+
+    prompt = PromptTemplate(template=config.SYSTEM_MSG+"\n"+config.SUMMARIZE_MSG+" {text}", input_variables=["text"])
+    llm = OpenAI(temperature=config.TEMPERATURE, max_tokens=config.MAX_TOKENS)
     text_splitter = CharacterTextSplitter()
     texts = text_splitter.split_text(text)
     docs = [Document(page_content=t) for t in texts][:3]
     chain = load_summarize_chain(llm, chain_type="map_reduce", map_prompt=prompt)
     return chain.run(docs)
-    
-
-    # return "\n".join(summaries)
