@@ -1,5 +1,6 @@
 import tiktoken
 import config
+from discord import Message
 
 # will likely change w api update
 # https://platform.openai.com/docs/guides/chat/managing-tokens
