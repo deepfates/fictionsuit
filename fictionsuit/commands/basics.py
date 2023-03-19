@@ -1,5 +1,6 @@
 import time
 from commands.command_group import CommandGroup
+from utils import send_long_message
 
 class Basics(CommandGroup):
     async def cmd_ping(self, message, args):
@@ -12,3 +13,9 @@ class Basics(CommandGroup):
         response = f"Pong! Latency {latency} ms"
         await message.channel.send(response)
 
+    async def cmd_summarize(self, message, args):
+        """**__Summarize__**
+        `prefix summarize` - returns a summary of the linked article
+        """
+        response = "This command is not yet implemented. Sorry!"
+        await send_long_message(message.channel.send(response))
