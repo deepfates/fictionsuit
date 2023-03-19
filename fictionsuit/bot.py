@@ -33,7 +33,7 @@ class Bot(commands.Bot):
         response = f"Pong! Latency {latency} ms"
         await ctx.send(response)
 
-    @commands.Cog.listener()
+    #@commands.Cog.listener()
     async def on_message(self, message):
         if message.author == self.user:
             return
