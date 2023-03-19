@@ -12,6 +12,7 @@ intents.message_content = True
 
 bot = Bot(intents=intents)
 
+# Get the bot id to pass around
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -50,7 +51,9 @@ def main():
     if config.SERVER == "dev":
         bot.run(config.DEV_TOKEN)
     elif config.SERVER == "prod":
+        print(bot.user)
         bot.run(config.PROD_TOKEN)
+        
 
 if __name__ == '__main__':
     main()

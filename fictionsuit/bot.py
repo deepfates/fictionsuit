@@ -76,3 +76,27 @@ class Bot(commands.Bot):
         except Exception as e:
             print(e)
             return "There has been an error, check console.", {}
+
+
+    # This is discord specific. Should it go somewhere else?
+    async def get_channel_history(
+        self,   
+        message: discord.Message,
+        window_size: int = 5,
+    ):
+        '''Returns a list of messages from the channel the message was sent in. 
+        Messages are in the form of a dict with keys 'role' and 'message'.
+        If the message is from our bot, it gets the 'ai' role. Otherwise it gets the 'human' role.
+        Human messages are prepended with their author's name.'''
+        history = []
+        async for msg in message.channel.history(limit=window_size):
+            if msg.author.id == self.user.id:
+                role = "ai"
+            else:
+                role = "human"
+            history.append({
+                "role": role,
+                "message": msg.author.display_name + ": " + msg.content
+            })
+            history.reverse()
+        return history
