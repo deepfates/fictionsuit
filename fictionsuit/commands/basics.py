@@ -1,6 +1,7 @@
 import time
 from commands.command_group import CommandGroup
 from utils import send_long_message
+from core import summarize
 
 class Basics(CommandGroup):
     async def cmd_ping(self, message, args):
@@ -17,5 +18,5 @@ class Basics(CommandGroup):
         """**__Summarize__**
         `prefix summarize` - returns a summary of the linked article
         """
-        response = "This command is not yet implemented. Sorry!"
-        await send_long_message(message.channel.send(response))
+        summary = await summarize(args)
+        await send_long_message(message.channel, summary)
