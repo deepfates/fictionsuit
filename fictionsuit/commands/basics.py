@@ -1,5 +1,6 @@
 import time
 from commands.command_group import CommandGroup
+from core import summarize
 
 class Basics(CommandGroup):
     async def cmd_ping(self, message, args):
@@ -33,5 +34,5 @@ Vivamus porta in mi hendrerit consequat. Integer blandit placerat dui ut porta. 
         """**__Summarize__**
         `prefix summarize` - returns a summary of the linked article
         """
-        response = "This command is not yet implemented. Sorry!"
-        await message.reply(response) 
+        summary = await summarize(args)
+        await message.reply(summary) 
