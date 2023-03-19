@@ -1,6 +1,8 @@
 import time
 from commands.command_group import CommandGroup
 from core import summarize
+import config
+import tiktoken
 
 class Basics(CommandGroup):
     async def cmd_ping(self, message, args):
@@ -36,3 +38,15 @@ Vivamus porta in mi hendrerit consequat. Integer blandit placerat dui ut porta. 
         """
         summary = await summarize(args)
         await message.reply(summary) 
+
+
+    async def cmd_tokens(self , message, args):
+        """**__Tokens__**
+        `prefix tokens` - returns the number of tokens in the given text
+        """
+        try:
+            encoding = tiktoken.encoding_for_model(config.OAI_MODEL)    
+        except KeyError:
+            encoding = tiktoken.get_encoding("cl100k_base")
+        num_tokens = len(encoding.encode(args))
+        await message.reply(f"Number of tokens in text: {num_tokens}")

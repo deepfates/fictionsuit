@@ -36,6 +36,9 @@ async def on_message(message):
     if cmd == 'help':
         await wrap.reply(f'Sorry, there\'s no command called "{args}"')
     
+    # Response
+    response = bot.respond(message.content)
+    await wrap.reply(response)
 
 def main():
     global command_groups
@@ -54,4 +57,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
