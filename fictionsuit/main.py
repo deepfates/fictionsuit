@@ -35,8 +35,7 @@ async def on_message(message):
         await message.channel.send(f'Sorry, there\'s no command called "{args}"')
     
     # Prefix and text, but no command found. Just reply
-    reply = await reply_chain.arun(args)
-    await send_long_message(message.channel, reply)
+    await Basics().cmd_reply(message, args)
 
 def main():
     global command_groups
