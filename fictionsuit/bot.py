@@ -49,7 +49,7 @@ class Bot(commands.Bot):
             return str
         else:
             return content
-
+        
     def respond(self, message):  # main entryway for bot
         message = " ".join(message.split(" ")[1:])
         self.messages.append({"role": "user", "content": message})
