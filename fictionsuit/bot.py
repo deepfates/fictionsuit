@@ -2,21 +2,46 @@ import openai
 import config
 import prompts
 from utils import make_stats_str
+from discord.ext import commands
+from discord.ext.commands import CommandNotFound
+import time
+import discord
 
 
-class Bot:
+class Bot(commands.Bot):
     def __init__(
         self,
         system_msg=prompts.SYSTEM_MSG,
         stats_ui=True,
         command_prefix=prompts.COMMAND_PREFIX,
-        mode="conversation",
+        mode="chat",
+        intents=discord.Intents.default()
     ):
+        super().__init__(command_prefix=command_prefix, intents=intents) #TODO: move intents to main.py
         self.system_msg = system_msg
         self.messages = [{"role": "system", "content": system_msg}]
         self.stats_ui = stats_ui
         self.command_prefix = command_prefix
         self.mode = mode
+
+    async def pingCommand(self, ctx):
+    # bot_id = client.user.id
+        # if str(bot_id) in ctx.message.content:
+        timestamp = ctx.message.created_at.timestamp()
+        now = time.time()
+        latency = round(now - timestamp)
+        response = f"Pong! Latency {latency} ms"
+        await ctx.send(response)
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author == self.user:
+            return
+
+        if message.content.startswith(self.command_prefix):
+            await self.process_commands(message)
+            # res = bot.respond(message.content)
+            # await message.channel.send(res)
 
     def toggle_stats_ui(self, content, messages):
         if self.stats_ui:
