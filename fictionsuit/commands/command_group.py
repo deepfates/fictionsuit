@@ -1,10 +1,11 @@
+import prompts
 class CommandGroup():
     async def handle(self, message):
         if not message.content.startswith(prompts.COMMAND_PREFIX):
             return
-
+        print(f'Handling command: {message.content}')
         cmd_split = message.content.split(' ', 1)
-        cmd = cmd_split[0]
+        cmd = cmd_split[1]
 
         if len(cmd_split) < 2:
             args = ''
@@ -12,10 +13,12 @@ class CommandGroup():
             args = cmd_split[1]
 
         try:
-            cmd_handler = f'cmd_{cmd[len(prompts.COMMAND_PREFIX):]}'
-
+            print(f'Handling command: {cmd}')
+            cmd_handler = f'cmd_{cmd}'
+            print(f'Handler: {cmd_handler}')
             if not hasattr(self, cmd_handler):
                 # No handler
+                print(f'No handler for command: {cmd}')
                 return False
 
             handler = getattr(self, cmd_handler)
