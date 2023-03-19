@@ -4,10 +4,18 @@ import dotenv
 
 dotenv.load_dotenv()
 
-DEV_TOKEN = os.environ["DISCORD_DEV_TOKEN"]
-PROD_TOKEN = os.environ["DISCORD_PROD_TOKEN"]
-SERVER = os.environ["SERVER"]
-OA_MODEL = "gpt-3.5-turbo-0301"
-openai.api_key = os.environ["OPENAI_API_KEY"]
+# general
+SERVER = os.getenv("SERVER")
 
-COMMAND_PREFIX = os.environ["COMMAND_PREFIX"] if "COMMAND_PREFIX" in os.environ else "chat "
+# llm
+OAI_MODEL = os.getenv("OAI_MODEL", "gpt-3.5-turbo-0301")
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Bot specific
+COMMAND_PREFIX = os.getenv("COMMAND_PREFIX", "chat ")
+DEV_TOKEN = os.getenv("DISCORD_DEV_TOKEN")
+PROD_TOKEN = os.getenv("DISCORD_PROD_TOKEN")
+
+# Prompts
+SYSTEM_MSG = os.getenv("SYSTEM_MSG", "You are a helpful assistant. Your responses are ALWAYS 240 characters or less. You never respond over 240 characters.")
+SUMMARIZE_MSG = os.getenv("SUMMARIZE_MSG", "Summarize the following text:")

@@ -1,6 +1,5 @@
 import openai
 import config
-import prompts
 from utils import make_stats_str
 from discord.ext import commands
 import time
@@ -10,7 +9,7 @@ import discord
 class Bot(commands.Bot):
     def __init__(
         self,
-        system_msg=prompts.SYSTEM_MSG,
+        system_msg=config.SYSTEM_MSG,
         stats_ui=True,
         command_prefix=config.COMMAND_PREFIX,
         mode="chat",
@@ -71,7 +70,7 @@ class Bot(commands.Bot):
     def get_openai_response(self, messages_list):
         try:
             return openai.ChatCompletion.create(
-                model=config.OA_MODEL,
+                model=config.OAI_MODEL,
                 messages=messages_list,
             )
         except Exception as e:
