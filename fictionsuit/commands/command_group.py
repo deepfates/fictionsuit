@@ -7,7 +7,8 @@ class CommandGroup():
     The rest of the function name is the command name.
     "message" is the discord message that contains the command
     "args" is everything in the message after the command prefix and command name
-    
+    A handler's name should not contain any upper-case characters. Usage will not be case-sensitive.
+
     Look at CommandGroup.cmd_help for an example of a command handler.
     Do not implement a cmd_help command on subclasses unless you enjoy breaking things.
     """
@@ -21,7 +22,7 @@ class CommandGroup():
         This is because every CommandGroup has a cmd_help implementation.
         """
         try:
-            cmd_handler = f'cmd_{command}'
+            cmd_handler = f'cmd_{command}'.lower()
             if not hasattr(self, cmd_handler):
                 # No handler
                 return False
@@ -45,7 +46,7 @@ class CommandGroup():
 
         response = None
 
-        command_handler_name = f'cmd_{command}'
+        command_handler_name = f'cmd_{command}'.lower()
 
         if hasattr(self, command_handler_name):
             handler = getattr(self, command_handler_name)
@@ -61,40 +62,29 @@ class CommandGroup():
     def get_all_commands(self):
         return [x[4:] for x in self.__class__.__dict__ if x.startswith('cmd_')]
 
-def command_split(content):
+# TODO: Unit testing
+def command_split(content, prefix):
     """given a string that starts with the command prefix,
     returns the command and its arguments as a tuple.
 
     If there is no command, the command will be None
     If there are no arguments, the arguments will be an empty string.
+    
+    **It is the caller's responsibility to ensure that the string starts with the prefix.**
     """
+    after_prefix = content[len(prefix):].strip()
 
-    # "cmd_prefix cmd args..."
-    #            ^
-    #            | this space might not exist
-    if prompts.COMMAND_PREFIX.endswith(' '):
-        # If it does exist, we need to split at the first 2 spaces
-        split_content = content.split(maxsplit=2)
-        # prefix = content_split[0] (we can throw this away)
-        if len(split_content) < 2:
-            return (None, '') # just the prefix, with no command
-        cmd = split_content[1]
-        if len(split_content) > 2:
-            args = split_content[2]
-        else:
-            args = ''
+    if after_prefix == '':
+        return (None, '') # No command
+
+    split_content = after_prefix.split(maxsplit=1)
+
+    cmd = split_content[0]
+
+    if len(split_content) == 1: # No args
+        args = ''
     else:
-        # If it doesn't exist, we only need to split on one space
-        # but, the first section will contain the prefix
-        split_content = content.split(maxsplit=1)
-        cmd = split_content[0]
-        cmd = cmd[len(prompts.COMMAND_PREFIX):] # strip off prefix
-        if cmd == '':
-            return (None, '') # just the prefix, with no command
-        if len(split_content) > 1:
-            args = split_content[1]
-        else:
-            args = ''
+        args = split_content[1]
 
     return (cmd, args)
-
+  

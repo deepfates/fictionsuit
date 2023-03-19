@@ -17,11 +17,12 @@ async def on_message(message):
     if message.author == bot.user:
         # Don't self-reply
         return
-    
-    if not message.content.startswith(prompts.COMMAND_PREFIX):
+   
+    prefix_lower = prompts.COMMAND_PREFIX.lower()
+    if not message.content.lower().startswith(prefix_lower):
         return # Not handling non-command messages, for now
 
-    (cmd, args) = command_split(message.content)
+    (cmd, args) = command_split(message.content, prompts.COMMAND_PREFIX)
 
     if cmd is None:
         return # Prefix, but no command. Nothing to do.
