@@ -49,22 +49,9 @@ class Bot(commands.Bot):
             return content
         
     def respond(self, message):  # main entryway for bot
-        message = " ".join(message.split(" ")[1:])
-        self.messages.append({"role": "user", "content": message})
-        if message.startswith("help"):
-            pass
-            # update self.messages
-        if message.startswith("read"):
-            self.mode = "read"
-            content = "i was just told to read"
-            # TODO add summarize code here
-            # update self.messages
-        else:
-            self.mode = "conversation"
-            res = self.get_openai_response(self.messages)
-            content = res["choices"][0]["message"]["content"]
-            self.messages.append({"role": "assistant", "content": content})
-            # update self.messages
+        res = self.get_openai_response(messages_list=[{"role": "system", "content": config.SYSTEM_MSG}, {"role": "user", "content": message}])
+        content = res["choices"][0]["message"]["content"]
+        self.messages.append({"role": "assistant", "content": content})
         return self.toggle_stats_ui(content, self.messages)
 
     def get_openai_response(self, messages_list):
