@@ -1,7 +1,6 @@
 import config
 import discord
 from bot import Bot
-import time
 
 from commands.command_group import command_split
 from commands.basics import Basics

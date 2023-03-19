@@ -1,4 +1,3 @@
-import prompts
 import traceback
 
 class CommandGroup():

@@ -3,7 +3,7 @@ import config
 
 # will likely change w api update
 # https://platform.openai.com/docs/guides/chat/managing-tokens
-def num_tokens_from_messages(messages, model=config.OA_MODEL):
+def num_tokens_from_messages(messages, model=config.OAI_MODEL):
     """Returns the number of tokens used by a list of messages."""
     try:
         encoding = tiktoken.encoding_for_model(model)
