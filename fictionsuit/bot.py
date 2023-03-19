@@ -3,7 +3,6 @@ import config
 import prompts
 from utils import make_stats_str
 from discord.ext import commands
-from discord.ext.commands import CommandNotFound
 import time
 import discord
 
@@ -13,7 +12,7 @@ class Bot(commands.Bot):
         self,
         system_msg=prompts.SYSTEM_MSG,
         stats_ui=True,
-        command_prefix=prompts.COMMAND_PREFIX,
+        command_prefix=config.COMMAND_PREFIX,
         mode="chat",
         intents=discord.Intents.default()
     ):
