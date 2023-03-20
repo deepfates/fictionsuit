@@ -1,25 +1,33 @@
 from utils import convert_article, scrape_link, write_md
 import openai
 import config
-from langchain import PromptTemplate, LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.chains.mapreduce import MapReduceChain
-from langchain.prompts import PromptTemplate
 from langchain.docstore.document import Document
 from langchain.chains.summarize import load_summarize_chain
+from typing import List, Dict
+import aiohttp
+URL = "https://api.openai.com/v1/chat/completions"
 
+async def get_openai_response(messages: List[Dict]) -> str:
+    
+    headers = {
+	"Content-Type": "application/json",
+	"Authorization": f"Bearer {openai.api_key}"
+    }
+    
+    body = {
+        "model": config.OAI_MODEL,
+        "temperature": config.TEMPERATURE,
+        "max_tokens": config.MAX_TOKENS,
+        "messages": messages
+    }
 
-def get_openai_response(messages_list):
-    try:
-        return openai.ChatCompletion.create(
-            model=config.OAI_MODEL,
-            messages=messages_list,
-        )
-    except Exception as e:
-        print(e)
-        return "There has been an error, check console.", {}
+    async with aiohttp.ClientSession() as session:
+        async with session.post(URL, headers=headers, json=body) as response:
+            response_data = await response.json()
 
+    return response_data
 
 # summarize text
 async def summarize(url):
