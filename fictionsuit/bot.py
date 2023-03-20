@@ -5,7 +5,7 @@ from discord.ext import commands
 import time
 import discord
 from core import get_openai_response
-
+from chains import reply
 
 class Bot(commands.Bot):
     def __init__(
@@ -30,7 +30,8 @@ class Bot(commands.Bot):
         else:
             return content
         
-    def respond(self, message):  # main entryway for bot
-        res = get_openai_response(messages_list=[{"role": "system", "content": config.SYSTEM_MSG}, {"role": "user", "content": message}])
-        content = res["choices"][0]["message"]["content"]
-        return self.toggle_stats_ui(content, self.messages)
+    async def respond(self, message):  # main entryway for bot
+        # res = get_openai_response(messages_list=[{"role": "system", "content": config.SYSTEM_MSG}, {"role": "user", "content": message}])
+        # content = res["choices"][0]["message"]["content"]
+        # return self.toggle_stats_ui(content, self.messages)
+        return await reply(message)
