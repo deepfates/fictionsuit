@@ -8,7 +8,7 @@ from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
     AIMessagePromptTemplate
 )
-chat = ChatOpenAI(temperature=config.TEMP)
+chat = ChatOpenAI(temperature=config.TEMPERATURE)
 
 # The system prompt can be enhanced by re-inserting it at the end of the message list
 # This may also help with prompt injection techniques
@@ -23,7 +23,7 @@ reply_prompt = HumanMessagePromptTemplate(
         )
     )
 reply_prompt_template = ChatPromptTemplate.from_messages([system_prompt, reply_prompt, character_prompt])
-reply_chain = LLMChain(llm=chat, prompt=reply_prompt_template )
+reply_chain = LLMChain(llm=chat, prompt=reply_prompt_template)
 
 # Given an array of dicts with keys "role" and "message", 
 # build prompt templates based on whether the role is "human" or "ai"\

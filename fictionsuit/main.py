@@ -5,10 +5,6 @@ import config
 
 from commands.command_group import command_split
 from commands.basics import Basics
-from chains import reply_chain
-from utils import send_long_message
-
-from api_wrap.discord import DiscordMessage
 
 from api_wrap.discord import DiscordMessage
 
@@ -17,7 +13,6 @@ intents.message_content = True
 
 bot = Bot(intents=intents)
 
-# Get the bot id to pass around
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -44,6 +39,7 @@ async def on_message(message):
     # Response
     response = bot.respond(message.content)
     await wrap.reply(response)
+    
 
 def main():
     global command_groups
@@ -58,7 +54,6 @@ def main():
     if config.SERVER == "dev":
         bot.run(config.DEV_TOKEN)
     elif config.SERVER == "prod":
-        print(bot.user)
         bot.run(config.PROD_TOKEN)
         
 
