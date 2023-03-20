@@ -1,4 +1,6 @@
 import tiktoken
+import os
+from goose3 import Goose
 import config
 
 # will likely change w api update
@@ -37,3 +39,56 @@ def make_stats_str(content, messages, mode):
     token_str = f"approx {tokens} tokens ({tokens/4096*100:.2f}% of max)"
     messages_str = f"{len(messages)} messages in memory"
     return f"{content}\n{hr}\n{token_str} / {messages_str} / mode: {mode}"
+
+
+def convert_article(article, url, conversion):
+    """
+    given a goose3 article object, convert it to a dict or markdown string (more options later maybe)
+    """
+    print("start convert article")
+    converted_article = ""
+    if conversion == "dict":
+        converted_article = {
+            "title": article.title,
+            "metadata": article.meta_description,
+            "url": url,
+            "article_text": article.cleaned_text,
+            "featured_image": article.top_image.src,
+        }
+
+    elif conversion == "md":
+        converted_article = f"""---
+title: {article.title}
+metadata: {article.meta_description}
+url: {url}
+featured_image: {article.top_image.src if article.top_image else ""}\n---\n{article.cleaned_text}"""
+    else:
+        converted_article = "error converting article"
+    return converted_article
+
+
+def write_md(data, doctype, filename):
+    """Where doctype is the source/type of resource, e.g. 'articles' or 'tweets' and filename is the name of the file to be saved.
+    eg write_md(data, 'articles', 'article.md')
+    """
+    directory = f"./documents/{doctype}/"
+
+    # Create the directory if it doesn't exist
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    file_path = os.path.join(directory, filename + ".md")
+    with open(file_path, "w") as md_file:
+        md_file.write(data)
+
+
+# given a link to a web article, get its content and metadata
+async def scrape_link(link):
+    try:
+        g = Goose()
+        article = g.extract(url=link)
+        g.close()
+        return article
+    except Exception as e:
+        print(e)
+        return None

@@ -1,9 +1,10 @@
 import time
 from commands.command_group import CommandGroup
-from core import summarize
+from core import summarize, scrape_link
 import config
 import tiktoken
 from chains import reply_chain, reply_to_messages
+
 
 class Basics(CommandGroup):
     async def cmd_ping(self, message, args , bot_id):
@@ -20,7 +21,8 @@ class Basics(CommandGroup):
         """**__Lorem Ipsum__**
         `prefix lorem` - returns a few paragraphs of lorem ipsum
         """
-        await message.reply("""
+        await message.reply(
+            """
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut faucibus nibh quam, non interdum mi egestas id. Nam dapibus mattis metus, sed lacinia risus eleifend ac. Suspendisse et neque orci. Nulla molestie a magna ac gravida. Ut commodo ut est eleifend suscipit. Proin varius interdum nulla sit amet imperdiet. Suspendisse id ultricies urna. Nulla facilisi. Vivamus luctus ac nisl vitae rhoncus. Vivamus in pulvinar est. Donec dictum faucibus interdum.
 
 Vivamus vitae nibh arcu. Donec massa dolor, posuere a auctor id, ultricies ut turpis. Etiam placerat sem eu consectetur consectetur. Donec consequat, nunc ut maximus dignissim, eros orci dictum magna, at placerat ligula ipsum a nisl. In sit amet vestibulum eros, rutrum pulvinar est. Nullam iaculis velit quis nulla lacinia, eu hendrerit lectus commodo. Maecenas ut imperdiet nisi, at bibendum leo.
@@ -30,27 +32,33 @@ Praesent non fermentum metus. Sed vulputate metus id nulla vestibulum luctus. Na
 Morbi lobortis lorem est, et commodo nisl blandit quis. Fusce vel velit et arcu fringilla fringilla pulvinar eget nisl. Quisque viverra sagittis ex, sit amet malesuada odio finibus sed. Sed commodo consectetur mi convallis scelerisque. Suspendisse iaculis libero vitae augue porttitor, vel mollis dui facilisis. Nulla et suscipit urna. Phasellus commodo rutrum magna, quis ultricies purus posuere sit amet.
 
 Vivamus porta in mi hendrerit consequat. Integer blandit placerat dui ut porta. Sed congue dolor leo, vel interdum ante posuere non. Proin dignissim vitae ligula vel interdum. Aliquam at nunc non felis dapibus placerat. Aliquam id tempus sapien. Morbi tempor luctus mauris sed consectetur. Etiam sagittis pharetra pellentesque.
-        """)
+        """
+        )
 
-
-    async def cmd_summarize(self, message, args, bot_id):
+    async def cmd_summarize(self, message, args):
         """**__Summarize__**
         `prefix summarize` - returns a summary of the linked article
         """
         summary = await summarize(args)
-        await message.reply(summary) 
+        await message.reply(summary)
 
-
-    async def cmd_tokens(self , message, args):
+    async def cmd_tokens(self, message, args):
         """**__Tokens__**
         `prefix tokens` - returns the number of tokens in the given text
         """
         try:
-            encoding = tiktoken.encoding_for_model(config.OAI_MODEL)    
+            encoding = tiktoken.encoding_for_model(config.OAI_MODEL)
         except KeyError:
             encoding = tiktoken.get_encoding("cl100k_base")
         num_tokens = len(encoding.encode(args))
         await message.reply(f"Number of tokens in text: {num_tokens}")
+
+    async def cmd_scrape(self, message, args):
+        """**__Scrape__**
+        `prefix scrape` - returns scraped URL
+        """
+        summary = await scrape_link(args)
+        await message.reply(summary.cleaned_text)
 
     async def cmd_reply(self, message, args, bot_id):
         """**__Reply__**
