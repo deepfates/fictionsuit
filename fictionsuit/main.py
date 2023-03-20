@@ -1,11 +1,16 @@
-import config
 import discord
+
 from bot import Bot
+import config
 
 from commands.command_group import command_split
 from commands.basics import Basics
 from chains import reply_chain
 from utils import send_long_message
+
+from api_wrap.discord import DiscordMessage
+
+from api_wrap.discord import DiscordMessage
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -19,24 +24,26 @@ async def on_message(message):
         # Don't self-reply
         return
    
-    prefix_lower = config.COMMAND_PREFIX.lower()
-    if not message.content.lower().startswith(prefix_lower):
+    wrap = DiscordMessage(message)
+
+    if not wrap.has_prefix(config.COMMAND_PREFIX):
         return # Not handling non-command messages, for now
 
-    (cmd, args) = command_split(message.content, config.COMMAND_PREFIX)
+    (cmd, args) = command_split(wrap.content, config.COMMAND_PREFIX)
 
     if cmd is None:
         return # Prefix, but no command. Nothing to do.
 
     for group in command_groups:
-        if await group.handle(message, cmd, args):
+        if await group.handle(wrap, cmd, args):
             return
 
     if cmd == 'help':
-        await message.channel.send(f'Sorry, there\'s no command called "{args}"')
+        await wrap.reply(f'Sorry, there\'s no command called "{args}"')
     
-    # Prefix and text, but no command found. Just reply
-    await Basics().cmd_reply(message, args)
+    # Response
+    response = bot.respond(message.content)
+    await wrap.reply(response)
 
 def main():
     global command_groups
@@ -57,4 +64,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

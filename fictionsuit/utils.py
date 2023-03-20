@@ -38,12 +38,3 @@ def make_stats_str(content, messages, mode):
     token_str = f"approx {tokens} tokens ({tokens/4096*100:.2f}% of max)"
     messages_str = f"{len(messages)} messages in memory"
     return f"{content}\n{hr}\n{token_str} / {messages_str} / mode: {mode}"
-
-async def send_long_message(channel, message):
-    '''Sends a message to a Discord channel, splitting it into chunks if it's too long.'''
-    if len(message) < 2000:
-        await channel.send(message)
-    else:
-        chunks = [message[i:i+2000] for i in range(0, len(message), 2000)]
-        for chunk in chunks:
-            await channel.send(chunk)
