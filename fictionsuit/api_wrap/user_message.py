@@ -4,48 +4,48 @@ class UserMessage(ABC):
     MAX_ATTEMPTS = 3
 
     '''Represents a platform-agnostic message from a user.'''
-    def __init__(self, content, author):
+    def __init__(self, content: str, author: str):
         self.content = content
         self.author = author
         self.char_limit = -1
 
-    def has_prefix(self, prefix):
+    def has_prefix(self, prefix: str) -> bool:
         return self.content.lower().startswith(prefix.lower())
 
     @abstractmethod
-    async def _get_timestamp(self):
+    async def _get_timestamp(self) -> float:
         pass
 
-    async def get_timestamp(self):
+    async def get_timestamp(self) -> float:
         return await self._get_timestamp()
 
     @abstractmethod
-    async def _reply(self, reply_content):
+    async def _reply(self, reply_content: str) -> bool:
         '''Directly reply to a user message.
         Return True if the reply is sent successfully.'''
         pass
 
     @abstractmethod
-    async def _send(self, reply_content):
+    async def _send(self, reply_content: str) -> bool:
         '''Send a message on the same platform as the user message.
         Return True if the message is sent successfully.'''
         pass
 
     @abstractmethod
-    async def _react(self, reaction):
+    async def _react(self, reaction: str | None) -> bool:
         '''React to the message (e.g. discord emoji reactions, twitter like/rt, etc.)
         Return True if the reaction is applied successfully.'''
         pass
 
     @abstractmethod
-    async def _undo_react(self, reaction):
+    async def _undo_react(self, reaction: str | None) -> bool:
         '''Remove a reaction to a message.
         Return True if the reaction was removed successfully.'''
         pass
 
     # TODO: find a way to reduce the repetition here with higher-order functions
 
-    async def _try_reply(self, reply_content):
+    async def _try_reply(self, reply_content: str) -> bool:
         attempts = 0
         while attempts < self.MAX_ATTEMPTS:
             success = await self._reply(reply_content)
@@ -54,7 +54,7 @@ class UserMessage(ABC):
             attempts += 1
         return False
 
-    async def _try_send(self, reply_content):
+    async def _try_send(self, reply_content: str) -> bool:
         attempts = 0
         while attempts < self.MAX_ATTEMPTS:
             success = await self._send(reply_content)
@@ -63,7 +63,7 @@ class UserMessage(ABC):
             attempts += 1
         return False
 
-    async def _try_react(self, reaction):
+    async def _try_react(self, reaction: str | None) -> bool:
         attempts = 0
         while attempts <self.MAX_ATTEMPTS:
             success = await self._react(reaction)
@@ -72,7 +72,7 @@ class UserMessage(ABC):
             attempts += 1
         return False
 
-    async def _try_undo_react(self, reaction):
+    async def _try_undo_react(self, reaction: str | None) -> bool:
         attempts = 0
         while attempts <self.MAX_ATTEMPTS:
             success = await self._undo_react(reaction)
@@ -81,7 +81,7 @@ class UserMessage(ABC):
             attempts += 1
         return False
 
-    def _split_content(self, content):
+    def _split_content(self, content: str) -> tuple[str, str]:
         '''Cuts off the first chunk of the content that fits within the character limit.
         This method will attempt to find a graceful place to cut the messages, but it will fall back on
         less ideal options if necessary to avoid throwing exceptions.
@@ -89,7 +89,7 @@ class UserMessage(ABC):
         '''
         simple_cut = content[:self.char_limit]
 
-        def split_at(index):
+        def split_at(index: int) -> tuple[str, str]:
             if index == -1:
                 return None
             return (content[:index].strip(), content[index+1:].strip())
@@ -116,13 +116,16 @@ class UserMessage(ABC):
         # _split_reply should never be called when self.char_limit == -1, so this won't return None:
         return split_at(self.char_limit)
 
-    async def react(self, reaction=None):
+    async def react(self, reaction: str | None = None):
         return await self._try_react(reaction)
 
-    async def undo_react(self, reaction=None):
+    async def undo_react(self, reaction: str | None = None):
         return await self._try_undo_react(reaction)
    
-    async def send(self, message_content):
+    async def send(self, message_content: str) -> bool:
+        if len(message_content) == 0:
+            return True
+
         if self.char_limit == -1 or len(message_content) <= self.char_limit:
             return await self._try_send(message_content)
                 
@@ -139,9 +142,12 @@ class UserMessage(ABC):
 
         return True
         
-    async def reply(self, reply_content):
+    async def reply(self, reply_content: str) -> bool:
         '''Returns True if the reply is sent successfully.
         This method will split the reply into appropriately-sized chunks for the underlying platform.'''
+        if len(reply_content) == 0:
+            return True # Send nothing
+
         if self.char_limit == -1 or len(reply_content) <= self.char_limit:
             return await self._try_reply(reply_content)
                 
@@ -158,7 +164,7 @@ class UserMessage(ABC):
 
         return True
 
-def last_full_stop(s):
+def last_full_stop(s: str) -> int:
     '''Return the last full stop in a string'''
     q_index = s.rfind('? ')
     e_index = s.rfind('! ')

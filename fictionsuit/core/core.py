@@ -5,15 +5,17 @@ from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.docstore.document import Document
 from langchain.chains.summarize import load_summarize_chain
-from typing import List, Dict
 import aiohttp
 
 URL = "https://api.openai.com/v1/chat/completions"
 
-def chat_message(role, content):
+# TODO: extract openai stuff into an openai wrapper
+openai_chat = list[dict[str,str]]
+
+def chat_message(role: str, content: str) -> openai_chat:
     return [{'role':role,'content':content}]
 
-async def get_openai_response(messages: List[Dict]) -> str:
+async def get_openai_response(messages: openai_chat) -> str:
     
     headers = {
 	"Content-Type": "application/json",
@@ -34,7 +36,7 @@ async def get_openai_response(messages: List[Dict]) -> str:
     return response_data
 
 # summarize text
-async def summarize(url):
+async def summarize(url: str):
     try:
         article = await scrape_link(url)
         md_article = convert_article(article, url, "md")

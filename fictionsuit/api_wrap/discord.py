@@ -56,7 +56,7 @@ class DiscordMessage(UserMessage):
         self.char_limit = 2000
         self.client = client
 
-    async def _send(self, message_content):
+    async def _send(self, message_content: str) -> bool:
         try:
             result = await self.discord_message.channel.send(message_content)
             return result is not None
@@ -64,7 +64,7 @@ class DiscordMessage(UserMessage):
             print(f'Exception in discord message send: {e}')
             return False
 
-    async def _react(self, reaction):
+    async def _react(self, reaction: str) -> bool:
         if reaction is None:
             reaction = '👍'
         try:
@@ -74,7 +74,7 @@ class DiscordMessage(UserMessage):
             print(f'Exception in discord reaction: {e}')
             return False
 
-    async def _undo_react(self, reaction):
+    async def _undo_react(self, reaction: str) -> bool:
         if reaction is None:
             reaction = '👍'
         try:
@@ -88,7 +88,7 @@ class DiscordMessage(UserMessage):
             print(f'Exception in discord reaction removal: {e}')
             return False
 
-    async def _reply(self, reply_content):
+    async def _reply(self, reply_content: str) -> bool:
         try:
             result = await self.discord_message.reply(reply_content)
             return result is not None
@@ -96,6 +96,6 @@ class DiscordMessage(UserMessage):
             print(f'Exception in discord message send: {e}')
             return False
 
-    async def _get_timestamp(self):
+    async def _get_timestamp(self) -> float:
         return self.discord_message.created_at.timestamp()
 

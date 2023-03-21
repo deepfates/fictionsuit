@@ -18,8 +18,8 @@ class BasicCommandSystem(System):
     def __init__(
         self, 
         command_groups: Sequence[CommandGroup], 
-        stats_ui=True,
-        respond_on_unrecognized=False
+        stats_ui: bool = True,
+        respond_on_unrecognized: bool = False
         ):
         self.command_groups = command_groups
         self.stats_ui = stats_ui

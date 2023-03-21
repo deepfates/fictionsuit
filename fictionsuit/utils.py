@@ -2,10 +2,11 @@ import tiktoken
 import os
 from goose3 import Goose
 import config
+from typing import List, Dict
 
 # will likely change w api update
 # https://platform.openai.com/docs/guides/chat/managing-tokens
-def num_tokens_from_messages(messages, model=config.OAI_MODEL):
+def num_tokens_from_messages(messages: List[Dict], model: str = config.OAI_MODEL) -> int:
     """Returns the number of tokens used by a list of messages."""
     try:
         encoding = tiktoken.encoding_for_model(model)
@@ -33,7 +34,7 @@ def num_tokens_from_messages(messages, model=config.OAI_MODEL):
 
 
 # TODO pass in vars whether this is gpt-4 or 3.5 for cost and max tokens
-def make_stats_str(content, messages, mode):
+def make_stats_str(content: str, messages: List[Dict], mode: str) -> str:
     tokens = num_tokens_from_messages(messages)
     hr = "-~-~-~-~-~"
     token_str = f"approx {tokens} tokens ({tokens/4096*100:.2f}% of max)"

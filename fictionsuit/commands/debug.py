@@ -3,9 +3,10 @@ import time
 
 import config
 from commands.command_group import  CommandGroup
+from api_wrap.user_message import UserMessage
 
 class Debug(CommandGroup):
-    async def cmd_ping(self, message, args):
+    async def cmd_ping(self, message: UserMessage, args: str):
         """**__Ping__**
         `prefix ping` - returns the one-way latency from the user to the bot
         """
@@ -15,7 +16,7 @@ class Debug(CommandGroup):
         response = f"Pong! Latency {latency} ms"
         await message.reply(response)
     
-    async def cmd_lorem(self, message, args):
+    async def cmd_lorem(self, message: UserMessage, args: str):
         """**__Lorem Ipsum__**
         `prefix lorem` - returns a few paragraphs of lorem ipsum
         """
@@ -33,21 +34,21 @@ Vivamus porta in mi hendrerit consequat. Integer blandit placerat dui ut porta. 
         """
         )
 
-    async def cmd_react(self, message, args):
+    async def cmd_react(self, message: UserMessage, args: str):
         await message.react()
 
-    async def cmd_react_then_unreact(self, message, args):
+    async def cmd_react_then_unreact(self, message: UserMessage, args: str):
         await message.react()
         time.sleep(1)
         await message.undo_react()
 
-    async def cmd_echo(self, message, args):
+    async def cmd_echo(self, message: UserMessage, args: str):
         await message.send(args)
 
-    async def cmd_kill(self, message, args):
+    async def cmd_kill(self, message: UserMessage, args: str):
         exit()
 
-    async def cmd_tokens(self, message, args):
+    async def cmd_tokens(self, message: UserMessage, args: str):
         """**__Tokens__**
         `prefix tokens` - returns the number of tokens in the given text
         """

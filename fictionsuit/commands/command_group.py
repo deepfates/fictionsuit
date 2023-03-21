@@ -1,5 +1,7 @@
 import traceback
 
+from api_wrap.user_message import UserMessage
+
 class CommandGroup():
     """ Extend this class to create a group of command handlers for the bot.
     A handler consists of: a function whose name starts with "cmd_" that accepts the arguments (self, message, args) 
@@ -12,7 +14,7 @@ class CommandGroup():
     Do not implement a cmd_help command on subclasses unless you enjoy breaking things.
     """
 
-    async def handle(self, message, command, args):
+    async def handle(self, message: UserMessage, command: str, args: str) -> bool:
         """Attempt to handle the command.
         Returns True if this command group has a handler for the command*,
         False if the command group has no such handler.
@@ -33,7 +35,7 @@ class CommandGroup():
             print(f'\nError in {command} handler: {e}\n{traceback.format_exc()}\n')
             return True
     
-    async def cmd_help(self, message, args):
+    async def cmd_help(self, message: UserMessage, args: str) -> bool:
         """**__Help__**
         `prefix help {cmd}` - print the help for command `cmd`
         """
@@ -60,11 +62,11 @@ class CommandGroup():
         await message.reply(response)
         return True
 
-    def get_all_commands(self):
+    def get_all_commands(self) -> list[str]:
         return [x[4:] for x in self.__class__.__dict__ if x.startswith('cmd_')]
 
 # TODO: Unit testing
-def command_split(content, prefix):
+def command_split(content: str, prefix: str) -> tuple[str, str]:
     """given a string that starts with the command prefix,
     returns the command and its arguments as a tuple.
 
