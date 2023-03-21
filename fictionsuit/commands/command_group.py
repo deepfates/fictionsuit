@@ -51,6 +51,8 @@ class CommandGroup():
             handler = getattr(self, command_handler_name)
             if handler.__doc__ is not None:
                 response = handler.__doc__
+            else:
+                response = f'Sorry, the "{command}" command is missing documentation.'
 
         if response is None:
             return False # This command group has no documentation for this command, but another group might.

@@ -5,7 +5,7 @@ from typing import Sequence
 from abc import ABC, abstractmethod
 from api_wrap.user_message import UserMessage
 from commands.command_group import CommandGroup, command_split
-from core import chat_message, get_openai_response
+from core.core import chat_message, get_openai_response
 
 class System(ABC):
     '''A system for handling incoming user messages.'''

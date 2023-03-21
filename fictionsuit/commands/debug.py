@@ -44,6 +44,9 @@ Vivamus porta in mi hendrerit consequat. Integer blandit placerat dui ut porta. 
     async def cmd_echo(self, message, args):
         await message.send(args)
 
+    async def cmd_kill(self, message, args):
+        exit()
+
     async def cmd_tokens(self, message, args):
         """**__Tokens__**
         `prefix tokens` - returns the number of tokens in the given text
