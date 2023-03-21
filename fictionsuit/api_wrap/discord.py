@@ -10,7 +10,7 @@ class DiscordMessage(UserMessage):
 
     async def _reply(self, reply_content):
         try:
-            result = await self.discord_message.channel.send(reply_content)
+            result = await self.discord_message.reply(reply_content)
             return result is not None
         except Exception as e:
             print(f'Exception in discord message send: {e}')

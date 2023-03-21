@@ -2,7 +2,6 @@ import discord
 
 from bot import Bot
 import config
-
 from commands.command_group import command_split
 from commands.basics import Basics
 
@@ -37,7 +36,7 @@ async def on_message(message):
         await wrap.reply(f'Sorry, there\'s no command called "{args}"')
     
     # Response
-    response = bot.respond(message.content)
+    response = await bot.respond(message.content)
     await wrap.reply(response)
 
 def main():
