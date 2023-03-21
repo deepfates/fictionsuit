@@ -1,11 +1,10 @@
-import time
-from commands.command_group import CommandGroup
-from core import summarize, scrape_link
-import config
 import tiktoken
+import time
 
+import config
+from commands.command_group import  CommandGroup
 
-class Basics(CommandGroup):
+class Debug(CommandGroup):
     async def cmd_ping(self, message, args):
         """**__Ping__**
         `prefix ping` - returns the one-way latency from the user to the bot
@@ -15,7 +14,7 @@ class Basics(CommandGroup):
         latency = round(now - timestamp)
         response = f"Pong! Latency {latency} ms"
         await message.reply(response)
-
+    
     async def cmd_lorem(self, message, args):
         """**__Lorem Ipsum__**
         `prefix lorem` - returns a few paragraphs of lorem ipsum
@@ -34,12 +33,16 @@ Vivamus porta in mi hendrerit consequat. Integer blandit placerat dui ut porta. 
         """
         )
 
-    async def cmd_summarize(self, message, args):
-        """**__Summarize__**
-        `prefix summarize` - returns a summary of the linked article
-        """
-        summary = await summarize(args)
-        await message.reply(summary)
+    async def cmd_react(self, message, args):
+        await message.react()
+
+    async def cmd_react_then_unreact(self, message, args):
+        await message.react()
+        time.sleep(1)
+        await message.undo_react()
+
+    async def cmd_echo(self, message, args):
+        await message.send(args)
 
     async def cmd_tokens(self, message, args):
         """**__Tokens__**
@@ -52,9 +55,4 @@ Vivamus porta in mi hendrerit consequat. Integer blandit placerat dui ut porta. 
         num_tokens = len(encoding.encode(args))
         await message.reply(f"Number of tokens in text: {num_tokens}")
 
-    async def cmd_scrape(self, message, args):
-        """**__Scrape__**
-        `prefix scrape` - returns scraped URL
-        """
-        summary = await scrape_link(args)
-        await message.reply(summary.cleaned_text)
+
