@@ -1,5 +1,5 @@
 from commands.command_group import CommandGroup
-from core import summarize, scrape_link
+from core.core import summarize, scrape_link
 
 class Research(CommandGroup): 
     async def cmd_summarize(self, message, args):

@@ -2,7 +2,8 @@ import config
 from utils import make_stats_str
 from discord.ext import commands
 import discord
-from core import get_openai_response, System
+from core.core import get_openai_response
+from core.system import System
 from api_wrap.user_message import UserMessage
 
 class DiscordBotClient(commands.Bot):

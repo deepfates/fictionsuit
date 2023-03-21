@@ -27,7 +27,7 @@ class UserMessage(ABC):
 
     @abstractmethod
     async def _send(self, reply_content):
-        '''Send a message in the same context as the user message.
+        '''Send a message on the same platform as the user message.
         Return True if the message is sent successfully.'''
         pass
 

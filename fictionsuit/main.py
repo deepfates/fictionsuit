@@ -4,7 +4,7 @@ import config
 from commands.debug import Debug
 from commands.research import Research
 from api_wrap.discord import DiscordBotClient
-from core import BasicCommandSystem
+from core.system import BasicCommandSystem
 
 def main():
     intents = discord.Intents.default()
