@@ -4,7 +4,7 @@ from .. import config
 from typing import Sequence
 from abc import ABC, abstractmethod
 from ..api_wrap.user_message import UserMessage
-from ..commands.command_group import CommandGroup, command_split
+from ..commands.command_group import CommandGroup, CommandNotFound, CommandFailure, command_split
 from .core import chat_message, get_openai_response
 
 class System(ABC):
@@ -32,16 +32,28 @@ class BasicCommandSystem(System):
             print(f'{"!"*20}\n\nWARNING: MULTIPLE COMMANDS WITH OVERLAPPING COMMAND NAMES\n\n{"!"*20}')
 
     async def enqueue_message(self, message: UserMessage):
+        content = message.content
+        
+        try:
+            for group in self.command_groups:
+                content = await group.intercept_content(content)
+        except Exception as e:
+            await message.reply(f'Error in content interception: {e}')
+            content = message.content
+
         if not message.has_prefix(config.COMMAND_PREFIX):
             return # Not handling non-command messages, for now
 
-        (cmd, args) = command_split(message.content, config.COMMAND_PREFIX)
+        (cmd, args) = command_split(content, config.COMMAND_PREFIX)
 
         if cmd is None:
             return # Nothing but a prefix. Nothing to do.
 
         for group in self.command_groups:
-            if await group.handle(message, cmd, args):
+            result = await group.handle(message, cmd, args)
+            if type(result) is not CommandNotFound:
+                if type(result) is CommandFailure:
+                    await message.reply(f'Command "{cmd}" failed.\n{result.message}')
                 return
 
         if cmd == 'help':

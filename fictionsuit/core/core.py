@@ -26,7 +26,8 @@ async def get_openai_response(messages: openai_chat) -> str:
         "model": config.OAI_MODEL,
         "temperature": config.TEMPERATURE,
         "max_tokens": config.MAX_TOKENS,
-        "messages": messages
+        "messages": messages,
+        "top_p": config.TOP_P
     }
 
     async with aiohttp.ClientSession() as session:

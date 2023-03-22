@@ -81,17 +81,3 @@ class TextIOMessage(UserMessage):
     async def _get_timestamp(self) -> float:
         return self.timestamp
 
-
-
-if __name__ == '__main__':
-    main()
-
-
-
-
-
-
-
-
-
-

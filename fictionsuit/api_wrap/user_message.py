@@ -8,6 +8,7 @@ class UserMessage(ABC):
         self.content = content
         self.author = author
         self.char_limit = -1
+        self.disable_interactions = False
 
     def has_prefix(self, prefix: str) -> bool:
         return self.content.lower().startswith(prefix.lower())
@@ -81,8 +82,6 @@ class UserMessage(ABC):
             attempts += 1
         return False
 
-    # NOTE: this algorithm has some room for optimization.
-    # I'll take care of that eventually if it becomes a problem or bothers me too much - John
     def _split_content(self, content: str) -> tuple[str, str]:
         '''Cuts off the first chunk of the content that fits within the character limit.
         This method will attempt to find a graceful place to cut the messages, but it will fall back on
@@ -119,12 +118,18 @@ class UserMessage(ABC):
         return split_at(self.char_limit)
 
     async def react(self, reaction: str | None = None):
+        if self.disable_interactions:
+            return False
         return await self._try_react(reaction)
 
     async def undo_react(self, reaction: str | None = None):
+        if self.disable_interactions:
+            return False
         return await self._try_undo_react(reaction)
    
     async def send(self, message_content: str) -> bool:
+        if self.disable_interactions:
+            return False
         if len(message_content) == 0:
             return True
 
@@ -147,6 +152,8 @@ class UserMessage(ABC):
     async def reply(self, reply_content: str) -> bool:
         '''Returns True if the reply is sent successfully.
         This method will split the reply into appropriately-sized chunks for the underlying platform.'''
+        if self.disable_interactions:
+            return False
         if len(reply_content) == 0:
             return True # Send nothing
 

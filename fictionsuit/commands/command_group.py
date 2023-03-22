@@ -1,6 +1,20 @@
 import traceback
+import inspect
+from typing import Any
 
 from ..api_wrap.user_message import UserMessage
+
+class CommandFailure():
+    def __init__(self, message: str):
+        self.message = message
+
+class CommandNotFound():
+    pass
+
+class CommandHandled():
+    pass
+
+CommandResult = Any | None
 
 class CommandGroup():
     """ Extend this class to create a group of command handlers for the bot.
@@ -14,7 +28,7 @@ class CommandGroup():
     Do not implement a cmd_help command on subclasses unless you enjoy breaking things.
     """
 
-    async def handle(self, message: UserMessage, command: str, args: str) -> bool:
+    async def handle(self, message: UserMessage, command: str, args: str) -> CommandResult:
         """Attempt to handle the command.
         Returns True if this command group has a handler for the command*,
         False if the command group has no such handler.
@@ -26,16 +40,26 @@ class CommandGroup():
             cmd_handler = f'cmd_{command}'.lower()
             if not hasattr(self, cmd_handler):
                 # No handler
-                return False
+                return CommandNotFound() 
 
             handler = getattr(self, cmd_handler)
             handler_result = await handler(message, args)
-            return handler_result if command == 'help' else True
+            sig = inspect.signature(handler)
+            return_type = sig.return_annotation
+            if return_type is type(inspect._empty) or return_type is type(None):
+                handler_result = CommandHandled()
+                print('foo')
+                print(return_type)
+            return handler_result
         except Exception as e:
-            print(f'\nError in {command} handler: {e}\n{traceback.format_exc()}\n')
-            return True
-    
-    async def cmd_help(self, message: UserMessage, args: str) -> bool:
+            err_msg = f'Exception thrown by {command} handler: {e}\n{traceback.format_exc()}'
+            return CommandFailure(err_msg)
+        
+    async def intercept_content(self, content: str) -> str:
+        '''Intercept and modify the content of an incoming UserMessage.'''
+        return content
+
+    async def cmd_help(self, message: UserMessage, args: str) -> CommandNotFound | str:
         """**__Help__**
         `prefix help {cmd}` - print the help for command `cmd`
         """
@@ -45,7 +69,7 @@ class CommandGroup():
         
         command = args.split(maxsplit=1)[0]
 
-        response = None
+        response = None 
 
         command_handler_name = f'cmd_{command}'.lower()
 
@@ -57,10 +81,10 @@ class CommandGroup():
                 response = f'Sorry, the "{command}" command is missing documentation.'
 
         if response is None:
-            return False # This command group has no documentation for this command, but another group might.
+            return CommandNotFound()# This command group has no documentation for this command, but another group might.
 
         await message.reply(response)
-        return True
+        return response
 
     def get_all_commands(self) -> list[str]:
         return [x[4:] for x in self.__class__.__dict__ if x.startswith('cmd_')]

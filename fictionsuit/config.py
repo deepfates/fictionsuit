@@ -10,7 +10,8 @@ SERVER = os.getenv("SERVER")
 # llm
 OAI_MODEL = os.getenv("OAI_MODEL", "gpt-3.5-turbo-0301")
 openai.api_key = os.getenv("OPENAI_API_KEY")
-TEMPERATURE = float(os.getenv("TEMPERATURE", 1))
+TEMPERATURE = float(os.getenv("TEMPERATURE", 1.3))
+TOP_P = float(os.getenv("TOP_P", 1))
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", 500))
 
 # Bot specific

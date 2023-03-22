@@ -3,6 +3,8 @@ from fictionsuit.core.cli import TextIOClient
 from fictionsuit.api_wrap.user_message import UserMessage
 from fictionsuit.commands.debug import Debug
 from fictionsuit.commands.research import Research
+from fictionsuit.commands.chat import Chat 
+from fictionsuit.commands.meta import Meta
 from fictionsuit import config
 
 from argparse import ArgumentParser
@@ -17,8 +19,11 @@ def main():
     
     command_groups = [
         Debug(),
-        Research()
+        Research(),
+        Chat()
         ]
+
+    command_groups += [Meta(command_groups)]
 
     if args.no_cli:
         config.COMMAND_PREFIX = ''
