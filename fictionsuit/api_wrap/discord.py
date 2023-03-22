@@ -1,10 +1,10 @@
-import config
-from utils import make_stats_str
+from .. import config
+from ..utils import make_stats_str
 from discord.ext import commands
 import discord
-from core.core import get_openai_response
-from core.system import System
-from api_wrap.user_message import UserMessage
+from ..core.core import get_openai_response
+from ..core.system import System
+from ..api_wrap.user_message import UserMessage
 
 class DiscordBotClient(commands.Bot):
     def __init__(
@@ -64,7 +64,7 @@ class DiscordMessage(UserMessage):
             print(f'Exception in discord message send: {e}')
             return False
 
-    async def _react(self, reaction: str) -> bool:
+    async def _react(self, reaction: str | None) -> bool:
         if reaction is None:
             reaction = '👍'
         try:
@@ -74,7 +74,7 @@ class DiscordMessage(UserMessage):
             print(f'Exception in discord reaction: {e}')
             return False
 
-    async def _undo_react(self, reaction: str) -> bool:
+    async def _undo_react(self, reaction: str | None) -> bool:
         if reaction is None:
             reaction = '👍'
         try:

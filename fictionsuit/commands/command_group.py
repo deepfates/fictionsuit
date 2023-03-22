@@ -1,6 +1,6 @@
 import traceback
 
-from api_wrap.user_message import UserMessage
+from ..api_wrap.user_message import UserMessage
 
 class CommandGroup():
     """ Extend this class to create a group of command handlers for the bot.

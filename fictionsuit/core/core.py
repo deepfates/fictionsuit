@@ -1,6 +1,6 @@
-from utils import convert_article, scrape_link, write_md
+from ..utils import convert_article, scrape_link, write_md
 import openai
-import config
+from .. import config
 from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.docstore.document import Document
