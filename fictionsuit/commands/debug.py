@@ -1,9 +1,9 @@
 import tiktoken
 import time
 
-import config
-from commands.command_group import  CommandGroup
-from api_wrap.user_message import UserMessage
+from .. import config
+from .command_group import  CommandGroup
+from ..api_wrap.user_message import UserMessage
 
 class Debug(CommandGroup):
     async def cmd_ping(self, message: UserMessage, args: str):

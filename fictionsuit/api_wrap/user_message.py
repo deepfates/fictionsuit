@@ -81,6 +81,8 @@ class UserMessage(ABC):
             attempts += 1
         return False
 
+    # NOTE: this algorithm has some room for optimization.
+    # I'll take care of that eventually if it becomes a problem or bothers me too much - John
     def _split_content(self, content: str) -> tuple[str, str]:
         '''Cuts off the first chunk of the content that fits within the character limit.
         This method will attempt to find a graceful place to cut the messages, but it will fall back on

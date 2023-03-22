@@ -1,6 +1,6 @@
-from commands.command_group import CommandGroup
-from core.core import summarize, scrape_link
-from api_wrap.user_message import UserMessage
+from .command_group import CommandGroup
+from ..core.core import summarize, scrape_link
+from ..api_wrap.user_message import UserMessage
 
 class Research(CommandGroup): 
     async def cmd_summarize(self, message: UserMessage, args: str):

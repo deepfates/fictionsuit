@@ -1,7 +1,7 @@
 import tiktoken
 import os
 from goose3 import Goose
-import config
+from . import config
 from typing import List, Dict
 
 # will likely change w api update
