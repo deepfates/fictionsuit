@@ -2,8 +2,9 @@ import tiktoken
 import time
 
 from .. import config
-from .command_group import  CommandGroup
+from .command_group import CommandGroup
 from ..api_wrap.user_message import UserMessage
+
 
 class Debug(CommandGroup):
     async def cmd_ping(self, message: UserMessage, args: str):
@@ -15,7 +16,7 @@ class Debug(CommandGroup):
         latency = round(now - timestamp)
         response = f"Pong! Latency {latency} ms"
         await message.reply(response)
-    
+
     async def cmd_lorem(self, message: UserMessage, args: str):
         """**__Lorem Ipsum__**
         `prefix lorem` - returns a few paragraphs of lorem ipsum
@@ -58,5 +59,3 @@ Vivamus porta in mi hendrerit consequat. Integer blandit placerat dui ut porta. 
             encoding = tiktoken.get_encoding("cl100k_base")
         num_tokens = len(encoding.encode(args))
         await message.reply(f"Number of tokens in text: {num_tokens}")
-
-

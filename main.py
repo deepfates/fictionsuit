@@ -1,10 +1,9 @@
 import discord
 
-import fictionsuit.config
 from fictionsuit.commands.debug import Debug
 from fictionsuit.commands.research import Research
 from fictionsuit.api_wrap.discord import DiscordBotClient
-from fictionsuit.core.system import BasicCommandSystem
+from fictionsuit.core.basic_command_system import BasicCommandSystem
 
 def main():
     intents = discord.Intents.default()

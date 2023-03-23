@@ -1,6 +1,5 @@
-from fictionsuit.core.system import BasicCommandSystem
+from fictionsuit.core.basic_command_system import BasicCommandSystem
 from fictionsuit.core.cli import TextIOClient
-from fictionsuit.api_wrap.user_message import UserMessage
 from fictionsuit.commands.debug import Debug
 from fictionsuit.commands.research import Research
 from fictionsuit import config
