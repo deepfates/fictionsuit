@@ -30,7 +30,6 @@ class DiscordBotClient(commands.Bot):
         if message.author == self.user:
             # Don't self-reply
             return
-        await message.channel.typing()
         wrap = DiscordMessage(self, message)
         await self.system.enqueue_message(wrap)
 
