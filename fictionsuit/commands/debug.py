@@ -2,8 +2,9 @@ import tiktoken
 import time
 
 from .. import config
-from .command_group import  CommandGroup
+from .command_group import CommandGroup
 from ..api_wrap.user_message import UserMessage
+
 
 class Debug(CommandGroup):
     async def cmd_ping(self, message: UserMessage, args: str) -> str:
@@ -61,5 +62,3 @@ Vivamus porta in mi hendrerit consequat. Integer blandit placerat dui ut porta. 
         num_tokens = len(encoding.encode(args))
         await message.reply(f"Number of tokens in text: {num_tokens}")
         return num_tokens
-
-

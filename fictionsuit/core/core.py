@@ -10,24 +10,28 @@ import aiohttp
 URL = "https://api.openai.com/v1/chat/completions"
 
 # TODO: extract openai stuff into an openai wrapper
-openai_chat = list[dict[str,str]]
+openai_chat = list[dict[str, str]]
+
 
 def chat_message(role: str, content: str) -> openai_chat:
-    return [{'role':role,'content':content}]
+    return [{"role": role, "content": content}]
+
 
 async def get_openai_response(messages: openai_chat) -> str:
-    
     headers = {
-	"Content-Type": "application/json",
-	"Authorization": f"Bearer {openai.api_key}"
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {openai.api_key}",
     }
-    
+
     body = {
         "model": config.OAI_MODEL,
         "temperature": config.TEMPERATURE,
         "max_tokens": config.MAX_TOKENS,
         "messages": messages,
+<<<<<<< HEAD
         "top_p": config.TOP_P
+=======
+>>>>>>> main
     }
 
     async with aiohttp.ClientSession() as session:
@@ -35,6 +39,7 @@ async def get_openai_response(messages: openai_chat) -> str:
             response_data = await response.json()
 
     return response_data
+
 
 # summarize text
 async def summarize(url: str):

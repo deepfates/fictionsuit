@@ -1,18 +1,20 @@
-from ..utils import make_stats_str
-import openai
-from .. import config
-from typing import Sequence
 from abc import ABC, abstractmethod
 from ..api_wrap.user_message import UserMessage
+<<<<<<< HEAD
 from ..commands.command_group import CommandGroup, CommandNotFound, CommandFailure, command_split
 from .core import chat_message, get_openai_response
+=======
+
+>>>>>>> main
 
 class System(ABC):
-    '''A system for handling incoming user messages.'''
+    """A system for handling incoming user messages."""
+
     @abstractmethod
     async def enqueue_message(self, message: UserMessage):
-        '''Called whenever a new user message arrives.'''
+        """Called whenever a new user message arrives."""
         pass
+<<<<<<< HEAD
 
 class BasicCommandSystem(System):
     def __init__(
@@ -71,3 +73,5 @@ class BasicCommandSystem(System):
         content = make_stats_str(content, messages, 'chat') if self.stats_ui else content
         await message.reply(content)
 
+=======
+>>>>>>> main

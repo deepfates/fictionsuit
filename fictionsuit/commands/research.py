@@ -18,4 +18,3 @@ class Research(CommandGroup):
         summary = await scrape_link(args)
         await message.reply(summary.cleaned_text)
         return summary
-
