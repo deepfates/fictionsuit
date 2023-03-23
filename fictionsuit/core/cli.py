@@ -83,8 +83,5 @@ class TextIOMessage(UserMessage):
     async def _get_timestamp(self) -> float:
         return self.timestamp
 
-<<<<<<< HEAD
-=======
     async def _retrieve_history(self) -> openai_chat:
         return []
->>>>>>> main
