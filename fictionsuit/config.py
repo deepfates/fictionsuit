@@ -19,5 +19,13 @@ DEV_TOKEN = os.getenv("DISCORD_DEV_TOKEN")
 PROD_TOKEN = os.getenv("DISCORD_PROD_TOKEN")
 
 # Prompts
-SYSTEM_MSG = os.getenv("SYSTEM_MSG", "You are a helpful assistant. Your responses are ALWAYS 240 characters or less. You never respond over 240 characters.")
+SYSTEM_MSG = os.getenv(
+    "SYSTEM_MSG",
+    "You are a helpful assistant. Your responses are ALWAYS 240 characters or less. You never respond over 240 characters.",
+)
 SUMMARIZE_MSG = os.getenv("SUMMARIZE_MSG", "Summarize the following text:")
+
+# Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
+UPLOAD_TO_SUPABASE = True
