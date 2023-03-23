@@ -52,7 +52,6 @@ class BasicCommandSystem(System):
     async def direct_chat(self, message: UserMessage):
         if isinstance(message, DiscordMessage):
             await message.discord_message.channel.typing()
-
         messages = await message.retrieve_history()
         messages += chat_message("system", config.SYSTEM_MSG)
         messages += chat_message("user", message.content)
