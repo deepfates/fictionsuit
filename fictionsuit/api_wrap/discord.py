@@ -2,9 +2,9 @@ from .. import config
 from ..utils import make_stats_str
 from discord.ext import commands
 import discord
-from ..core.core import get_openai_response
 from ..core.system import System
 from ..api_wrap.user_message import UserMessage
+from discord import Message
 
 class DiscordBotClient(commands.Bot):
     def __init__(
@@ -26,12 +26,13 @@ class DiscordBotClient(commands.Bot):
     async def on_guild_join(self, server):
         self.as_member_of[server.id] = await self.get_self_as_member(server)
 
-    async def on_message(self, message):
+    async def on_message(self, message: Message):
         if message.author == self.user:
             # Don't self-reply
             return
+        await message.channel.typing()
         wrap = DiscordMessage(self, message)
-        await self.system.enqueue_message(wrap) 
+        await self.system.enqueue_message(wrap)
 
     def run(self):
         if config.SERVER == 'dev':
