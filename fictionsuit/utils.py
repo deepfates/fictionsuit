@@ -4,9 +4,12 @@ from goose3 import Goose
 from . import config
 from typing import List, Dict
 
+
 # will likely change w api update
 # https://platform.openai.com/docs/guides/chat/managing-tokens
-def num_tokens_from_messages(messages: List[Dict], model: str = config.OAI_MODEL) -> int:
+def num_tokens_from_messages(
+    messages: List[Dict], model: str = config.OAI_MODEL
+) -> int:
     """Returns the number of tokens used by a list of messages."""
     try:
         encoding = tiktoken.encoding_for_model(model)
@@ -16,7 +19,6 @@ def num_tokens_from_messages(messages: List[Dict], model: str = config.OAI_MODEL
     if model == "gpt-3.5-turbo-0301":  # note: future models may deviate from this
         num_tokens = 0
         for message in messages:
-
             num_tokens += (
                 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
             )
