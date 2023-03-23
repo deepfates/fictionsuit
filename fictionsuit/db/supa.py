@@ -60,7 +60,7 @@ async def build_annoy_index():
 
 async def upload_article_with_embeddings(url):
     global global_annoy_index, global_id_mapping, global_id_mapping_chunk
-    supaclient = await init_client()
+    supaclient = await supabase()
     try:
         article = await scrape_link(url)
         article_dict = {
