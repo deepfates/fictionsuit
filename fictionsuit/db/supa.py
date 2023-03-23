@@ -1,15 +1,15 @@
 from annoy import AnnoyIndex
 import json
 import ast
-from ..utils import scrape_link, get_embeddings, embed_query
+from ..utils import scrape_link  # , get_embeddings, embed_query
 from supabase import create_client
 import sys
 from .. import config
 
 supabase = None
-if config.UPLOAD_DATA_TO_SUPABASE:
+if config.UPLOAD_TO_SUPABASE:
     url: str = config.SUPABASE_URL
-    key: str = config.SUPABASE_ANON_KEY
+    key: str = config.SUPABASE_KEY
     supabase = create_client(url, key)
 
 
