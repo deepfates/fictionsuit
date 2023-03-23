@@ -5,6 +5,7 @@ from .. import config
 import sys
 import time
 import asyncio
+from ..core.core import openai_chat
 
 
 class TextIOClient:
@@ -81,3 +82,6 @@ class TextIOMessage(UserMessage):
 
     async def _get_timestamp(self) -> float:
         return self.timestamp
+
+    async def _retrieve_history(self) -> openai_chat:
+        return []
