@@ -2,10 +2,16 @@ from ..utils import make_stats_str
 from .. import config
 from typing import Sequence
 from ..api_wrap.user_message import UserMessage
-from ..commands.command_group import CommandFailure, CommandGroup, CommandNotFound, command_split
+from ..commands.command_group import (
+    CommandFailure,
+    CommandGroup,
+    CommandNotFound,
+    command_split,
+)
 from .core import chat_message, get_openai_response
 from ..api_wrap.discord import DiscordMessage
 from .system import System
+
 
 class BasicCommandSystem(System):
     def __init__(
@@ -30,16 +36,16 @@ class BasicCommandSystem(System):
 
     async def enqueue_message(self, message: UserMessage):
         content = message.content
-        
+
         try:
             for group in self.command_groups:
                 content = await group.intercept_content(content)
         except Exception as e:
-            await message.reply(f'Error in content interception: {e}')
+            await message.reply(f"Error in content interception: {e}")
             content = message.content
 
         if not message.has_prefix(config.COMMAND_PREFIX):
-            return # Not handling non-command messages, for now
+            return  # Not handling non-command messages, for now
 
         (cmd, args) = command_split(content, config.COMMAND_PREFIX)
 

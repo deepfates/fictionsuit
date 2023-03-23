@@ -2,7 +2,7 @@ from fictionsuit.core.basic_command_system import BasicCommandSystem
 from fictionsuit.core.cli import TextIOClient
 from fictionsuit.commands.debug import Debug
 from fictionsuit.commands.research import Research
-from fictionsuit.commands.chat import Chat 
+from fictionsuit.commands.chat import Chat
 from fictionsuit.commands.meta import Meta
 from fictionsuit import config
 
@@ -23,12 +23,8 @@ def main():
         help="defines the command prefix, which would otherwise be loaded from the environment.",
     )
     args = parser.parse_args()
-    
-    command_groups = [
-        Debug(),
-        Research(),
-        Chat()
-        ]
+
+    command_groups = [Debug(), Research(), Chat()]
 
     command_groups += [Meta(command_groups)]
 

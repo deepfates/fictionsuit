@@ -173,11 +173,12 @@ class UserMessage(ABC):
         return True
 
     async def reply(self, reply_content: str) -> bool:
-        '''Returns True if the reply is sent successfully.
-        This method will split the reply into appropriately-sized chunks for the underlying platform.'''
+        """Returns True if the reply is sent successfully.
+        This method will split the reply into appropriately-sized chunks for the underlying platform.
+        """
         if self.disable_interactions:
             return False
-        
+
         if len(reply_content) == 0:
             return True  # Send nothing
 

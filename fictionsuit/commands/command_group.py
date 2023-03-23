@@ -4,21 +4,26 @@ from typing import Any
 
 from ..api_wrap.user_message import UserMessage
 
-class CommandFailure():
+
+class CommandFailure:
     def __init__(self, message: str):
         self.message = message
 
-class CommandNotFound():
+
+class CommandNotFound:
     pass
 
-class CommandHandled():
+
+class CommandHandled:
     pass
+
 
 CommandResult = Any | None
 
+
 class CommandGroup:
-    """ Extend this class to create a group of command handlers for the bot.
-    A handler consists of: a function whose name starts with "cmd_" that accepts the arguments (self, message, args) 
+    """Extend this class to create a group of command handlers for the bot.
+    A handler consists of: a function whose name starts with "cmd_" that accepts the arguments (self, message, args)
 
     The rest of the function name is the command name.
     "message" is the UserMessage that contains the command
@@ -29,7 +34,9 @@ class CommandGroup:
     Do not implement a cmd_help command on subclasses unless you enjoy breaking things.
     """
 
-    async def handle(self, message: UserMessage, command: str, args: str) -> CommandResult:
+    async def handle(
+        self, message: UserMessage, command: str, args: str
+    ) -> CommandResult:
         """Attempt to handle the command.
         Returns True if this command group has a handler for the command*,
         False if the command group has no such handler.
@@ -41,7 +48,7 @@ class CommandGroup:
             cmd_handler = f"cmd_{command}".lower()
             if not hasattr(self, cmd_handler):
                 # No handler
-                return CommandNotFound() 
+                return CommandNotFound()
 
             handler = getattr(self, cmd_handler)
             handler_result = await handler(message, args)
@@ -49,15 +56,17 @@ class CommandGroup:
             return_type = sig.return_annotation
             if return_type is type(inspect._empty) or return_type is type(None):
                 handler_result = CommandHandled()
-                print('foo')
+                print("foo")
                 print(return_type)
             return handler_result
         except Exception as e:
-            err_msg = f'Exception thrown by {command} handler: {e}\n{traceback.format_exc()}'
+            err_msg = (
+                f"Exception thrown by {command} handler: {e}\n{traceback.format_exc()}"
+            )
             return CommandFailure(err_msg)
-        
+
     async def intercept_content(self, content: str) -> str:
-        '''Intercept and modify the content of an incoming UserMessage.'''
+        """Intercept and modify the content of an incoming UserMessage."""
         return content
 
     async def cmd_help(self, message: UserMessage, args: str) -> CommandNotFound | str:
@@ -70,7 +79,7 @@ class CommandGroup:
 
         command = args.split(maxsplit=1)[0]
 
-        response = None 
+        response = None
 
         command_handler_name = f"cmd_{command}".lower()
 
@@ -82,7 +91,9 @@ class CommandGroup:
                 response = f'Sorry, the "{command}" command is missing documentation.'
 
         if response is None:
-            return CommandNotFound()# This command group has no documentation for this command, but another group might.
+            return (
+                CommandNotFound()
+            )  # This command group has no documentation for this command, but another group might.
 
         await message.reply(response)
         return response
