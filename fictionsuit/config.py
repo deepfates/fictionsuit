@@ -29,4 +29,4 @@ SUMMARIZE_MSG = os.getenv("SUMMARIZE_MSG", "Summarize the following text:")
 # Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
-UPLOAD_TO_SUPABASE = True
+UPLOAD_TO_SUPABASE = os.getenv("UPLOAD_TO_SUPABASE", False)
