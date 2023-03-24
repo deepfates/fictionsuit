@@ -1,9 +1,10 @@
 import tiktoken
+from langchain.text_splitter import CharacterTextSplitter
 import os
 from goose3 import Goose
 from . import config
 from typing import List, Dict
-
+import openai
 
 # will likely change w api update
 # https://platform.openai.com/docs/guides/chat/managing-tokens
@@ -95,3 +96,47 @@ async def scrape_link(link):
     except Exception as e:
         print(e)
         return None
+
+
+def split_text(text):
+    text_splitter = CharacterTextSplitter()
+    texts = text_splitter.split_text(text)
+    return texts
+
+
+def get_embeddings(text):
+    response = openai.Embedding.create(
+        model="text-embedding-ada-002",
+        encoding="cl100k_base",
+        input=text,
+        max_tokens=8191,
+    )
+    embeddings = response["data"][0]["embedding"]
+    return embeddings
+
+
+async def embed_query(query):
+    # Split the query into chunks if necessary
+    text_splitter = CharacterTextSplitter()
+    query_chunks = text_splitter.split_text(query)
+
+    # Generate embeddings for each chunk
+    embeddings = []
+    for chunk in query_chunks:
+        response = openai.Embedding.create(
+            input=chunk,
+            model="text-embedding-ada-002",
+            encoding="cl100k_base",
+            max_tokens=8191,
+        )
+
+        embedding = response["data"][0]["embedding"]
+        embeddings.append(embedding)
+
+    # If there's more than one chunk, average the embeddings
+    if len(embeddings) > 1:
+        avg_embedding = [sum(x) / len(x) for x in zip(*embeddings)]
+    else:
+        avg_embedding = embeddings[0]
+
+    return avg_embedding
