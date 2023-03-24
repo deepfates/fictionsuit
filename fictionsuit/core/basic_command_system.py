@@ -1,11 +1,13 @@
+from ..commands.meta import Meta
 from ..utils import make_stats_str
 from .. import config
-from typing import Sequence
+from typing import Callable, Sequence
 from ..api_wrap.user_message import UserMessage
 from ..commands.command_group import (
     CommandFailure,
     CommandGroup,
     CommandNotFound,
+    CommandNotHandled,
     command_split,
 )
 from .core import chat_message, get_openai_response
@@ -34,7 +36,12 @@ class BasicCommandSystem(System):
                 f'{"!"*20}\n\nWARNING: MULTIPLE COMMANDS WITH OVERLAPPING COMMAND NAMES\n\n{"!"*20}'
             )
 
-    async def enqueue_message(self, message: UserMessage):
+    def add_meta_group(self):
+        self.command_groups += [Meta(self, self.command_groups)]
+
+    async def enqueue_message(
+        self, message: UserMessage, return_failures: bool = False
+    ):
         content = message.content
 
         try:
@@ -57,7 +64,10 @@ class BasicCommandSystem(System):
             if type(result) is not CommandNotFound:
                 if type(result) is CommandFailure:
                     await message.reply(f'Command "{cmd}" failed.\n{result.message}')
-                return
+                    if return_failures:
+                        return result
+                if type(result) is not CommandNotHandled:
+                    return
 
         if cmd == "help":
             await message.reply(f'Sorry, there\'s no command called "{args}".')

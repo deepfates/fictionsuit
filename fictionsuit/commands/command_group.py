@@ -14,6 +14,10 @@ class CommandNotFound:
     pass
 
 
+class CommandNotHandled:
+    pass
+
+
 class CommandHandled:
     pass
 
@@ -54,10 +58,8 @@ class CommandGroup:
             handler_result = await handler(message, args)
             sig = inspect.signature(handler)
             return_type = sig.return_annotation
-            if return_type is type(inspect._empty) or return_type is type(None):
+            if handler_result is None:
                 handler_result = CommandHandled()
-                print("foo")
-                print(return_type)
             return handler_result
         except Exception as e:
             err_msg = (
@@ -69,7 +71,9 @@ class CommandGroup:
         """Intercept and modify the content of an incoming UserMessage."""
         return content
 
-    async def cmd_help(self, message: UserMessage, args: str) -> CommandNotFound | str:
+    async def cmd_help(
+        self, message: UserMessage, args: str
+    ) -> str | CommandNotHandled:
         """**__Help__**
         `prefix help {cmd}` - print the help for command `cmd`
         """
@@ -92,7 +96,7 @@ class CommandGroup:
 
         if response is None:
             return (
-                CommandNotFound()
+                CommandNotHandled()
             )  # This command group has no documentation for this command, but another group might.
 
         await message.reply(response)
