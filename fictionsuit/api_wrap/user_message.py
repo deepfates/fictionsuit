@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from ..core.core import openai_chat
+from ..core.core import OpenAIChat
 
 
 class UserMessage(ABC):
@@ -48,7 +48,7 @@ class UserMessage(ABC):
         pass
 
     @abstractmethod
-    async def _retrieve_history(self) -> list[openai_chat]:
+    async def _retrieve_history(self) -> list[OpenAIChat]:
         """Retrieve the history of messages
         Return a list of message contents."""
         pass
@@ -91,7 +91,7 @@ class UserMessage(ABC):
             attempts += 1
         return False
 
-    async def _try_retrieve_history(self) -> list[openai_chat]:
+    async def _try_retrieve_history(self) -> list[OpenAIChat]:
         attempts = 0
         while attempts < self.MAX_ATTEMPTS:
             history = await self._retrieve_history()
@@ -147,7 +147,7 @@ class UserMessage(ABC):
             return False
         return await self._try_undo_react(reaction)
 
-    async def retrieve_history(self) -> openai_chat:
+    async def retrieve_history(self) -> OpenAIChat:
         return await self._try_retrieve_history()
 
     async def send(self, message_content: str) -> bool:

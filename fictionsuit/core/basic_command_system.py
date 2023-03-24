@@ -8,6 +8,8 @@ from ..commands.command_group import (
     CommandGroup,
     CommandNotFound,
     CommandNotHandled,
+    CommandReply,
+    PartialReply,
     command_split,
 )
 from .core import chat_message, get_openai_response
@@ -36,6 +38,8 @@ class BasicCommandSystem(System):
                 f'{"!"*20}\n\nWARNING: MULTIPLE COMMANDS WITH OVERLAPPING COMMAND NAMES\n\n{"!"*20}'
             )
 
+        self.slow_commands = None
+
     def add_meta_group(self):
         self.command_groups += [Meta(self, self.command_groups)]
 
@@ -52,26 +56,61 @@ class BasicCommandSystem(System):
             content = message.content
 
         if not message.has_prefix(config.COMMAND_PREFIX):
-            return  # Not handling non-command messages, for now
+            return  # Not handling non-prefixed messages, for now
 
         (cmd, args) = command_split(content, config.COMMAND_PREFIX)
 
         if cmd is None:
             return  # Nothing but a prefix. Nothing to do.
 
+        if self.slow_commands is None:
+            self.slow_commands = []
+            for group in self.command_groups:
+                self.slow_commands += group.get_slow_commands()
+
+        cmd_is_slow = cmd in self.slow_commands
+
+        if cmd_is_slow:
+            await message.react("⏳")
+
+        accumulator = None
+
         for group in self.command_groups:
-            result = await group.handle(message, cmd, args)
+            if accumulator is not None:
+                result = await group.handle(message, cmd, args, accumulator)
+            else:
+                result = await group.handle(message, cmd, args)
             if type(result) is not CommandNotFound:
                 if type(result) is CommandFailure:
-                    await message.reply(f'Command "{cmd}" failed.\n{result.message}')
+                    if cmd_is_slow:
+                        await message.undo_react("⏳")
+                    await message.react("❌")
+                    await message.reply(f'Command "{cmd}" failed.\n{result}')
                     if return_failures:
                         return result
+                if type(result) is CommandReply:
+                    if cmd_is_slow:
+                        await message.undo_react("⏳")
+                        await message.react("✅")
+                    await message.reply(result)
+                    return
+                if type(result) is PartialReply:
+                    accumulator = result
+                    continue
                 if type(result) is not CommandNotHandled:
+                    if cmd_is_slow:
+                        await message.undo_react("⏳")
+                    await message.react("✅")
                     return
 
-        if cmd == "help":
-            await message.reply(f'Sorry, there\'s no command called "{args}".')
+        if accumulator is not None:
+            if cmd_is_slow:
+                await message.undo_react("⏳")
+                await message.react("✅")
+            await message.reply(accumulator)
             return
+
+        await message.react("⏳")
 
         if self.respond_on_unrecognized:
             await self.direct_chat(message)
@@ -88,6 +127,8 @@ class BasicCommandSystem(System):
         content = (
             make_stats_str(content, messages, "chat") if self.stats_ui else content
         )
+        await message.undo_react("⏳")
+        await message.react("✅")
         await message.reply(content)
 
     # Retrieve history of the chat and return list of UserMessages

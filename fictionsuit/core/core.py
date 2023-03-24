@@ -10,14 +10,14 @@ import aiohttp
 URL = "https://api.openai.com/v1/chat/completions"
 
 # TODO: extract openai stuff into an openai wrapper
-openai_chat = list[dict[str, str]]
+OpenAIChat = list[dict[str, str]]
 
 
-def chat_message(role: str, content: str) -> openai_chat:
+def chat_message(role: str, content: str) -> OpenAIChat:
     return [{"role": role, "content": content}]
 
 
-async def get_openai_response(messages: openai_chat) -> str:
+async def get_openai_response(messages: OpenAIChat) -> str:
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {openai.api_key}",
