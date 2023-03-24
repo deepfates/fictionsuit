@@ -168,7 +168,7 @@ class Meta(CommandGroup):
 
     @slow_command
     async def cmd_load_script(self, message: UserMessage, args: str) -> str:
-        """Load a script from a file. Files use the .fs extension, but that convention might change. Idk."""
+        """Load a script from a file. Files use the .fic extension, but that convention might change. Idk."""
         split = [x.strip() for x in args.split("as", maxsplit=1)]
         if len(split) == 1:
             var_name = ntpath.basename(args)
