@@ -31,3 +31,6 @@ SUMMARIZE_MSG = os.getenv("SUMMARIZE_MSG", "Summarize the following text:")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
 UPLOAD_TO_SUPABASE = bool(os.getenv("UPLOAD_TO_SUPABASE"))
+
+# Embedding globals
+embeddings_cache = {"embeddings_list": [], "id_mappings": [], "needs_update": True}

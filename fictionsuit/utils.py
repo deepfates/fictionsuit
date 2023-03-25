@@ -1,11 +1,10 @@
-import os
-from typing import Dict, List
-
 import tiktoken
+from langchain.text_splitter import CharacterTextSplitter
+import os
 from goose3 import Goose
-
 from . import config
-
+from typing import List, Dict
+import openai
 
 # will likely change w api update
 # https://platform.openai.com/docs/guides/chat/managing-tokens
@@ -50,7 +49,6 @@ def convert_article(article, url, conversion):
     """
     given a goose3 article object, convert it to a dict or markdown string (more options later maybe)
     """
-    print("start convert article")
     converted_article = ""
     if conversion == "dict":
         converted_article = {
@@ -97,3 +95,20 @@ async def scrape_link(link):
     except Exception as e:
         print(e)
         return None
+
+
+def split_text(text):
+    text_splitter = CharacterTextSplitter()
+    texts = text_splitter.split_text(text)
+    return texts
+
+
+def get_embeddings(text):
+    response = openai.Embedding.create(
+        model="text-embedding-ada-002",
+        encoding="cl100k_base",
+        input=text,
+        max_tokens=8191,
+    )
+    embeddings = response["data"][0]["embedding"]
+    return embeddings
