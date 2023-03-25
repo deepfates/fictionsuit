@@ -1,10 +1,8 @@
-from annoy import AnnoyIndex
-import json
 import ast
-from ..utils import scrape_link, split_text, get_embeddings, embed_query
+import json
+from ..utils import split_text, get_embeddings
 from .. import config
 from .supa_client import init_supa_client
-import openai
 
 
 async def upload_article(article, url, summary):
@@ -42,9 +40,9 @@ async def upload_article_embeddings(scraped_article, article_id):
     for i, chunk in enumerate(split_text(scraped_article.cleaned_text)):
         embedding = get_embeddings(chunk)
         vector_data = {
-            "article": article_id,
             "embedding": embedding,
             "chunk_index": i,
+            "article_id": article_id,
         }
         client.table("article_vectors").insert(vector_data).execute()
 
@@ -52,5 +50,12 @@ async def upload_article_embeddings(scraped_article, article_id):
 async def get_articles():
     client = init_supa_client()
     res, _ = client.table("articles").select("*").execute()
+    _, data = res
+    return data
+
+
+async def delete_article(article_id):
+    client = init_supa_client()
+    res, _ = client.table("articles").delete().eq("id", article_id).execute()
     _, data = res
     return data

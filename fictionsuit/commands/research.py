@@ -2,48 +2,70 @@ from .. import config
 from .command_group import CommandGroup
 from ..core.core import summarize, scrape_link
 from ..api_wrap.user_message import UserMessage
-from ..db.simplersupa import (
-    upload_article_with_embeddings,
-    search_similar,
+from ..db.supa_tools import (
+    upload_article,
+    upload_article_embeddings,
+    get_articles,
+    delete_article,
+)
+from ..db.search import (
+    embed_query,
+    create_mappings,
+    get_cosine_similarity,
+    get_article_blurbs,
+    set_cache_needs_update,
 )
 
 
 class Research(CommandGroup):
-    def __init__(self, annoy_index, id_mapping, id_mapping_chunk):
-        self.annoy_index = annoy_index
-        self.id_mapping = id_mapping
-        self.id_mapping_chunk = id_mapping_chunk
-        super().__init__()
-
-    async def cmd_summarize(self, message: UserMessage, args: str):
-        """**__Summarize__**
-        `prefix summarize` - returns a summary of the linked article
+    async def cmd_read(self, message: UserMessage, args: str):
+        """**__Read__**
+        `prefix read` - returns a summary of the linked article, uploads, and embeds
         """
         article = await scrape_link(args)
-        if config.UPLOAD_TO_SUPABASE:
-            await upload_article_with_embeddings(
-                article, args, self.annoy_index, self.id_mapping, self.id_mapping_chunk
-            )
-
-        # Add print statements to see the state of the instance attributes after updating
+        # should prepend the title, author, metadata, date, url to the cleaned_text of the file too
         summary = await summarize(args)
         await message.reply(summary)
+        if config.UPLOAD_TO_SUPABASE:
+            article_id = await upload_article(article, args, summary)
+            await upload_article_embeddings(article, article_id)
+            set_cache_needs_update()
+            await message.reply(f"Article uploaded to Supabase with ID: {article_id}")
 
     async def cmd_scrape(self, message: UserMessage, args: str):
         """**__Scrape__**
         `prefix scrape` - returns scraped URL
         """
         article = await scrape_link(args)
-        if config.UPLOAD_TO_SUPABASE:
-            await upload_article_with_embeddings(article, args, self.id_mapping)
-
         await message.reply(article.cleaned_text)
 
-    async def cmd_recall(self, message, args):
+    async def cmd_list_articles(self, message, args):
         """**__Recall__**
-        `prefix recall` - returns results of a similarity search
+        `prefix list_articles` - returns a list of all articles in the database
         """
-        _, search_str = await search_similar(
-            args, self.annoy_index, self.id_mapping, self.id_mapping_chunk
+        articles = await get_articles()
+        ar_list = ""
+        for article in articles:
+            ar_list += f"- {article['title']} <{article['url']}> id: {article['id']}\n"
+        await message.reply(ar_list)
+
+    async def cmd_delete_article(self, message, args):
+        """**__Delete__**
+        `prefix delete_article` - deletes an article from the database
+        """
+        article_id = args
+        await delete_article(article_id)
+        set_cache_needs_update()
+        await message.reply(f"Article <{article_id}> deleted from database")
+
+    async def cmd_search(self, message, args):
+        """**__Search__**
+        `prefix search` - searches for similar articles in the database"""
+        query = args
+        embeddings_list, id_mappings = create_mappings()
+        query_embedding = await embed_query(query)
+        matched_articles = await get_cosine_similarity(
+            2, embeddings_list, id_mappings, query_embedding
         )
-        await message.reply(search_str)
+        search_results = await get_article_blurbs(query, matched_articles)
+        await message.reply(search_results)

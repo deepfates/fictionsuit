@@ -49,7 +49,6 @@ def convert_article(article, url, conversion):
     """
     given a goose3 article object, convert it to a dict or markdown string (more options later maybe)
     """
-    print("start convert article")
     converted_article = ""
     if conversion == "dict":
         converted_article = {
@@ -113,30 +112,3 @@ def get_embeddings(text):
     )
     embeddings = response["data"][0]["embedding"]
     return embeddings
-
-
-async def embed_query(query):
-    # Split the query into chunks if necessary
-    text_splitter = CharacterTextSplitter()
-    query_chunks = text_splitter.split_text(query)
-
-    # Generate embeddings for each chunk
-    embeddings = []
-    for chunk in query_chunks:
-        response = openai.Embedding.create(
-            input=chunk,
-            model="text-embedding-ada-002",
-            encoding="cl100k_base",
-            max_tokens=8191,
-        )
-
-        embedding = response["data"][0]["embedding"]
-        embeddings.append(embedding)
-
-    # If there's more than one chunk, average the embeddings
-    if len(embeddings) > 1:
-        avg_embedding = [sum(x) / len(x) for x in zip(*embeddings)]
-    else:
-        avg_embedding = embeddings[0]
-
-    return avg_embedding
