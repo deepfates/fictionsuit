@@ -1,40 +1,40 @@
-from fictionsuit.core.basic_command_system import BasicCommandSystem
-from fictionsuit.core.cli import TextIOClient
-from fictionsuit.commands.debug import Debug
-from fictionsuit.commands.research import Research
-from fictionsuit import config
-
 from argparse import ArgumentParser
+
+from fictionsuit import config
+from fictionsuit.commands import Chat, Debug, Research
+from fictionsuit.core import BasicCommandSystem, TextIOClient
 
 
 def main():
     parser = ArgumentParser(prog="FictionSuit", description="LLM Orchestrator")
     parser.add_argument(
-        "-nc",
-        "--no_cli",
+        "-q",
+        "--quiet",
         action="store_true",
-        help='disables CLI prompt ("> ") and welcome message; sets command prefix to the empty string unless --prefix is specified.',
+        help='disables CLI prompt ("> "), welcome message, and exit message. ideal for piping files through cli.py.',
     )
     parser.add_argument(
         "-p",
         "--prefix",
-        help="defines the command prefix, which would otherwise be loaded from the environment.",
+        help="defines the command prefix, which is the empty string by default.",
     )
     args = parser.parse_args()
 
-    command_groups = [Debug(), Research()]
+    command_groups = [Debug(), Research(), Chat()]
 
-    if args.no_cli:
-        config.COMMAND_PREFIX = ""
+    config.COMMAND_PREFIX = ""
 
     if args.prefix is not None:
         config.COMMAND_PREFIX = args.prefix
 
     system = BasicCommandSystem(
-        command_groups, respond_on_unrecognized=True, stats_ui=False
+        command_groups,
+        respond_on_unrecognized=False,
+        stats_ui=False,
+        enable_scripting=True,
     )
 
-    client = TextIOClient(system, cli=not args.no_cli)
+    client = TextIOClient(system, cli=not args.quiet)
 
     client.run()
 

@@ -1,6 +1,7 @@
 import os
-import openai
+
 import dotenv
+import openai
 
 dotenv.load_dotenv()
 
@@ -10,7 +11,8 @@ SERVER = os.getenv("SERVER")
 # llm
 OAI_MODEL = os.getenv("OAI_MODEL", "gpt-3.5-turbo-0301")
 openai.api_key = os.getenv("OPENAI_API_KEY")
-TEMPERATURE = float(os.getenv("TEMPERATURE", 1))
+TEMPERATURE = float(os.getenv("TEMPERATURE", 1.3))
+TOP_P = float(os.getenv("TOP_P", 1))
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", 500))
 
 # Bot specific
@@ -28,4 +30,4 @@ SUMMARIZE_MSG = os.getenv("SUMMARIZE_MSG", "Summarize the following text:")
 # Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
-UPLOAD_TO_SUPABASE = True
+UPLOAD_TO_SUPABASE = bool(os.getenv("UPLOAD_TO_SUPABASE"))

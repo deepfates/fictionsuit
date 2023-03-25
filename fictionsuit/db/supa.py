@@ -102,7 +102,6 @@ async def upload_article_with_embeddings(url):
 
 
 async def update_annoy_index(article_id, new_embeddings):
-
     global global_annoy_index, global_id_mapping, global_id_mapping_chunk
     for new_id, new_embedding in new_embeddings:
         global_annoy_index.add_item(new_id, new_embedding)

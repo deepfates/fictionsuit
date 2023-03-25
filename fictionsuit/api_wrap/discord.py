@@ -1,11 +1,11 @@
-from .. import config
-from ..utils import make_stats_str
-from discord.ext import commands
 import discord
-from ..core.system import System
-from ..api_wrap.user_message import UserMessage
 from discord import Message
-from ..core.core import openai_chat, chat_message
+from discord.ext import commands
+
+from .. import config
+from ..core.system import System
+from ..core.user_message import UserMessage
+from ..core.core import OpenAIChat, chat_message
 
 
 class DiscordBotClient(commands.Bot):
@@ -106,7 +106,7 @@ class DiscordMessage(UserMessage):
     async def _retrieve_history(
         self,
         limit: int = 10,
-    ) -> openai_chat:
+    ) -> OpenAIChat:
         messages = []
         history = self.discord_message.channel.history(
             before=self.discord_message, limit=limit
