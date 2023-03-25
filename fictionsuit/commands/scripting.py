@@ -154,9 +154,10 @@ class Scripting(CommandGroup):
             return CommandFailure(
                 "Arguments without defaults must precede arguments with defaults."
             )
-        if args not in self.vars:
+        arg_name = args.split('=', maxsplit=1)[0].strip()
+        if arg_name not in self.vars:
             if not defaulting:
-                return CommandFailure(f"Missing argument: {args}")
+                return CommandFailure(f"Missing argument: {arg_name}")
             return await self.cmd_var(message, args)
 
     async def cmd_args(self, message: UserMessage, args: str) -> None | CommandFailure:

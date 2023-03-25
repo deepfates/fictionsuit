@@ -17,8 +17,4 @@ chat temp 1.2 helper
 
 var result = chat continue helper
 
-var x = chat dump helper
-
-yell {x}
-
 return result

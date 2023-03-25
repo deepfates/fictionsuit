@@ -66,7 +66,7 @@ class ChatInstance:
         self.history.extend(api_message("system", content))
 
     async def assistant(self, content):
-        self.history.extend(api_message("system", content))
+        self.history.extend(api_message("assistant", content))
 
     async def _get_completion(self, messages: ApiMessages, n: int) -> dict:
         body = self._body(messages, n)
