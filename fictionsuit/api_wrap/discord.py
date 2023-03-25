@@ -3,9 +3,9 @@ from discord import Message
 from discord.ext import commands
 
 from .. import config
-from ..api_wrap import UserMessage
-from ..core import OpenAIChat, chat_message
 from ..core.system import System
+from ..core.user_message import UserMessage
+from ..core.core import OpenAIChat, chat_message
 
 
 class DiscordBotClient(commands.Bot):

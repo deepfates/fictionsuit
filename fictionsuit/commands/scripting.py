@@ -4,8 +4,8 @@ import ntpath
 import os
 
 from .. import config
-from ..api_wrap import UserMessage
-from ..core import OpenAIChat
+from ..core.core import OpenAIChat
+from ..core.user_message import UserMessage
 from ..core.fictionscript import FictionScript, ScriptMessage, VarScope
 from ..core.system import System
 from .command_group import (

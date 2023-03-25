@@ -1,6 +1,6 @@
 from .. import config
-from ..api_wrap import UserMessage
-from ..core import chat_message, get_openai_response
+from ..core.core import chat_message, get_openai_response
+from ..core.user_message import UserMessage
 from .command_group import CommandGroup, auto_reply, slow_command
 
 

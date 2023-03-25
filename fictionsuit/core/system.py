@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from ..api_wrap import UserMessage
+from .user_message import UserMessage
 
 
 class System(ABC):

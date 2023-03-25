@@ -3,7 +3,7 @@ import time
 import tiktoken
 
 from .. import config
-from ..api_wrap import UserMessage
+from ..core.user_message import UserMessage
 from .command_group import CommandGroup, auto_reply
 
 

@@ -4,9 +4,9 @@ import time
 from io import TextIOBase
 
 from .. import config
-from ..api_wrap import UserMessage
-from ..core import OpenAIChat
-from ..core.system import System
+from .core import OpenAIChat
+from .system import System
+from .user_message import UserMessage
 
 
 class TextIOClient:

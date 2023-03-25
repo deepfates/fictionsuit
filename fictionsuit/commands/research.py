@@ -1,5 +1,5 @@
-from ..api_wrap import UserMessage
-from ..core import summarize
+from ..core.user_message import UserMessage
+from ..core.core import summarize
 from ..db.supa import list_first_article, supabase
 from ..utils import scrape_link
 from .command_group import CommandGroup

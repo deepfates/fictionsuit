@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from ..core import OpenAIChat
+from .core import OpenAIChat
 
 
 class UserMessage(ABC):

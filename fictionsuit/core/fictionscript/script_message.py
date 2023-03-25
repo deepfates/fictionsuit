@@ -1,5 +1,5 @@
-from ...api_wrap import UserMessage
-from ...core import OpenAIChat
+from ...core.core import OpenAIChat
+from ...core.user_message import UserMessage
 
 
 class ScriptMessage(UserMessage):

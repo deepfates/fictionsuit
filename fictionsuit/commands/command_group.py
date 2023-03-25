@@ -2,7 +2,7 @@ import string
 import traceback
 from typing import Any, Callable
 
-from ..api_wrap import UserMessage
+from ..core.user_message import UserMessage
 
 # TODO: this file is doing way too many things. probably best to extract to a module
 

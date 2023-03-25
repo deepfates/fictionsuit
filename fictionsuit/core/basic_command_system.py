@@ -1,7 +1,6 @@
 from typing import Sequence
 
 from .. import config
-from ..api_wrap import DiscordMessage, UserMessage
 from ..commands.command_group import (
     CommandFailure,
     CommandGroup,
@@ -15,6 +14,7 @@ from ..commands.scripting import Scripting
 from ..utils import make_stats_str
 from .core import chat_message, get_openai_response
 from .system import System
+from .user_message import UserMessage
 
 
 class BasicCommandSystem(System):
@@ -118,7 +118,7 @@ class BasicCommandSystem(System):
             await self.direct_chat(message)
 
     async def direct_chat(self, message: UserMessage):
-        if isinstance(message, DiscordMessage):
+        if hasattr(message, "discord_message"):
             await message.discord_message.channel.typing()
         messages = []
         # messages = await message.retrieve_history()
