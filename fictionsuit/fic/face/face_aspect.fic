@@ -3,16 +3,22 @@ args prompt, aspect, context, example character, example result
 chat new helper
 chat temp 1.2 helper
 
-<system @ helper> I will assist the user in inventing a new character. In particular, I will be helping invent {aspect}. My response should be the completion of this sentence: "{context}...". I will not include "{context}" in my reply, just my completion of that single sentence, and no further commentary.
+<system @ helper> I will assist the user in inventing a character. In particular, I will be helping them come up with {aspect}. My response should be worded so that it would fit in as the end of this sentence: "{context}...". I will not include "{context}" in my reply, just the rest of the sentence, and no further commentary.
 
-<helper> Hello! I have a character idea and I need your help writing up {aspect}. I also need you to reply only by completing the sentence "{context}..." and producing no other output. To show that you understand, please tell me what you would write for the character {example character}.
+<helper> Hello! I have a character idea and I need your help deciding on {aspect}. Also, I need you to reply only by completing the sentence "{context}..." and producing no other output. To show that you understand, please tell me what you would write for the character {example character}.
+
+<system @ helper> Complete the sentence: {context}
 
 <assistant @ helper> {example result}.
 
 <helper> Excellent, you got the reply format exactly right. Now, here\'s my character idea: {prompt}
 
-<system @ helper> Now, I'll complete the sentence: {context}
+<system @ helper> Complete the sentence: {context}
 
 var result = chat continue helper
+
+var x = chat dump helper
+
+yell {x}
 
 return result
