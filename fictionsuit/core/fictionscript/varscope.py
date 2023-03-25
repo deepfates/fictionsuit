@@ -14,6 +14,7 @@ class VarScope:
                 self.name = f"{parent.name}_anon"
         else:
             self.name = f"{parent.name}_{name}"
+        self._has_defaulting_args = False
 
     def move_up(self, k):
         self.parent[k] = self[k]

@@ -52,6 +52,17 @@ class Debug(CommandGroup):
         """Repeats back the arguments."""
         return args
 
+    async def cmd_yell(self, message: UserMessage, args: str) -> str:
+        """Replies with the arguments.
+        This is distinct from echo in that it will reply even when called from within
+        a script, which would normally disable replies.
+        This should pretty much only be used for debugging, and should not appear in finished scripts."""
+        previous_state = message.disable_interactions
+        message.disable_interactions = False
+        await message.reply(args)
+        message.disable_interactions = previous_state
+        return args
+
     # TODO: a more graceful cmd_exit would be nice - one that shuts the process down in a more controlled manner
     async def cmd_kill(self, message: UserMessage, args: str) -> None:
         """Immediately and unceremoniously kills the entire python process."""

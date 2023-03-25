@@ -1,0 +1,5 @@
+args text, query
+
+var response = chat Here is some text:\n"{text}"\nPlease answer this question about the text:\n{query}
+
+return response

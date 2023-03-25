@@ -93,7 +93,6 @@ class BasicCommandSystem(System):
                 if type(result) is CommandReply:
                     if cmd_is_slow:
                         await message.undo_react("⏳")
-                        await message.react("✅")
                     await message.reply(result)
                     return
                 if type(result) is PartialReply:
@@ -108,11 +107,10 @@ class BasicCommandSystem(System):
         if accumulator is not None:
             if cmd_is_slow:
                 await message.undo_react("⏳")
-                await message.react("✅")
             await message.reply(accumulator)
             return
 
-        await message.react("⏳")
+        await message.undo_react("⏳")
 
         if self.respond_on_unrecognized:
             await self.direct_chat(message)
@@ -130,7 +128,6 @@ class BasicCommandSystem(System):
             make_stats_str(content, messages, "chat") if self.stats_ui else content
         )
         await message.undo_react("⏳")
-        await message.react("✅")
         await message.reply(content)
 
     # Retrieve history of the chat and return list of UserMessages
