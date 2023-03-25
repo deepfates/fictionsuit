@@ -1,4 +1,4 @@
-from ...core.core import OpenAIChat
+from ...api_wrap.openai import ApiMessages
 from ...core.user_message import UserMessage
 
 
@@ -23,5 +23,5 @@ class ScriptMessage(UserMessage):
     async def _get_timestamp(self) -> float:
         return await self.invoker._get_timestamp()
 
-    async def _retrieve_history(self) -> OpenAIChat:
+    async def _retrieve_history(self) -> ApiMessages:
         return await self.invoker._retrieve_history()

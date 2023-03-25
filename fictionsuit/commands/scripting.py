@@ -5,9 +5,8 @@ import os
 import glob
 
 from .. import config
-from ..core.core import OpenAIChat
 from ..core.user_message import UserMessage
-from ..core.fictionscript import FictionScript, ScriptMessage, VarScope
+from ..core.fictionscript import FictionScript, ScriptMessage, Scope
 from ..core.system import System
 from .command_group import (
     CommandFailure,
@@ -25,34 +24,44 @@ class Scripting(CommandGroup):
     def __init__(self, system: System, command_groups: list[CommandGroup]):
         self.command_groups = command_groups
         self.system = system
-        self.vars = VarScope()  # TODO: save and load scopes?
+        self.prefix = system.prefix if hasattr(system, 'prefix') else ''
+        self.vars = Scope()  # TODO: save and load scopes?
+        # TODO: Concurrency & scopes might be a mess
         # TODO: add a more general preprocessor outside of Scripting for parsing scripts
         # from a nicer syntax down into runnable commands
         # TODO: maybe add config options for folders instead of just hard-coding things...
-        self.load_scripts('fictionsuit/fic')
-        self.load_scripts('fictionsuit/.fic')
+        self.load_scripts("fictionsuit/fic")
+        self.load_scripts("fictionsuit/.fic")
 
-    async def intercept_content(self, content: str) -> str:
-        if not content.startswith(config.COMMAND_PREFIX):
+    async def intercept_content(self, content: str, prefix: str | None = None) -> str:
+        if prefix is None:
+            prefix = self.prefix
+        if not content.startswith(prefix):
             return content
-        (cmd, _) = command_split(content, config.COMMAND_PREFIX)
+        (cmd, args) = command_split(content, prefix)
         if cmd == "def_fic":
             return content
         content = content.replace("\\n", "\n")
-        if cmd == "fic":
+        cmd_inner = None
+        if cmd == "var":
+            split = args.split('=', maxsplit=1)
+            if len(split) > 1:
+                (cmd_inner, _) = command_split(split[1], "")
+        if cmd == "fic" or cmd_inner == "fic":
+            content = content.replace("\\,", "<COMMA>")
             content = content.replace(",", "<_COMMA>")
         content = content.format(**self.vars.get_vars())
-        if cmd == "fic":
+        if cmd == "fic" or cmd_inner == "fic":
             content = content.replace(",", "<COMMA>")
             content = content.replace("<_COMMA>", ",")
         return content
-    
+
     def load_scripts(self, directory_name):
-        for file in glob.glob(os.path.join(directory_name, '*.fic')):
+        for file in glob.glob(os.path.join(directory_name, "*.fic")):
             script = FictionScript.from_file(file)
             var_name = ntpath.basename(file)
-            if var_name.endswith('.fic'):
-                var_name = var_name[:-4].replace('_', ' ').lower()
+            if var_name.endswith(".fic"):
+                var_name = var_name[:-4].replace("_", " ").lower()
             self.vars[var_name] = script
 
     @slow_command
@@ -99,7 +108,7 @@ class Scripting(CommandGroup):
         `_enter_scope`
         `_enter_scope {name of scope}`"""
         name = None if args == "" else args
-        vars = VarScope(parent=self.vars, name=name)
+        vars = Scope(parent=self.vars, name=name)
         self.vars = vars
 
     async def cmd__exit_scope(
@@ -118,8 +127,7 @@ class Scripting(CommandGroup):
         """Returns the value of a variable from the parent scope."""
         return self.vars.parent[args]
 
-    # TODO: use this in more of cmd_fic, to ensure 
-    def _return_to_scope(self, scope: VarScope) -> None:
+    def _return_to_scope(self, scope: Scope) -> None:
         self.vars = scope
 
     async def cmd_str(self, message: UserMessage, args: str):
@@ -127,7 +135,7 @@ class Scripting(CommandGroup):
         Shorthand for `var {name} = echo {string}`
         Usage:
         `str {name of string} = {string to be stored}`"""
-        await self.cmd_var(message, args.replace('=', '= echo ', 1))
+        await self.cmd_var(message, args.replace("=", "= echo ", 1))
 
     @slow_command
     async def cmd_arg(self, message: UserMessage, args: str) -> None | CommandFailure:
@@ -139,26 +147,31 @@ class Scripting(CommandGroup):
         Usage:
         `arg {name of argument}`
         `arg {name of argument} = {default value}`"""
-        defaulting = '=' in args
+        defaulting = "=" in args
         if defaulting:
             self.vars._has_defaulting_args = True
         if not defaulting and self.vars._has_defaulting_args:
-            return CommandFailure('Arguments without defaults must precede arguments with defaults.')
+            return CommandFailure(
+                "Arguments without defaults must precede arguments with defaults."
+            )
         if args not in self.vars:
             if not defaulting:
                 return CommandFailure(f"Missing argument: {args}")
-            await self.cmd_var(message, args)
-        
+            return await self.cmd_var(message, args)
+
     async def cmd_args(self, message: UserMessage, args: str) -> None | CommandFailure:
         """Returns a failure if any of the arguments have not been defined.
         Does nothing otherwise.
         This is typically used at the start of a script file, to ensure that every script input is defined.
         Names of arguments cannot contain commas, since commas are the separator.
         Usage:
-        `args {name of argument}, {name of another argument}, {and another}, {and so on any number of times...} ...`"""
+        `args {name of argument}, {name of another argument}, {and another}, {and so on any number of times...} ...`
+        """
         if self.vars._has_defaulting_args:
-            return CommandFailure('Arguments without defaults must precede arguments with defaults.')
-        args_split = [arg.strip() for arg in args.split(',')]
+            return CommandFailure(
+                "Arguments without defaults must precede arguments with defaults."
+            )
+        args_split = [arg.strip() for arg in args.split(",")]
         for arg in args_split:
             if arg not in self.vars:
                 return CommandFailure(f"Missing argument: {args}")
@@ -171,11 +184,14 @@ class Scripting(CommandGroup):
         Usage:
         `load_fic fic/compose_poem.fic` by default, this will load the script as "compose poem"
         `load_fic fic/query.fic as {custom name}`"""
+        args = args.replace('$FIC', './fictionsuit/fic')
+        args = args.replace('$.FIC', './fictionsuit/.fic')
+
         split = [x.strip() for x in args.split(" as ", maxsplit=1)]
         if len(split) == 1:
             var_name = ntpath.basename(args)
-            if var_name.endswith('.fic'):
-                var_name = var_name[:-4].replace('_', ' ').lower()
+            if var_name.endswith(".fic"):
+                var_name = var_name[:-4].replace("_", " ").lower()
         else:
             var_name = split[1]
 
@@ -197,15 +213,8 @@ class Scripting(CommandGroup):
             return CommandFailure("Script definition is empty.")
         self.vars[var_name] = FictionScript(split[1:])
 
-    @slow_command
-    @auto_reply
-    async def cmd_fic(
-        self, message: UserMessage, args: str
-    ) -> str | CommandHandled | CommandFailure:
-        """Run a fictionscript. Scripts must first be loaded from a file with `load_fic` or defined with `def_fic`.
-        If the script has only one returned variable, this command will return its value.
-        Usage:
-        `fic {name of script}`"""
+    async def _fic(self, message: UserMessage, args: str) -> str | CommandHandled | CommandFailure:
+        """See docs for cmd_fic"""
         split = args.split(":", maxsplit=1)
         script_name = split[0].strip()
         if len(split) > 1:
@@ -215,9 +224,9 @@ class Scripting(CommandGroup):
         else:
             arg_values = []
 
-        pfx = config.COMMAND_PREFIX
+        pfx = self.command_prefix
         if pfx != "" and pfx[-1] != " ":
-            pfx = f"{config.COMMAND_PREFIX} "
+            pfx = f"{self.command_prefix} "
 
         if script_name in self.vars:
             script = self.vars[script_name]
@@ -225,8 +234,10 @@ class Scripting(CommandGroup):
             script_name = await self.cmd_load_fic(message, script_name)
             script = self.vars[script_name]
         else:
-            if ':' not in args:
-                return CommandFailure("No such script.\nMaybe you forgot to put a colon (:) after the script name?")
+            if ":" not in args:
+                return CommandFailure(
+                    "No such script.\nMaybe you forgot to put a colon (:) after the script name?"
+                )
             return CommandFailure("No such script.")
 
         if type(script) is not FictionScript:
@@ -243,6 +254,7 @@ class Scripting(CommandGroup):
         )
 
         async def enqueue(script_message):
+            script_message.content = await self.intercept_content(script_message.content)
             return await self.system.enqueue_message(
                 script_message, return_failures=True
             )
@@ -252,11 +264,13 @@ class Scripting(CommandGroup):
             message.disable_interactions = previous_dis_int_value
             self._return_to_scope(initial_scope)
             return result  # Failure
-        
+
         if len(arg_values) > len(params):
             message.disable_interactions = previous_dis_int_value
             self._return_to_scope(initial_scope)
-            return CommandFailure('Too many arguments! Remember, an argument that contains a comma has to be passed as a variable.\nFor example:\n```str this is fine = this is not fine, because it has a comma\nfic name of script: {this is fine}```')
+            return CommandFailure(
+                f"Too many arguments! Remember, an argument that contains a comma has to be passed as a variable.\nFor example:\n```str this is fine = this is not fine, because it has a comma\nfic name of script: {{this is fine}}```\n\nExtra arguments:\n{arg_values[len(params):]}"
+            )
 
         for i in range(len(arg_values)):
             result = await enqueue(
@@ -302,6 +316,25 @@ class Scripting(CommandGroup):
         await message.reply(f"Script ran successfully. Return statments: [{returns}]")
         return CommandHandled()
 
+    @slow_command
+    @auto_reply
+    async def cmd_fic(
+        self, message: UserMessage, args: str
+    ) -> str | CommandHandled | CommandFailure:
+        """Run a fictionscript. Scripts must first be loaded from a file with `load_fic` or defined with `def_fic`.
+        If the script has only one returned variable, this command will return its value.
+        Usage:
+        `fic {name of script}`"""
+        scope_before = self.vars
+        disabled_before = message.disable_interactions
+        try:
+            return await self._fic(message, args)
+        finally:
+            self._return_to_scope(scope_before)
+            message.disable_interactions = disabled_before
+
+        
+
     # TODO: "return x as y / return x as _" syntax
     async def cmd_return(
         self, message: UserMessage, args: str
@@ -322,7 +355,6 @@ class Scripting(CommandGroup):
         """Attempts to store the result of another command as a variable.
         Usage:
         `var {name of variable} = {command and its arguments}`"""
-
         arg_split = [x.strip() for x in args.split("=", maxsplit=1)]
         arg_split = [x for x in arg_split if x != ""]
 

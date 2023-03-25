@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
+import os
 
-from fictionsuit import config
 from fictionsuit.commands import Chat, Debug, Research
 from fictionsuit.core import BasicCommandSystem, TextIOClient
 
@@ -18,23 +18,29 @@ def main():
         "--prefix",
         help="defines the command prefix, which is the empty string by default.",
     )
+    parser.add_argument(
+        "-r",
+        "--reactions",
+        help="show a message when the system attempts to react to a user message.",
+    )
     args = parser.parse_args()
 
-    command_groups = [Debug(), Research(), Chat()]
-
-    config.COMMAND_PREFIX = ""
+    prefix = ""
 
     if args.prefix is not None:
-        config.COMMAND_PREFIX = args.prefix
+        prefix = args.prefix
+
+    command_groups = [Debug(), Research(), Chat()]
 
     system = BasicCommandSystem(
         command_groups,
         respond_on_unrecognized=False,
         stats_ui=False,
         enable_scripting=True,
+        prefix=prefix
     )
 
-    client = TextIOClient(system, cli=not args.quiet)
+    client = TextIOClient(system, cli=not args.quiet, reactions=args.reactions)
 
     client.run()
 

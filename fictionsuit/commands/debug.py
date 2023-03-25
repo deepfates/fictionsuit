@@ -56,7 +56,8 @@ class Debug(CommandGroup):
         """Replies with the arguments.
         This is distinct from echo in that it will reply even when called from within
         a script, which would normally disable replies.
-        This should pretty much only be used for debugging, and should not appear in finished scripts."""
+        This should pretty much only be used for debugging, and should not appear in finished scripts.
+        """
         previous_state = message.disable_interactions
         message.disable_interactions = False
         await message.reply(args)

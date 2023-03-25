@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
-from .core import OpenAIChat
+from ..api_wrap.openai import ApiMessages
+
 
 
 class UserMessage(ABC):
@@ -13,6 +14,7 @@ class UserMessage(ABC):
         self.author = author
         self.char_limit = -1
         self.disable_interactions = False
+        self.no_react = False
 
     def has_prefix(self, prefix: str) -> bool:
         return self.content.lower().startswith(prefix.lower())
@@ -49,7 +51,7 @@ class UserMessage(ABC):
         pass
 
     @abstractmethod
-    async def _retrieve_history(self) -> list[OpenAIChat]:
+    async def _retrieve_history(self) -> list[ApiMessages]:
         """Retrieve the history of messages
         Return a list of message contents."""
         pass
@@ -92,7 +94,7 @@ class UserMessage(ABC):
             attempts += 1
         return False
 
-    async def _try_retrieve_history(self) -> list[OpenAIChat]:
+    async def _try_retrieve_history(self) -> list[ApiMessages]:
         attempts = 0
         while attempts < self.MAX_ATTEMPTS:
             history = await self._retrieve_history()
@@ -139,16 +141,16 @@ class UserMessage(ABC):
         return split_at(self.char_limit)
 
     async def react(self, reaction: str | None = None):
-        if self.disable_interactions:
+        if self.disable_interactions or self.no_react:
             return False
         return await self._try_react(reaction)
 
     async def undo_react(self, reaction: str | None = None):
-        if self.disable_interactions:
+        if self.disable_interactions or self.no_react:
             return False
         return await self._try_undo_react(reaction)
 
-    async def retrieve_history(self) -> OpenAIChat:
+    async def retrieve_history(self) -> ApiMessages:
         return await self._try_retrieve_history()
 
     async def send(self, message_content: str) -> bool:
