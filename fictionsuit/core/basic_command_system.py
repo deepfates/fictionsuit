@@ -1,8 +1,7 @@
-from ..commands.meta import Meta
-from ..utils import make_stats_str
+from typing import Sequence
+
 from .. import config
-from typing import Callable, Sequence
-from ..api_wrap.user_message import UserMessage
+from ..api_wrap import DiscordMessage, UserMessage
 from ..commands.command_group import (
     CommandFailure,
     CommandGroup,
@@ -12,8 +11,9 @@ from ..commands.command_group import (
     PartialReply,
     command_split,
 )
+from ..commands.scripting import Scripting
+from ..utils import make_stats_str
 from .core import chat_message, get_openai_response
-from ..api_wrap.discord import DiscordMessage
 from .system import System
 
 
@@ -23,6 +23,7 @@ class BasicCommandSystem(System):
         command_groups: Sequence[CommandGroup],
         stats_ui: bool = True,
         respond_on_unrecognized: bool = False,
+        enable_scripting: bool = False,
     ):
         self.command_groups = command_groups
         self.stats_ui = stats_ui
@@ -32,6 +33,7 @@ class BasicCommandSystem(System):
             command for group in command_groups for command in group.get_all_commands()
         ]
 
+        # TODO: this doesn't actually work; figure out why
         if len(all_commands) != len(set(all_commands)):
             # TODO: Print out more useful information, like where the name collision actually is.
             print(
@@ -40,8 +42,8 @@ class BasicCommandSystem(System):
 
         self.slow_commands = None
 
-    def add_meta_group(self):
-        self.command_groups += [Meta(self, self.command_groups)]
+        if enable_scripting:
+            self.command_groups += [Scripting(self, self.command_groups)]
 
     async def enqueue_message(
         self, message: UserMessage, return_failures: bool = False

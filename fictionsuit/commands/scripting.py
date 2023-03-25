@@ -1,12 +1,16 @@
 from __future__ import annotations
+
+import ntpath
 import os
 
 from .. import config
-
+from ..api_wrap import UserMessage
+from ..core import OpenAIChat
+from ..core.fictionscript import FictionScript, ScriptMessage, VarScope
 from ..core.system import System
 from .command_group import (
-    CommandGroup,
     CommandFailure,
+    CommandGroup,
     CommandHandled,
     CommandNotFound,
     CommandReply,
@@ -14,87 +18,14 @@ from .command_group import (
     command_split,
     slow_command,
 )
-from ..api_wrap.user_message import UserMessage
-import ntpath
-
-from ..core.core import OpenAIChat
 
 
-class VarScope:
-    def __init__(
-        self, name: str | None = None, parent: VarScope = None, vars: dict | None = None
-    ):
-        self.parent = parent
-        self.vars = vars if vars else {}
-        if name is None:
-            if parent is None:
-                self.name = "base"
-            else:
-                self.name = f"{parent.name}_anon"
-        else:
-            self.name = f"{parent.name}_{name}"
-
-    def move_up(self, k):
-        self.parent[k] = self[k]
-
-    def get_vars(self) -> dict:
-        if self.parent is not None:
-            # Pull in vars from outer scope, override any collisions
-            return {**self.parent.get_vars(), **self.vars}
-        return self.vars
-
-    def __setitem__(self, k, v):
-        self.vars[k] = v
-
-    def __contains__(self, k):
-        return self.get_vars().__contains__(k)
-
-    def __getitem__(self, k):
-        return self.get_vars()[k]
-
-
-class ScriptMessage(UserMessage):
-    def __init__(self, content: str, filename: str, invoker: UserMessage):
-        super().__init__(content, f"script: {filename}")
-        self.invoker = invoker
-        self.disable_interactions = invoker.disable_interactions
-
-    async def _send(self, message_content: str) -> bool:
-        return await self.invoker._send(message_content)
-
-    async def _reply(self, reply_content: str) -> bool:
-        return await self.invoker._reply(reply_content)
-
-    async def _react(self, reaction: str | None) -> bool:
-        return await self.invoker._react(reaction)
-
-    async def _undo_react(self, reaction: str | None) -> bool:
-        return await self.invoker._undo_react(reaction)
-
-    async def _get_timestamp(self) -> float:
-        return await self.invoker._get_timestamp()
-
-    async def _retrieve_history(self) -> OpenAIChat:
-        return await self.invoker._retrieve_history()
-
-
-class FictionScript:
-    def __init__(self, lines, source=None):
-        self.lines = lines
-        self.source = source
-
-    def from_file(filename):
-        with open(filename, "r") as file:
-            lines = file.readlines()
-            return FictionScript(lines, source=filename)
-
-
-class Meta(CommandGroup):
+class Scripting(CommandGroup):
     def __init__(self, system: System, command_groups: list[CommandGroup]):
         self.command_groups = command_groups
         self.system = system
         self.vars = VarScope()  # TODO: load in var state from a file, optionally?
-        # TODO: add a more general preprocessor outside of Meta for parsing scripts
+        # TODO: add a more general preprocessor outside of Scripting for parsing scripts
         # from a nicer syntax down into runnable commands
 
     async def intercept_content(self, content: str) -> str:
@@ -217,7 +148,7 @@ class Meta(CommandGroup):
         if script_name in self.vars:
             script = self.vars[script_name]
         elif os.path.exists(script_name):
-            script_name = await self.cmd_load_file(message, script_name)
+            script_name = await self.cmd_load_script(message, script_name)
             script = self.vars[script_name]
         else:
             return CommandFailure("No such script.")

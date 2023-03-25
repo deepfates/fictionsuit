@@ -1,10 +1,8 @@
 import discord
 
-from fictionsuit.commands.debug import Debug
-from fictionsuit.commands.research import Research
-from fictionsuit.api_wrap.discord import DiscordBotClient
-from fictionsuit.core.basic_command_system import BasicCommandSystem
-from fictionsuit.commands.chat import Chat
+from fictionsuit.api_wrap import DiscordBotClient
+from fictionsuit.commands import Chat, Debug, Research
+from fictionsuit.core import BasicCommandSystem
 
 
 def main():
@@ -15,10 +13,11 @@ def main():
     command_groups = [Debug(), Research(), Chat()]
 
     system = BasicCommandSystem(
-        command_groups, respond_on_unrecognized=True, stats_ui=False
+        command_groups,
+        respond_on_unrecognized=True,
+        stats_ui=False,
+        enable_scripting=True,
     )
-
-    system.add_meta_group()
 
     client = DiscordBotClient(system, intents=intents)
 

@@ -1,13 +1,11 @@
-import sys
-import traceback
-from .. import config
-from ..utils import make_stats_str
-from discord.ext import commands
 import discord
-from ..core.system import System
-from ..api_wrap.user_message import UserMessage
 from discord import Message
-from ..core.core import OpenAIChat, chat_message
+from discord.ext import commands
+
+from .. import config
+from ..api_wrap import UserMessage
+from ..core import OpenAIChat, chat_message
+from ..core.system import System
 
 
 class DiscordBotClient(commands.Bot):

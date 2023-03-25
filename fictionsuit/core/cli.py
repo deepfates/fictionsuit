@@ -1,11 +1,12 @@
-from ..core.system import System
-from ..api_wrap.user_message import UserMessage
-from io import TextIOBase
-from .. import config
+import asyncio
 import sys
 import time
-import asyncio
-from ..core.core import OpenAIChat
+from io import TextIOBase
+
+from .. import config
+from ..api_wrap import UserMessage
+from ..core import OpenAIChat
+from ..core.system import System
 
 
 class TextIOClient:

@@ -1,9 +1,10 @@
-import tiktoken
 import time
 
+import tiktoken
+
 from .. import config
+from ..api_wrap import UserMessage
 from .command_group import CommandGroup, auto_reply
-from ..api_wrap.user_message import UserMessage
 
 
 class Debug(CommandGroup):

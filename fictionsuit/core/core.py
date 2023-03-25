@@ -1,11 +1,12 @@
-from ..utils import convert_article, scrape_link, write_md
-import openai
-from .. import config
-from langchain.chat_models import ChatOpenAI
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.docstore.document import Document
-from langchain.chains.summarize import load_summarize_chain
 import aiohttp
+import openai
+from langchain.chains.summarize import load_summarize_chain
+from langchain.chat_models import ChatOpenAI
+from langchain.docstore.document import Document
+from langchain.text_splitter import CharacterTextSplitter
+
+from .. import config
+from ..utils import convert_article, scrape_link, write_md
 
 URL = "https://api.openai.com/v1/chat/completions"
 

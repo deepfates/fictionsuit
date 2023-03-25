@@ -1,12 +1,8 @@
-from fictionsuit.core.basic_command_system import BasicCommandSystem
-from fictionsuit.core.cli import TextIOClient
-from fictionsuit.commands.debug import Debug
-from fictionsuit.commands.research import Research
-from fictionsuit.commands.chat import Chat
-from fictionsuit.commands.meta import Meta
-from fictionsuit import config
-
 from argparse import ArgumentParser
+
+from fictionsuit import config
+from fictionsuit.commands import Chat, Debug, Research
+from fictionsuit.core import BasicCommandSystem, TextIOClient
 
 
 def main():
@@ -32,10 +28,11 @@ def main():
         config.COMMAND_PREFIX = args.prefix
 
     system = BasicCommandSystem(
-        command_groups, respond_on_unrecognized=False, stats_ui=False
+        command_groups,
+        respond_on_unrecognized=False,
+        stats_ui=False,
+        enable_scripting=True,
     )
-
-    system.add_meta_group()
 
     client = TextIOClient(system, cli=not args.quiet)
 

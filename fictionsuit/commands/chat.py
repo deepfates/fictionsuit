@@ -1,9 +1,7 @@
-from .command_group import CommandGroup, auto_reply, slow_command
-from ..api_wrap.user_message import UserMessage
-from ..core.core import chat_message, get_openai_response
-from ..utils import make_stats_str
-
 from .. import config
+from ..api_wrap import UserMessage
+from ..core import chat_message, get_openai_response
+from .command_group import CommandGroup, auto_reply, slow_command
 
 
 class Chat(CommandGroup):

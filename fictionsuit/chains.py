@@ -1,8 +1,5 @@
 from langchain.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-)
+from langchain.prompts.chat import ChatPromptTemplate, HumanMessagePromptTemplate
 
 human_message_prompt = HumanMessagePromptTemplate(
     prompt=PromptTemplate(

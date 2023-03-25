@@ -1,8 +1,10 @@
-import tiktoken
 import os
+from typing import Dict, List
+
+import tiktoken
 from goose3 import Goose
+
 from . import config
-from typing import List, Dict
 
 
 # will likely change w api update
