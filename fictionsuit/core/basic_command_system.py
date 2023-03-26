@@ -6,8 +6,8 @@ from .. import config
 from ..commands.command_group import (
     CommandFailure,
     CommandGroup,
+    CommandHandled,
     CommandNotFound,
-    CommandNotHandled,
     CommandReply,
     PartialReply,
     command_split,
@@ -25,7 +25,7 @@ class BasicCommandSystem(System):
         stats_ui: bool = True,
         respond_on_unrecognized: bool = False,
         enable_scripting: bool = False,
-        prefix: str = config.COMMAND_PREFIX
+        prefix: str = config.COMMAND_PREFIX,
     ):
         self.command_groups = command_groups
         self.stats_ui = stats_ui
@@ -53,15 +53,20 @@ class BasicCommandSystem(System):
             group.inspect_other_groups(self.command_groups)
 
     async def enqueue_message(
-        self, message: UserMessage, return_failures: bool = False
+        self,
+        message: UserMessage,
+        return_failures: bool = False,
+        return_returns: bool = False,
     ):
         content = message.content
 
         try:
             for group in self.command_groups:
                 content = await group.intercept_content(content)
+                if type(content) is CommandFailure:
+                    return content if return_failures else None
         except Exception as e:
-            await message.reply(f"Error in content interception: {e}")
+            await message.reply(f"Content interceptor threw an exception: {e}")
             content = message.content
 
         if not message.has_prefix(self.prefix):
@@ -94,22 +99,29 @@ class BasicCommandSystem(System):
                     if cmd_is_slow:
                         await message.undo_react("⏳")
                     await message.react("❌")
-                    await message.reply(f'Command "{cmd}" failed.\n{result}')
-                    if return_failures:
-                        return result
-                if type(result) is CommandReply:
-                    if cmd_is_slow:
-                        await message.undo_react("⏳")
-                    await message.reply(result)
-                    return
+                    await message.reply(f'Command "{cmd}" failed:\n{result}')
+                    return result if return_failures else None
+                # if type(result) is CommandReply:
+                #     await message.reply(result)
+                #     return
+                if return_returns and cmd == "return":
+                    return result
                 if type(result) is PartialReply:
                     accumulator = result
                     continue
-                if type(result) is not CommandNotHandled:
+                if type(result) is CommandHandled:
                     if cmd_is_slow:
                         await message.undo_react("⏳")
                     await message.react("✅")
                     return
+                try:
+                    result = str(result)
+                except ValueError:
+                    pass
+                if cmd_is_slow:
+                    await message.undo_react("⏳")
+                await message.reply(result)
+                return
 
         if accumulator is not None:
             if cmd_is_slow:
@@ -126,9 +138,9 @@ class BasicCommandSystem(System):
         if hasattr(message, "discord_message"):
             await message.discord_message.channel.typing()
         chat = ChatInstance()
-        chat.system(config.SYSTEM_MSG)
-        chat.user(message.content)
-        content = chat.continue_()
+        await chat.system(config.SYSTEM_MSG)
+        await chat.user(message.content)
+        content = await chat.continue_()
         content = (
             make_stats_str(content, chat.history, "chat") if self.stats_ui else content
         )

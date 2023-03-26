@@ -4,7 +4,6 @@ from .command_group import (
     CommandGroup,
     CommandHandled,
     CommandNotFound,
-    CommandNotHandled,
     CommandReply,
     CommandResult,
     auto_reply,

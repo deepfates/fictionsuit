@@ -34,7 +34,6 @@ async def upload_article(article, url, summary):
 
 
 async def upload_article_embeddings(scraped_article, article_id):
-
     client = init_supa_client()
 
     for i, chunk in enumerate(split_text(scraped_article.cleaned_text)):

@@ -28,7 +28,6 @@ async def embed_query(query):
 
 
 def create_mappings():
-
     if not config.embeddings_cache["needs_update"]:
         return (
             config.embeddings_cache["embeddings_list"],
