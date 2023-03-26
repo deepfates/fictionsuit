@@ -6,6 +6,7 @@ from . import config
 from typing import List, Dict
 import openai
 
+
 # will likely change w api update
 # https://platform.openai.com/docs/guides/chat/managing-tokens
 def num_tokens_from_messages(

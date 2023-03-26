@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from ..api_wrap.openai import ApiMessages
 
 
-
 class UserMessage(ABC):
     MAX_ATTEMPTS = 3
 

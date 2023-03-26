@@ -37,7 +37,7 @@ def main():
         respond_on_unrecognized=False,
         stats_ui=False,
         enable_scripting=True,
-        prefix=prefix
+        prefix=prefix,
     )
 
     client = TextIOClient(system, cli=not args.quiet, reactions=args.reactions)

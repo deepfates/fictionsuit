@@ -2,6 +2,11 @@ from __future__ import annotations
 import ntpath
 import os
 import glob
+<<<<<<< HEAD
+=======
+import gc
+
+>>>>>>> 9f18e2bfc7c41e5941d26da51b5a99cdd11e4cf5
 from .. import config
 from ..core.user_message import UserMessage
 from ..core.fictionscript import FictionScript, ScriptMessage, Scope
@@ -31,33 +36,84 @@ class Scripting(CommandGroup):
         self.load_scripts("fictionsuit/fic")
         self.load_scripts("fictionsuit/.fic")
 
-    async def intercept_content(self, content: str, prefix: str | None = None) -> str:
+    async def intercept_content(
+        self, content: str, prefix: str | None = None
+    ) -> str | CommandFailure:
+        """TODO: make this method less of a horrifying mess"""
+        # Uncommenting this and the "AFTER" print at the bottom might
+        # help you understand how the scripting works a bit better, but
+        # it will spam the console very badly when you run a script
+        # print(f'BEFORE[{content}]')
         if prefix is None:
             prefix = self.prefix
         if not content.startswith(prefix):
             return content
         (cmd, args) = command_split(content, prefix)
+
+        if cmd is None:
+            return content
+
+        if cmd[0] == "#":
+            return ""  # Comment
+
+        def handle_vertbar(content: str, prefix: str, cmd: str, args: str) -> str:
+            if cmd is None:
+                return content
+            if cmd[0] != "|":
+                return content
+            if "=" in content:
+                if ">" not in content[: content.index("=")]:
+                    expansion = "var"
+                else:
+                    expansion = "insert"
+            else:
+                if content[len(prefix) :].strip() == f"{prefix}|":
+                    expansion = "where"
+                else:
+                    expansion = "retrieve"
+            x = f"{prefix}{expansion} {cmd[1:]}{args}"
+            # print(f'X[{x}]')
+            return x
+
+        content = handle_vertbar(content, prefix, cmd, args)
+
         if cmd == "def_fic":
             return content
+
+        (cmd, args) = command_split(content, prefix)
+
         content = content.replace("\\n", "\n")
         cmd_inner = None
+<<<<<<< HEAD
         if cmd == "var":
+=======
+        if cmd in ["var", "insert"]:
+>>>>>>> 9f18e2bfc7c41e5941d26da51b5a99cdd11e4cf5
             split = args.split("=", maxsplit=1)
             if len(split) > 1:
-                (cmd_inner, _) = command_split(split[1], "")
+                (cmd_inner, args_inner) = command_split(split[1], "")
+                inner_content = handle_vertbar(split[1], "", cmd_inner, args_inner)
+                (cmd_inner, args_inner) = command_split(inner_content, "")
+                content = f"{prefix}{cmd} {split[0]}={inner_content}"
+
         if cmd == "fic" or cmd_inner == "fic":
             content = content.replace("\\,", "<COMMA>")
             content = content.replace(",", "<_COMMA>")
-        content = content.format(**self.vars.get_vars())
+        try:
+            content = content.format(**self.vars.get_vars())
+        except KeyError as k:
+            return CommandFailure(f"No such variable: {k}")
         if cmd == "fic" or cmd_inner == "fic":
             content = content.replace(",", "<COMMA>")
             content = content.replace("<_COMMA>", ",")
+
+        # print(f'AFTER[{content}]')
         return content
 
     def load_scripts(self, directory_name):
         for file in glob.glob(os.path.join(directory_name, "*.fic")):
-            script = FictionScript.from_file(file)
             var_name = ntpath.basename(file)
+            script = FictionScript.from_file(file, var_name)
             if var_name.endswith(".fic"):
                 var_name = var_name[:-4].replace("_", " ").lower()
             self.vars[var_name] = script
@@ -82,12 +138,30 @@ class Scripting(CommandGroup):
         return vars
 
     @auto_reply
-    async def cmd__scope(self, message: UserMessage, args: str) -> str:
+    async def cmd_inspect_fic(self, message: UserMessage, args: str) -> str:
+        if args not in self.vars:
+            return CommandFailure("No such script.")
+        script = self.vars[args]
+        if type(script) is not FictionScript:
+            return CommandFailure(f'"{args}" is not a script.')
+        content = f"\n>".join(
+            f" {i+1: >3}  {line.strip()}" for i, line in enumerate(script.lines)
+        )
+        return f"**__{args}__**```\n>{content}\n```"
+
+    @auto_reply
+    async def cmd_where(self, message: UserMessage, args: str) -> str:
         """Internal metacommand for debugging.
         Returns the name of the current scope.
         Usage:
         `_scope`"""
-        return self.vars.name
+        return self.vars
+
+    async def cmd_scope(self, message: UserMessage, args: str) -> Scope:
+        if args != "":
+            self.vars[args] = Scope(parent=self.vars, name=args)
+            return
+        return Scope(parent=self.vars)
 
     @auto_reply
     async def cmd__dump_var(self, message: UserMessage, args: str) -> str:
@@ -96,7 +170,7 @@ class Scripting(CommandGroup):
         Usage:
         `_dump_var {name of variable}`"""
         var = self.vars[args]
-        return str(var)
+        return repr(var)
 
     async def cmd__enter_scope(self, message: UserMessage, args: str) -> None:
         """Internal metacommand.
@@ -118,15 +192,77 @@ class Scripting(CommandGroup):
         `_exit_scope`"""
         if self.vars.parent is None:
             return CommandFailure("Cannot exit scope, as there is no parent scope.")
-        self.vars = self.vars.parent
+        self._return_to_scope(self.vars.parent)
 
     @auto_reply
     async def cmd_outer(self, message: UserMessage, args: str):
         """Returns the value of a variable from the parent scope."""
+        if args == "":
+            if self.vars.parent is None:
+                return CommandFailure(
+                    "There is no outer scope -- this is the base scope."
+                )
+            return self.vars.parent
         return self.vars.parent[args]
+
+    @auto_reply
+    async def cmd_retrieve(self, message: UserMessage, args: str):
+        """Retrieve a value from within a scope, or from scopes within scopes.
+        You can just write | as a stand-in for this command."""
+        split = [x.strip() for x in args.split(">")]
+        result = self.vars
+        for name in split:
+            if name in result:
+                result = result[name]
+            else:
+                return CommandFailure(f'"{name}" not found.')
+        return result
+
+    @auto_reply
+    async def cmd_insert(self, message: UserMessage, args: str):
+        """Retrieve a value from within a scope, or multiple scopes.
+        You can just write | as a stand-in for this command."""
+        echo = False
+        if ":=" in args:
+            split = [x.strip() for x in args.split(":=", maxsplit=1)]
+            echo = True
+        else:
+            split = [x.strip() for x in args.split("=", maxsplit=1)]
+
+        retrieval = split[0]
+        if len(split) < 2:
+            return CommandFailure("No expression to insert.")
+        insertion = split[1]
+        retrieval_split = [x.strip() for x in retrieval.split(">")]
+        if len(retrieval_split) == 1:
+            if retrieval_split[0] == "":
+                return CommandFailure("No insert destination.")
+
+        scope = self.vars
+        for name in retrieval_split[:-1]:
+            if name in scope:
+                scope = scope[name]
+            else:
+                return CommandFailure(f'"{name}" not found.')
+
+        original_scope = self.vars
+        self.vars = scope
+        try:
+            if echo:
+                result = await self.cmd_var(
+                    message, f"{retrieval_split[-1]} := {insertion}"
+                )
+            else:
+                result = await self.cmd_var(
+                    message, f"{retrieval_split[-1]} = {insertion}"
+                )
+            return result
+        finally:
+            self._return_to_scope(original_scope)
 
     def _return_to_scope(self, scope: Scope) -> None:
         self.vars = scope
+        gc.collect()
 
     async def cmd_str(self, message: UserMessage, args: str):
         """Stores a string in a variable.
@@ -152,7 +288,15 @@ class Scripting(CommandGroup):
             return CommandFailure(
                 "Arguments without defaults must precede arguments with defaults."
             )
+<<<<<<< HEAD
         arg_name = args.split("=", maxsplit=1)[0].strip()
+=======
+        echo = ":=" in args
+        if echo:
+            arg_name = args.split(":=", maxsplit=1)[0].strip()
+        else:
+            arg_name = args.split("=", maxsplit=1)[0].strip()
+>>>>>>> 9f18e2bfc7c41e5941d26da51b5a99cdd11e4cf5
         if arg_name not in self.vars:
             if not defaulting:
                 return CommandFailure(f"Missing argument: {arg_name}")
@@ -194,7 +338,7 @@ class Scripting(CommandGroup):
         else:
             var_name = split[1]
 
-        script = FictionScript.from_file(split[0])
+        script = FictionScript.from_file(split[0], var_name)
 
         self.vars[var_name] = script
 
@@ -210,7 +354,7 @@ class Scripting(CommandGroup):
         var_name = split[0]
         if len(split) < 2:
             return CommandFailure("Script definition is empty.")
-        self.vars[var_name] = FictionScript(split[1:])
+        self.vars[var_name] = FictionScript(split[1:], var_name)
 
     async def _fic(
         self, message: UserMessage, args: str
@@ -255,18 +399,19 @@ class Scripting(CommandGroup):
         )
 
         async def enqueue(script_message):
-            script_message.content = await self.intercept_content(
-                script_message.content
-            )
+            # for group in self.command_groups:
+            #     script_message.content = await group.intercept_content(script_message.content)
+            #     if type(script_message.content) is CommandFailure:
+            #         return CommandFailure(f'Command interceptor failed: {script_message.content}')
             return await self.system.enqueue_message(
-                script_message, return_failures=True
+                script_message, return_failures=True, return_returns=True
             )
 
         result = await enqueue(enter_scope)
         if result is not None:
             message.disable_interactions = previous_dis_int_value
             self._return_to_scope(initial_scope)
-            return result  # Failure
+            return CommandFailure(f"Failed to enter scope:\n{result}")
 
         if len(arg_values) > len(params):
             message.disable_interactions = previous_dis_int_value
@@ -278,45 +423,35 @@ class Scripting(CommandGroup):
         for i in range(len(arg_values)):
             result = await enqueue(
                 ScriptMessage(
-                    f"{pfx}var {params[i]} = echo {arg_values[i]}", script_name, message
+                    f"{pfx}var {params[i]} := {arg_values[i]}", script_name, message
                 )
             )
             if result is not None:
                 message.disable_interactions = previous_dis_int_value
                 self._return_to_scope(initial_scope)
-                return result  # Failure
-        for line in script.lines:
+                return CommandFailure(f"Failed to set argument:\n{result}")
+        for index, line in enumerate(script.lines):
             if line.strip() != "":
                 result = await enqueue(
                     ScriptMessage(f"{pfx}{line}", script_name, message)
                 )
+                if type(result) is CommandFailure:
+                    message.disable_interactions = previous_dis_int_value
+                    self._return_to_scope(initial_scope)
+                    return CommandFailure(f"Failed at line {index + 1}:\n{result}")
                 if result is not None:
                     message.disable_interactions = previous_dis_int_value
                     self._return_to_scope(initial_scope)
-                    return result  # Failure
+                    return result
 
         exit_scope = ScriptMessage(f"{pfx}_exit_scope", script_name, message)
         result = await enqueue(exit_scope)
         if result is not None:
             message.disable_interactions = previous_dis_int_value
             self._return_to_scope(initial_scope)
-            return result  # Failure
-
-        returns = [x for x in script.lines if x.startswith("return")]
-
-        # If exactly one value is returned by the script, its value is
-        # returned by the cmd_script command.
-        if len(returns) == 1:
-            rcommand = returns[0]
-            r_args = rcommand.split(" ", maxsplit=1)[1]
-            r_args_split = r_args.split(",")
-            if len(r_args_split) == 1:
-                result = self.vars[r_args_split[0].strip()]
-                message.disable_interactions = previous_dis_int_value
-                return result  # str
+            return CommandFailure(f"Failed to exit:\n{result}")
 
         message.disable_interactions = previous_dis_int_value
-        await message.reply(f"Script ran successfully. Return statments: [{returns}]")
         return CommandHandled()
 
     @slow_command
@@ -336,33 +471,55 @@ class Scripting(CommandGroup):
             self._return_to_scope(scope_before)
             message.disable_interactions = disabled_before
 
+<<<<<<< HEAD
     # TODO: "return x as y / return x as _" syntax
     async def cmd_return(
         self, message: UserMessage, args: str
     ) -> str | None | CommandFailure:
+=======
+    async def cmd_return(self, message: UserMessage, args: str):
+>>>>>>> 9f18e2bfc7c41e5941d26da51b5a99cdd11e4cf5
         """Copy a variable from the current scope into the parent scope.
         Usage:
         `return {name of variable}`"""
-        if self.vars.parent is None:
-            return CommandFailure("Cannot return values out of the base scope.")
+
         vars = [x.strip() for x in args.split(",")]
-        for var in vars:
-            self.vars.move_up(var)
+        scope = Scope(parent=self.vars, name="returned")
         if len(vars) == 1:
             return self.vars[vars[0]]
+        for var in vars:
+            if var in self.vars:
+                scope[var] = self.vars[var]
+                if type(scope[var]) is Scope:
+                    scope[var].parent = scope
 
     @slow_command
     async def cmd_var(self, message: UserMessage, args: str):
         """Attempts to store the result of another command as a variable.
         Usage:
         `var {name of variable} = {command and its arguments}`"""
-        arg_split = [x.strip() for x in args.split("=", maxsplit=1)]
+        # TODO: don't intercept args, intercept the inner command portion only
+        # for group in self.command_groups:
+        #     args = await group.intercept_content(args)
+        #     if type(args) is CommandFailure:
+        #         return CommandFailure(f'Command interceptor failed: {args}')
+
+        echo = ":=" in args
+        if echo:
+            arg_split = [x.strip() for x in args.split(":=", maxsplit=1)]
+        else:
+            arg_split = [x.strip() for x in args.split("=", maxsplit=1)]
+
         arg_split = [x for x in arg_split if x != ""]
 
         if len(arg_split) != 2:
             return CommandFailure("Failed to store variable: Invalid syntax.")
 
         var_name = arg_split[0]
+
+        if echo:
+            self.vars[var_name] = arg_split[1]
+            return CommandHandled()
 
         (cmd, args) = command_split(arg_split[1], "")
 
@@ -380,7 +537,7 @@ class Scripting(CommandGroup):
                 if type(result) is CommandFailure:
                     message.disable_interactions = previous_dis_int_value
                     return CommandFailure(
-                        f'Failed to store variable: Command "{cmd}" failed.\n{result}'
+                        f'Failed to store variable: Command "{cmd}" failed with args "{args}".\n{result}'
                     )
                 if type(result) is CommandHandled:
                     message.disable_interactions = previous_dis_int_value

@@ -1,6 +1,6 @@
 from ..core.user_message import UserMessage
 from .. import config
-from .command_group import CommandGroup
+from .command_group import CommandGroup, auto_reply
 from ..core.core import summarize, scrape_link
 from ..db.supa_tools import (
     upload_article,
@@ -18,7 +18,8 @@ from ..db.search import (
 
 
 class Research(CommandGroup):
-    async def cmd_read(self, message: UserMessage, args: str):
+    @auto_reply
+    async def cmd_read(self, message: UserMessage, args: str) -> str:
         """**__Read__**
         `prefix read` - returns a summary of the linked article, uploads, and embeds
         """
@@ -31,14 +32,17 @@ class Research(CommandGroup):
             await upload_article_embeddings(article, article_id)
             set_cache_needs_update()
             await message.reply(f"Article uploaded to Supabase with ID: {article_id}")
+        return summary
 
+    @auto_reply
     async def cmd_scrape(self, message: UserMessage, args: str):
         """**__Scrape__**
         `prefix scrape` - returns scraped URL
         """
         article = await scrape_link(args)
-        await message.reply(article.cleaned_text)
+        return article.cleaned_text
 
+    @auto_reply
     async def cmd_list_articles(self, message, args):
         """**__Recall__**
         `prefix list_articles` - returns a list of all articles in the database
@@ -47,7 +51,7 @@ class Research(CommandGroup):
         ar_list = ""
         for article in articles:
             ar_list += f"- {article['title']} <{article['url']}> id: {article['id']}\n"
-        await message.reply(ar_list)
+        return ar_list
 
     async def cmd_delete_article(self, message, args):
         """**__Delete__**
@@ -58,6 +62,7 @@ class Research(CommandGroup):
         set_cache_needs_update()
         await message.reply(f"Article <{article_id}> deleted from database")
 
+    @auto_reply
     async def cmd_search(self, message, args):
         """**__Search__**
         `prefix search` - searches for similar articles in the database"""
@@ -68,4 +73,4 @@ class Research(CommandGroup):
             2, embeddings_list, id_mappings, query_embedding
         )
         search_results = await get_article_blurbs(query, matched_articles)
-        await message.reply(search_results)
+        return search_results

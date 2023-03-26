@@ -17,10 +17,10 @@ class TextIOClient:
         text_in: TextIOBase = sys.stdin,
         text_out: TextIOBase = sys.stdout,
         cli: bool = True,
-        reactions: bool = False
+        reactions: bool = False,
     ):
         self.system = system
-        self.prefix = system.prefix if hasattr(system, 'prefix') else ''
+        self.prefix = system.prefix if hasattr(system, "prefix") else ""
         self.text_in = text_in
         self.text_out = text_out
         self.cli = cli
@@ -34,8 +34,8 @@ class TextIOClient:
         greeting = ""
         input_indicator = ""
         if self.cli:
-            greeting = f'Welcome to Fictionsuit CLI.'
-            if self.prefix != '':
+            greeting = f"Welcome to Fictionsuit CLI."
+            if self.prefix != "":
                 greeting = f'{greeting} The command prefix is "{self.prefix}"'
             input_indicator = "\n> "
             self.print(f"{greeting}{input_indicator}")
