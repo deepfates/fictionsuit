@@ -1,0 +1,10 @@
+args text, query
+
+chat new c
+
+<system @ c> The user will ask you a question about this text, and you will answer briefly and accurately:\n{text}
+<user   @ c> {query}
+
+var response = chat continue c
+
+return response

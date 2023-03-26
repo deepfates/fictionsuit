@@ -1,5 +1,7 @@
 from typing import Sequence
 
+from ..api_wrap.openai import ChatInstance
+
 from .. import config
 from ..commands.command_group import (
     CommandFailure,
@@ -12,7 +14,6 @@ from ..commands.command_group import (
 )
 from ..commands.scripting import Scripting
 from ..utils import make_stats_str
-from .core import chat_message, get_openai_response
 from .system import System
 from .user_message import UserMessage
 
@@ -24,10 +25,12 @@ class BasicCommandSystem(System):
         stats_ui: bool = True,
         respond_on_unrecognized: bool = False,
         enable_scripting: bool = False,
+        prefix: str = config.COMMAND_PREFIX
     ):
         self.command_groups = command_groups
         self.stats_ui = stats_ui
         self.respond_on_unrecognized = respond_on_unrecognized
+        self.prefix = prefix
 
         all_commands = [
             command for group in command_groups for command in group.get_all_commands()
@@ -45,6 +48,10 @@ class BasicCommandSystem(System):
         if enable_scripting:
             self.command_groups += [Scripting(self, self.command_groups)]
 
+        for group in self.command_groups:
+            group.command_prefix = prefix
+            group.inspect_other_groups(self.command_groups)
+
     async def enqueue_message(
         self, message: UserMessage, return_failures: bool = False
     ):
@@ -57,10 +64,10 @@ class BasicCommandSystem(System):
             await message.reply(f"Error in content interception: {e}")
             content = message.content
 
-        if not message.has_prefix(config.COMMAND_PREFIX):
+        if not message.has_prefix(self.prefix):
             return  # Not handling non-prefixed messages, for now
 
-        (cmd, args) = command_split(content, config.COMMAND_PREFIX)
+        (cmd, args) = command_split(content, self.prefix)
 
         if cmd is None:
             return  # Nothing but a prefix. Nothing to do.
@@ -93,7 +100,6 @@ class BasicCommandSystem(System):
                 if type(result) is CommandReply:
                     if cmd_is_slow:
                         await message.undo_react("⏳")
-                        await message.react("✅")
                     await message.reply(result)
                     return
                 if type(result) is PartialReply:
@@ -108,11 +114,10 @@ class BasicCommandSystem(System):
         if accumulator is not None:
             if cmd_is_slow:
                 await message.undo_react("⏳")
-                await message.react("✅")
             await message.reply(accumulator)
             return
 
-        await message.react("⏳")
+        await message.undo_react("⏳")
 
         if self.respond_on_unrecognized:
             await self.direct_chat(message)
@@ -120,17 +125,14 @@ class BasicCommandSystem(System):
     async def direct_chat(self, message: UserMessage):
         if hasattr(message, "discord_message"):
             await message.discord_message.channel.typing()
-        messages = []
-        # messages = await message.retrieve_history()
-        messages += chat_message("system", config.SYSTEM_MSG)
-        messages += chat_message("user", message.content)
-        res = await get_openai_response(messages)
-        content = res["choices"][0]["message"]["content"]
+        chat = ChatInstance()
+        chat.system(config.SYSTEM_MSG)
+        chat.user(message.content)
+        content = chat.continue_()
         content = (
-            make_stats_str(content, messages, "chat") if self.stats_ui else content
+            make_stats_str(content, chat.history, "chat") if self.stats_ui else content
         )
         await message.undo_react("⏳")
-        await message.react("✅")
         await message.reply(content)
 
     # Retrieve history of the chat and return list of UserMessages

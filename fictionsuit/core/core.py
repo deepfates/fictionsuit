@@ -1,5 +1,3 @@
-import aiohttp
-import openai
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.docstore.document import Document
@@ -7,36 +5,6 @@ from langchain.text_splitter import CharacterTextSplitter
 
 from .. import config
 from ..utils import convert_article, scrape_link, write_md
-
-URL = "https://api.openai.com/v1/chat/completions"
-
-# TODO: extract openai stuff into an openai wrapper
-OpenAIChat = list[dict[str, str]]
-
-
-def chat_message(role: str, content: str) -> OpenAIChat:
-    return [{"role": role, "content": content}]
-
-
-async def get_openai_response(messages: OpenAIChat) -> str:
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {openai.api_key}",
-    }
-
-    body = {
-        "model": config.OAI_MODEL,
-        "temperature": config.TEMPERATURE,
-        "max_tokens": config.MAX_TOKENS,
-        "messages": messages,
-        "top_p": config.TOP_P,
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.post(URL, headers=headers, json=body) as response:
-            response_data = await response.json()
-
-    return response_data
 
 
 # summarize text

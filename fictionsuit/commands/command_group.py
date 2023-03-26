@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import string
 import traceback
 from typing import Any, Callable
@@ -128,6 +130,9 @@ class CommandGroup:
         except Exception as e:
             err_msg = f"Exception thrown by {command} handler: {e}\n```{traceback.format_exc()}```"
             return CommandFailure(err_msg)
+
+    def inspect_other_groups(self, groups: list[CommandGroup]):
+        pass
 
     async def intercept_content(self, content: str) -> str:
         """Intercept and modify the content of an incoming UserMessage."""

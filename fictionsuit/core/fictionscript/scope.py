@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 
-class VarScope:
+class Scope:
     def __init__(
-        self, name: str | None = None, parent: VarScope = None, vars: dict | None = None
+        self, name: str | None = None, parent: Scope = None, vars: dict | None = None
     ):
         self.parent = parent
         self.vars = vars if vars else {}
@@ -11,9 +11,10 @@ class VarScope:
             if parent is None:
                 self.name = "base"
             else:
-                self.name = f"{parent.name}_anon"
+                self.name = f"{parent.name} -> anon"
         else:
-            self.name = f"{parent.name}_{name}"
+            self.name = f"{parent.name} -> {name}"
+        self._has_defaulting_args = False
 
     def move_up(self, k):
         self.parent[k] = self[k]

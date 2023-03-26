@@ -2,10 +2,11 @@ import discord
 from discord import Message
 from discord.ext import commands
 
+from .openai import ApiMessages, api_message
+
 from .. import config
 from ..core.system import System
 from ..core.user_message import UserMessage
-from ..core.core import OpenAIChat, chat_message
 
 
 class DiscordBotClient(commands.Bot):
@@ -106,7 +107,7 @@ class DiscordMessage(UserMessage):
     async def _retrieve_history(
         self,
         limit: int = 10,
-    ) -> OpenAIChat:
+    ) -> ApiMessages:
         messages = []
         history = self.discord_message.channel.history(
             before=self.discord_message, limit=limit
@@ -119,7 +120,7 @@ class DiscordMessage(UserMessage):
                 role = "user"
                 content = f"{msg.author.name}: " + msg.content
 
-            messages += chat_message(role, content)
+            messages += api_message(role, content)
 
         messages.reverse()
 
