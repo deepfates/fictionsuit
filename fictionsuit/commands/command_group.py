@@ -13,10 +13,6 @@ class CommandNotFound:
     pass
 
 
-class CommandNotHandled:
-    pass
-
-
 class CommandHandled:
     pass
 

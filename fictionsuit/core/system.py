@@ -8,7 +8,10 @@ class System(ABC):
 
     @abstractmethod
     async def enqueue_message(
-        self, message: UserMessage, return_failures: bool = False
+        self,
+        message: UserMessage,
+        return_failures: bool = False,
+        return_returns: bool = False,
     ):
         """Called whenever a new user message arrives."""
         pass

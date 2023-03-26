@@ -16,6 +16,7 @@ class ChatInstance:
         temperature: float = 1.0,
         max_tokens: int = 500,
         top_p: float = 1.0,
+        name: str = "anon",
     ):
         self.model = model
         self.temperature = temperature
@@ -27,6 +28,13 @@ class ChatInstance:
         }
         self.body = {}
         self.history = []
+        self.name = name
+
+    def __str__(self):
+        return f"ChatInstance {self.name}"
+
+    def __repr__(self):
+        return f"<ChatInstance {self.name}>"
 
     def _body(self, messages: ApiMessages, n: int) -> dict:
         return {
@@ -35,20 +43,19 @@ class ChatInstance:
             "max_tokens": self.max_tokens,
             "top_p": self.top_p,
             "messages": messages,
-            "n": n
+            "n": n,
         }
 
     # named this way because continue is a reserved word
     async def continue_(self, n: int = 1) -> str | list[str]:
         completion = await self._get_completion(self.history, n)
 
-        if 'error' in completion:
+        if "error" in completion:
             raise Exception(f"OpenAI completion error:\n\n{completion['error']}")
 
         try:
             response = [
-                completion["choices"][x]["message"]["content"].strip()
-                for x in range(n)
+                completion["choices"][x]["message"]["content"].strip() for x in range(n)
             ]
         except:
             raise Exception(f"Failed parsing openai completion:\n\n{completion}\n")
