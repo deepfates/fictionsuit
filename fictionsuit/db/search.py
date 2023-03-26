@@ -73,6 +73,8 @@ async def get_cosine_similarity(
         matched_articles = []
         for i, embed_idx in enumerate(I[0]):
             matched_article = id_mappings[embed_idx]
+            # simply get them all, send back matched_article['chunk_idx'] and the ID
+            # and then add the similarity score to them. those three items in a dict list
             if matched_article["id"] not in [a["id"] for a in matched_articles]:
                 matched_article["similarity"] = D[0][i]
                 matched_articles.append(matched_article)

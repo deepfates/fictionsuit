@@ -1,9 +1,7 @@
 from __future__ import annotations
-
 import ntpath
 import os
 import glob
-
 from .. import config
 from ..core.user_message import UserMessage
 from ..core.fictionscript import FictionScript, ScriptMessage, Scope
@@ -24,7 +22,7 @@ class Scripting(CommandGroup):
     def __init__(self, system: System, command_groups: list[CommandGroup]):
         self.command_groups = command_groups
         self.system = system
-        self.prefix = system.prefix if hasattr(system, 'prefix') else ''
+        self.prefix = system.prefix if hasattr(system, "prefix") else ""
         self.vars = Scope()  # TODO: save and load scopes?
         # TODO: Concurrency & scopes might be a mess
         # TODO: add a more general preprocessor outside of Scripting for parsing scripts
@@ -44,7 +42,7 @@ class Scripting(CommandGroup):
         content = content.replace("\\n", "\n")
         cmd_inner = None
         if cmd == "var":
-            split = args.split('=', maxsplit=1)
+            split = args.split("=", maxsplit=1)
             if len(split) > 1:
                 (cmd_inner, _) = command_split(split[1], "")
         if cmd == "fic" or cmd_inner == "fic":
@@ -154,7 +152,7 @@ class Scripting(CommandGroup):
             return CommandFailure(
                 "Arguments without defaults must precede arguments with defaults."
             )
-        arg_name = args.split('=', maxsplit=1)[0].strip()
+        arg_name = args.split("=", maxsplit=1)[0].strip()
         if arg_name not in self.vars:
             if not defaulting:
                 return CommandFailure(f"Missing argument: {arg_name}")
@@ -185,8 +183,8 @@ class Scripting(CommandGroup):
         Usage:
         `load_fic fic/compose_poem.fic` by default, this will load the script as "compose poem"
         `load_fic fic/query.fic as {custom name}`"""
-        args = args.replace('$FIC', './fictionsuit/fic')
-        args = args.replace('$.FIC', './fictionsuit/.fic')
+        args = args.replace("$FIC", "./fictionsuit/fic")
+        args = args.replace("$.FIC", "./fictionsuit/.fic")
 
         split = [x.strip() for x in args.split(" as ", maxsplit=1)]
         if len(split) == 1:
@@ -214,7 +212,9 @@ class Scripting(CommandGroup):
             return CommandFailure("Script definition is empty.")
         self.vars[var_name] = FictionScript(split[1:])
 
-    async def _fic(self, message: UserMessage, args: str) -> str | CommandHandled | CommandFailure:
+    async def _fic(
+        self, message: UserMessage, args: str
+    ) -> str | CommandHandled | CommandFailure:
         """See docs for cmd_fic"""
         split = args.split(":", maxsplit=1)
         script_name = split[0].strip()
@@ -255,7 +255,9 @@ class Scripting(CommandGroup):
         )
 
         async def enqueue(script_message):
-            script_message.content = await self.intercept_content(script_message.content)
+            script_message.content = await self.intercept_content(
+                script_message.content
+            )
             return await self.system.enqueue_message(
                 script_message, return_failures=True
             )
@@ -333,8 +335,6 @@ class Scripting(CommandGroup):
         finally:
             self._return_to_scope(scope_before)
             message.disable_interactions = disabled_before
-
-        
 
     # TODO: "return x as y / return x as _" syntax
     async def cmd_return(

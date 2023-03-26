@@ -98,7 +98,9 @@ async def scrape_link(link):
 
 
 def split_text(text):
-    text_splitter = CharacterTextSplitter()
+    text_splitter = (
+        CharacterTextSplitter()
+    )  # could consider using TokenTextSplitter instead
     texts = text_splitter.split_text(text)
     return texts
 
