@@ -83,17 +83,26 @@ async def get_cosine_similarity(
         return e, None
 
 
-async def get_article_blurbs(
-    query, matched_articles
-):  # where ids is a list of article IDs
+async def get_article_blurbs(query, matched_articles):
     try:
         client = init_supa_client()
+        # TODO add relevant chunk from JSON object in articles
+        # first print out the shape of the articles response
+        articles = []
+        for article in matched_articles:
+            response, _ = (
+                client.table("articles").select("*").eq("id", article["id"]).execute()
+            )
+            _, data = response
+            articles.append(data[0])
+        print(articles)
         article_ids = [article["id"] for article in matched_articles]
         response, _ = (
             client.table("articles").select("*").in_("id", article_ids).execute()
         )
         _, data = response
         res_string = f"**__Search Results for {query}__**\n" ""
+
         for article in data:
             res_string += (
                 f"- {article['title']} <{article['url']}> - {article['ai_summary']}\n"

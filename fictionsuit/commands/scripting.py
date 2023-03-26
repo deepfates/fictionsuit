@@ -2,11 +2,7 @@ from __future__ import annotations
 import ntpath
 import os
 import glob
-<<<<<<< HEAD
-=======
 import gc
-
->>>>>>> 9f18e2bfc7c41e5941d26da51b5a99cdd11e4cf5
 from .. import config
 from ..core.user_message import UserMessage
 from ..core.fictionscript import FictionScript, ScriptMessage, Scope
@@ -84,11 +80,7 @@ class Scripting(CommandGroup):
 
         content = content.replace("\\n", "\n")
         cmd_inner = None
-<<<<<<< HEAD
-        if cmd == "var":
-=======
         if cmd in ["var", "insert"]:
->>>>>>> 9f18e2bfc7c41e5941d26da51b5a99cdd11e4cf5
             split = args.split("=", maxsplit=1)
             if len(split) > 1:
                 (cmd_inner, args_inner) = command_split(split[1], "")
@@ -288,15 +280,11 @@ class Scripting(CommandGroup):
             return CommandFailure(
                 "Arguments without defaults must precede arguments with defaults."
             )
-<<<<<<< HEAD
-        arg_name = args.split("=", maxsplit=1)[0].strip()
-=======
         echo = ":=" in args
         if echo:
             arg_name = args.split(":=", maxsplit=1)[0].strip()
         else:
             arg_name = args.split("=", maxsplit=1)[0].strip()
->>>>>>> 9f18e2bfc7c41e5941d26da51b5a99cdd11e4cf5
         if arg_name not in self.vars:
             if not defaulting:
                 return CommandFailure(f"Missing argument: {arg_name}")
@@ -471,14 +459,7 @@ class Scripting(CommandGroup):
             self._return_to_scope(scope_before)
             message.disable_interactions = disabled_before
 
-<<<<<<< HEAD
-    # TODO: "return x as y / return x as _" syntax
-    async def cmd_return(
-        self, message: UserMessage, args: str
-    ) -> str | None | CommandFailure:
-=======
     async def cmd_return(self, message: UserMessage, args: str):
->>>>>>> 9f18e2bfc7c41e5941d26da51b5a99cdd11e4cf5
         """Copy a variable from the current scope into the parent scope.
         Usage:
         `return {name of variable}`"""

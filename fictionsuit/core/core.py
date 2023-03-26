@@ -11,8 +11,8 @@ from ..utils import convert_article, scrape_link, write_md
 async def summarize(url: str):
     try:
         article = await scrape_link(url)
-        md_article = convert_article(article, url, "md")
-        write_md(md_article, "articles", article.title)
+        # md_article = convert_article(article, url, "md")
+        # write_md(md_article, "articles", article.title)
         text = article.cleaned_text
         summary_template = f"""
         {config.SYSTEM_MSG} \n
