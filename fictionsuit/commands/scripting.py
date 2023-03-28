@@ -628,11 +628,6 @@ class Scripting(CommandGroup):
         """Attempts to store the result of another command as a variable.
         Usage:
         `var {name of variable} = {command and its arguments}`"""
-        # TODO: don't intercept args, intercept the inner command portion only
-        # for group in self.command_groups:
-        #     args = await group.intercept_content(args)
-        #     if type(args) is CommandFailure:
-        #         return CommandFailure(f'Command interceptor failed: {args}')
 
         echo = ":=" in args
         if echo:

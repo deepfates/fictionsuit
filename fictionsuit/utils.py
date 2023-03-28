@@ -46,34 +46,34 @@ def make_stats_str(content: str, messages: List[Dict], mode: str) -> str:
     return f"{content}\n{hr}\n{token_str} / {messages_str} / mode: {mode}"
 
 
-def convert_article(article, url, conversion):
+def convert_document(document, url, conversion):
     """
-    given a goose3 article object, convert it to a dict or markdown string (more options later maybe)
+    given a goose3 document object, convert it to a dict or markdown string (more options later maybe)
     """
-    converted_article = ""
+    converted_document = ""
     if conversion == "dict":
-        converted_article = {
-            "title": article.title,
-            "metadata": article.meta_description,
+        converted_document = {
+            "title": document.title,
+            "metadata": document.meta_description,
             "url": url,
-            "article_text": article.cleaned_text,
-            "featured_image": article.top_image.src,
+            "document_text": document.cleaned_text,
+            "featured_image": document.top_image.src,
         }
 
     elif conversion == "md":
-        converted_article = f"""---
-title: {article.title}
-metadata: {article.meta_description}
+        converted_document = f"""---
+title: {document.title}
+metadata: {document.meta_description}
 url: {url}
-featured_image: {article.top_image.src if article.top_image else ""}\n---\n{article.cleaned_text}"""
+featured_image: {document.top_image.src if document.top_image else ""}\n---\n{document.cleaned_text}"""
     else:
-        converted_article = "error converting article"
-    return converted_article
+        converted_document = "error converting document"
+    return converted_document
 
 
 def write_md(data, doctype, filename):
-    """Where doctype is the source/type of resource, e.g. 'articles' or 'tweets' and filename is the name of the file to be saved.
-    eg write_md(data, 'articles', 'article.md')
+    """Where doctype is the source/type of resource, e.g. 'documents' or 'tweets' and filename is the name of the file to be saved.
+    eg write_md(data, 'documents', 'document.md')
     """
     directory = f"./documents/{doctype}/"
 
@@ -86,20 +86,22 @@ def write_md(data, doctype, filename):
         md_file.write(data)
 
 
-# given a link to a web article, get its content and metadata
+# given a link to a web document, get its content and metadata
 async def scrape_link(link):
     try:
         g = Goose()
-        article = g.extract(url=link)
+        document = g.extract(url=link)
         g.close()
-        return article
+        return document
     except Exception as e:
         print(e)
         return None
 
 
 def split_text(text):
-    text_splitter = CharacterTextSplitter()
+    text_splitter = (
+        CharacterTextSplitter()
+    )  # could consider using TokenTextSplitter instead
     texts = text_splitter.split_text(text)
     return texts
 
