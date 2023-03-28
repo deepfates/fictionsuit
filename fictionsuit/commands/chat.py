@@ -188,9 +188,8 @@ class _Chat(CommandGroup):
             split = [x.strip() for x in args.split(maxsplit=1)]
             try:
                 n = int(split[0][1:])
-                if (
-                    len(split) < 2
-                ):  # if "xN" is all that's provided, we have to assume that's the name of the chat instance
+                # if "xN" is all that's provided, we have to assume that's the name of the chat instance
+                if len(split) < 2:
                     n = 1
                     args = split[0]
                 else:
@@ -206,6 +205,8 @@ class _Chat(CommandGroup):
             result = await self.cmd_user(message, f"{split[0]}: {split[1]}")
             if type(result) is CommandFailure:
                 return CommandFailure(f"cmd_user failed:\n{result}")
+
+            args = split[0].rstrip()
 
         scope = self.parent._get_scope()
         if args not in scope:
