@@ -100,7 +100,6 @@ async def get_document_data(matched_documents):
 
 async def render_document_data(data):
     res_string = ""
-    print(data)
     for document in data:
         res_string += (
             f"- {document['title']} <{document['url']}> - {document['ai_summary']}\n"

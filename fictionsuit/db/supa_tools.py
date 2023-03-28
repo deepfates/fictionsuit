@@ -1,7 +1,5 @@
-import ast
 import json
 from ..utils import split_text, get_embeddings
-from .. import config
 from .supa_client import init_supa_client
 
 
@@ -22,7 +20,6 @@ async def upload_document(document, url, summary, type="article"):
                 }
             ),
         }
-
         res, _ = client.table("documents").insert(document_dict).execute()
         _, data = res
         document_id = data[0]["id"]

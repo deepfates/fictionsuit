@@ -26,19 +26,18 @@ class Research(CommandGroup):
         """**__Read__**
         `prefix read` - returns a summary of the linked document, uploads, and embeds
         """
-        # TODO: check here to see if the url already exists in the database
-        # if it does, return the summary from the database
         document_exists = await check_if_document_exists(args)
         if document_exists:
-            # query the database for the summary
-            # return the summary
             summary = await get_summary(document_exists)
             await message.reply(summary)
         else:
+            await message.reply("scraping...")
             document = await scrape_link(args)
+            await message.reply("scraping done, now summarizing...")
             summary = await summarize(document)
             await message.reply(summary)
             if config.UPLOAD_TO_SUPABASE:
+
                 document_id = await upload_document(document, args, summary)
                 await upload_document_embeddings(document, document_id)
                 set_cache_needs_update()
