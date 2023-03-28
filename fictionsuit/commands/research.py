@@ -1,27 +1,26 @@
-from ..core.user_message import UserMessage
 from .. import config
-from .command_group import CommandGroup, auto_reply
-from ..core.core import summarize, scrape_link
-from ..db.supa_tools import (
-    upload_article,
-    upload_article_embeddings,
-    get_articles,
-    delete_article,
-)
+from ..core.core import scrape_link, summarize
+from ..core.user_message import UserMessage
 from ..db.search import (
-    embed_query,
     create_mappings,
-    get_cosine_similarity,
+    embed_query,
     get_article_blurbs,
+    get_cosine_similarity,
     set_cache_needs_update,
 )
+from ..db.supa_tools import (
+    delete_article,
+    get_articles,
+    upload_article,
+    upload_article_embeddings,
+)
+from .command_group import CommandGroup
 
 
 class Research(CommandGroup):
-    @auto_reply
     async def cmd_read(self, message: UserMessage, args: str) -> str:
         """**__Read__**
-        `prefix read` - returns a summary of the linked article, uploads, and embeds
+        `read` - returns a summary of the linked article, uploads, and embeds
         """
         article = await scrape_link(args)
         # should prepend the title, author, metadata, date, url to the cleaned_text of the file too
@@ -34,18 +33,16 @@ class Research(CommandGroup):
             await message.reply(f"Article uploaded to Supabase with ID: {article_id}")
         return summary
 
-    @auto_reply
     async def cmd_scrape(self, message: UserMessage, args: str):
         """**__Scrape__**
-        `prefix scrape` - returns scraped URL
+        `scrape` - returns scraped URL
         """
         article = await scrape_link(args)
         return article.cleaned_text
 
-    @auto_reply
     async def cmd_list_articles(self, message, args):
         """**__Recall__**
-        `prefix list_articles` - returns a list of all articles in the database
+        `list_articles` - returns a list of all articles in the database
         """
         articles = await get_articles()
         ar_list = ""
@@ -55,17 +52,16 @@ class Research(CommandGroup):
 
     async def cmd_delete_article(self, message, args):
         """**__Delete__**
-        `prefix delete_article` - deletes an article from the database
+        `delete_article` - deletes an article from the database
         """
         article_id = args
         await delete_article(article_id)
         set_cache_needs_update()
         await message.reply(f"Article <{article_id}> deleted from database")
 
-    @auto_reply
     async def cmd_search(self, message, args):
         """**__Search__**
-        `prefix search` - searches for similar articles in the database"""
+        `search` - searches for similar articles in the database"""
         query = args
         embeddings_list, id_mappings = create_mappings()
         query_embedding = await embed_query(query)

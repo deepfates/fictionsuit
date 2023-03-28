@@ -1,0 +1,212 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "FictionScript",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#expression"
+		},
+		{
+			"include": "#keywords"
+		}
+	],
+	"repository": {
+		"expression": {
+			"patterns": [
+				{
+					"include": "#if_cond_then"
+				},
+				{
+					"include": "#setliteral"
+				},
+				{
+					"include": "#setexpr"
+				},
+				{
+					"include": "#chat"
+				}
+			]
+		},
+		"comments": {
+			"patterns": [{
+				"name": "comment.line.number-sign.fictionscript",
+				"match": "#.*$"
+			}]
+		},
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.fictionscript",
+				"match": "\\b(return|chat|arg|args|load_fic|fails|fail|fic|var|scope|\\$FIC|\\$\\.FIC)\\b"
+			}]
+		},
+		"setliteral": {
+			"patterns": [
+				{
+					"name": "string.quoted.double.fictionscript",
+					"begin": "(\\||arg|var)(?:\\s*(.*?)\\s*(>))*?\\s*(.*?)\\s*(:=)",
+					"end": "$",
+					"beginCaptures": {
+						"1": {
+							"name": "constant.language.fictionscript"
+						},
+						"2": {
+							"name": "variable.name.fictionscript"
+						},
+						"3": {
+							"name": "constant.language.fictionscript"
+						},
+						"4": {
+							"name": "variable.name.fictionscript"
+						},
+						"5": {
+							"name": "constant.language.fictionscript"
+						}
+					},
+					"patterns": [
+						{
+							"name": "variable.name.fictionscript",
+							"match": "{.*?}"
+						},
+						{
+							"name": "constant.character.escape",
+							"match": "\\\\n"
+						},
+						{
+							"name": "markup.italic",
+							"match": "."
+						}
+					]
+				}
+			]
+		},
+		"setexpr": {
+			"patterns": [
+				{
+					"name": "meta.selector.fictionscript",
+					"begin": "(\\||arg|var)(?:\\s*(.*?)\\s*(>))*?\\s*(.*?)\\s*(=)",
+					"end": "$",
+					"beginCaptures": {
+						"1": {
+							"name": "constant.language.fictionscript"
+						},
+						"2": {
+							"name": "variable.name.fictionscript"
+						},
+						"3": {
+							"name": "constant.language.fictionscript"
+						},
+						"4": {
+							"name": "variable.name.fictionscript"
+						},
+						"5": {
+							"name": "constant.language.fictionscript"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				}
+			]
+		},
+		"if_cond_then": {
+			"patterns": [
+				{
+					"name": "meta.selector.fictionscript",
+					"begin": "\\s*(if)\\s+",
+					"end": "\\s+(then)\\s+",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.fictionscript"
+						}
+					},
+					"endCaptures": {
+						"1": {
+							"name": "keyword.control.fictionscript"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				}
+			]
+		},
+		"retrieve": {
+			"patterns": [
+				{
+					"name": "meta.selector.fictionscript",
+					"begin": "(\\||retrieve)(?:\\s*(.*?)\\s*(>))*\\s*(.+)\\s*(\\?)?\\s*",
+					"end": "$",
+					"beginCaptures": {
+						"1": {
+							"name": "constant.language.fictionscript"
+						},
+						"2": {
+							"name": "variable.name.fictionscript"
+						},
+						"3": {
+							"name": "constant.language.fictionscript"
+						},
+						"4": {
+							"name": "variable.name.fictionscript"
+						},
+						"5": {
+							"name": "constant.language.fictionscript"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				}
+			]
+		},
+		"chat": {
+			"patterns": [
+				{
+					"name": "string.quoted.double.fictionscript",
+					"begin": "(<)\\s*(?:(system|user|assistant)\\s*(@))?\\s*(.*?)\\s*(>)",
+					"end": "$",
+					"beginCaptures": {
+						"1": {
+							"name": "constant.language.fictionscript"
+						},
+						"2": {
+							"name": "keyword.control.fictionscript"
+						},
+						"3": {
+							"name": "constant.language.fictionscript"
+						},
+						"4": {
+							"name": "variable.name.fictionscript"
+						},
+						"5": {
+							"name": "constant.language.fictionscript"
+						}
+					},
+					"patterns": [
+						{
+							"name": "variable.name.fictionscript",
+							"match": "{.*?}"
+						},
+						{
+							"name": "constant.character.escape",
+							"match": "\\\\n"
+						},
+						{
+							"name": "markup.italic",
+							"match": "."
+						}
+					]
+				}
+			]
+		}
+	},
+	"scopeName": "source.fic"
+}

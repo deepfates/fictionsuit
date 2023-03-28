@@ -4,11 +4,10 @@ import tiktoken
 
 from .. import config
 from ..core.user_message import UserMessage
-from .command_group import CommandGroup, auto_reply
+from .command_group import CommandGroup
 
 
 class Debug(CommandGroup):
-    @auto_reply
     async def cmd_ping(self, message: UserMessage, args: str) -> str:
         """`Returns the one-way latency from the user to the bot"""
         timestamp = await message.get_timestamp()
@@ -17,7 +16,6 @@ class Debug(CommandGroup):
         response = f"Pong! Latency {latency} ms"
         return response
 
-    @auto_reply
     async def cmd_lorem(self, message: UserMessage, args: str) -> str:
         """Returns a few paragraphs of lorem ipsum"""
         return "\n".join(
@@ -47,7 +45,6 @@ class Debug(CommandGroup):
         time.sleep(1)
         await message.undo_react()
 
-    @auto_reply
     async def cmd_echo(self, message: UserMessage, args: str) -> str:
         """Repeats back the arguments."""
         return args

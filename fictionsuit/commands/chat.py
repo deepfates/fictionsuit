@@ -1,15 +1,9 @@
 from .. import config
-from ..core.fictionscript.scope import Scope
 from ..api_wrap.openai import ChatInstance
-from .scripting import Scripting
+from ..core.fictionscript.scope import Scope
 from ..core.user_message import UserMessage
-from .command_group import (
-    CommandFailure,
-    CommandGroup,
-    auto_reply,
-    command_split,
-    slow_command,
-)
+from .command_group import CommandFailure, CommandGroup, command_split, slow_command
+from .scripting import Scripting
 
 
 class Chat(CommandGroup):
@@ -30,14 +24,12 @@ class Chat(CommandGroup):
 
         TODO: also find a nicer syntax for `chat continue {name of chat}`. Maybe `<{name of chat}++>`?
         """
-        if not content.startswith(self.command_prefix):
-            return content
-        content = content[len(self.command_prefix) :].strip()
+        content = content.strip()
         if not content.startswith("<"):
-            return f"{self.command_prefix}{content}"
+            return content
         split = [x.strip() for x in content[1:].split(">", maxsplit=1)]
         if len(split) < 2:
-            return f"{self.command_prefix}{content}"
+            return content
         role_and_chat = split[0]
         message = split[1]
         role_chat_split = [x.strip() for x in role_and_chat.split("@", maxsplit=1)]
@@ -47,7 +39,7 @@ class Chat(CommandGroup):
         else:
             role = role_chat_split[0]
             chat = role_chat_split[1]
-        return f"{self.command_prefix}chat {role} {chat}: {message}"
+        return f"chat {role} {chat}: {message}"
 
     def _get_scope(self) -> Scope:
         return (
@@ -57,10 +49,9 @@ class Chat(CommandGroup):
         )
 
     @slow_command
-    @auto_reply
     async def cmd_chat(self, message: UserMessage, args: str):
         """This one has subcommands. Not sure how to automate the help messages for that just yet..."""
-        (inner_cmd, inner_args) = command_split(args, "")
+        (inner_cmd, inner_args) = command_split(args)
         if inner_cmd is None:
             return
         return await self._chat_cmds.handle(message, inner_cmd, inner_args)
@@ -195,7 +186,14 @@ class _Chat(CommandGroup):
             return CommandFailure(
                 "Sorry, OpenAI's API doesn't support completions with no messages."
             )
-        return await scope[args].continue_(n)
+        results = await scope[args].continue_(n)
+        if type(results) is list:
+            return Scope(
+                f"{args} continuations",
+                scope,
+                {str(i): results[i] for i in range(len(results))},
+            )
+        return results
 
     async def cmd_dump(self, message: UserMessage, args: str):
         """Dump out the full text of a chat."""

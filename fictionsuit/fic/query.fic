@@ -1,10 +1,12 @@
+# Asks a new ChatInstance a question about some text.
+
 args text, query
 
 chat new c
 
-<system @ c> The user will ask you a question about this text, and you will answer briefly and accurately:\n{text}
-<user   @ c> {query}
+<system @ c> I answer questions about segments of text.
+<c> Here is some text:\n{text}
+<assistant @ c> I am ready to answer your question about the text.
+<user @ c> {query}
 
-| response = chat continue c
-
-return response
+return chat continue c

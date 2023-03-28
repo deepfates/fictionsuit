@@ -1,9 +1,13 @@
+# Given a character name and a simple starting description, generates:
+# {description} - A more detailed description of the character
+# {style} - A description of the character's distinctive writing style
+# {goals} - An explanation of the character's motivation or purpose
+
 # Define a variable that must be provided by the user
 arg name
 # Define a variable that will use a default value if not provided by the user
 # ":=" is shorthand for "= echo" here
 arg initial description := All I've really decided so far is the name of the character.
-
 
 # Load in a helper method from another file
 # $FIC is shorthand for ".fictionsuit/fic"
@@ -32,13 +36,6 @@ load_fic $FIC/face/face_aspect.fic
 
 | goals = fic face aspect: {prompt}, the character's goals and desires, The character seeks to, Sauron, {sauron goals}
 
-
-# Create a scope called "-", pack the vars into it, and return it.
-# TODO: make a shorthand for this, like:
-# return name, description, style, goals
-scope -
-| - > name = | name
-| - > description = | description
-| - > style = | style
-| - > goals = | goals
-return -
+# Pack the variables into a new scope and return the scope
+# TODO: syntactic sugar for pack? (e.g. "return [name, description, style, goals]")
+return pack name, description, style, goals

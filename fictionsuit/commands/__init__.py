@@ -6,11 +6,12 @@ from .command_group import (
     CommandNotFound,
     CommandReply,
     CommandResult,
-    auto_reply,
     command_split,
     multi_command,
     slow_command,
 )
 from .debug import Debug
+from .discord_only import DiscordOnly
 from .research import Research
 from .scripting import Scripting
+from .text import Text

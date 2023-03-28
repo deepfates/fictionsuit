@@ -3,9 +3,8 @@ import sys
 import time
 from io import TextIOBase
 
-from ..api_wrap.openai import ApiMessages
-
 from .. import config
+from ..api_wrap.openai import ApiMessages
 from .system import System
 from .user_message import UserMessage
 
@@ -20,7 +19,6 @@ class TextIOClient:
         reactions: bool = False,
     ):
         self.system = system
-        self.prefix = system.prefix if hasattr(system, "prefix") else ""
         self.text_in = text_in
         self.text_out = text_out
         self.cli = cli
@@ -35,8 +33,6 @@ class TextIOClient:
         input_indicator = ""
         if self.cli:
             greeting = f"Welcome to Fictionsuit CLI."
-            if self.prefix != "":
-                greeting = f'{greeting} The command prefix is "{self.prefix}"'
             input_indicator = "\n> "
             self.print(f"{greeting}{input_indicator}")
             self.skip_next_newline = True

@@ -40,16 +40,9 @@ def slow_command(command):
     return command
 
 
-def auto_reply(command):
-    """Wraps a command the returns `str | None`, causing the command to reply automatically with the returned string."""
-
-    async def _command(s, m, a):
-        result = await command(s, m, a)
-        return CommandReply(result) if type(result) is str else result
-
-    _command.__doc__ = command.__doc__
-    _command.__name__ = command.__name__
-    return _command
+def parse_args_as_expression(command):
+    command.requests_expression = True
+    return command
 
 
 def default_on_none(default):
@@ -94,7 +87,7 @@ class CommandGroup:
 
     The rest of the function name is the command name.
     "message" is the UserMessage that contains the command
-    "args" is everything in the message after the command prefix and command name
+    "args" is everything in the message after the command name
     A handler's name must not contain any upper-case characters. Usage will not be case-sensitive.
     """
 
@@ -184,21 +177,18 @@ class CommandGroup:
 
 
 # TODO: Unit testing
-def command_split(content: str, prefix: str) -> tuple[str, str]:
-    """given a string that starts with the command prefix,
-    returns the command and its arguments as a tuple.
+def command_split(content: str) -> tuple[str, str]:
+    """given a string containing a command, returns the command and its arguments as a tuple.
 
     If there is no command, the command will be None
     If there are no arguments, the arguments will be an empty string.
-
-    **It is the caller's responsibility to ensure that the string starts with the prefix.**
     """
-    after_prefix = content[len(prefix) :].strip()
+    content = content.strip()
 
-    if after_prefix == "":
+    if content == "":
         return (None, "")  # No command
 
-    split_content = after_prefix.split(maxsplit=1)
+    split_content = [x.strip() for x in content.split(maxsplit=1)]
 
     cmd = split_content[0]
 
