@@ -5,56 +5,71 @@ from .. import config
 from .supa_client import init_supa_client
 
 
-async def upload_article(article, url, summary):
+async def upload_document(document, url, summary, type="article"):
     client = init_supa_client()
 
     try:
-        article_dict = {
-            "title": article.title,
-            "meta_description": article.meta_description,
+        document_dict = {
+            "type": type,
+            "title": document.title,
+            "meta_description": document.meta_description,
             "url": url,
             "ai_summary": summary,
             "chunks": json.dumps(
                 {
                     str(i): chunk
-                    for i, chunk in enumerate(split_text(article.cleaned_text))
+                    for i, chunk in enumerate(split_text(document.cleaned_text))
                 }
             ),
         }
 
-        res, _ = client.table("articles").insert(article_dict).execute()
+        res, _ = client.table("documents").insert(document_dict).execute()
         _, data = res
-        article_id = data[0]["id"]
+        document_id = data[0]["id"]
 
-        return article_id
+        return document_id
 
     except Exception as e:
         print(e)
         return e, None
 
 
-async def upload_article_embeddings(scraped_article, article_id):
+async def upload_document_embeddings(scraped_document, document_id):
     client = init_supa_client()
 
-    for i, chunk in enumerate(split_text(scraped_article.cleaned_text)):
+    for i, chunk in enumerate(split_text(scraped_document.cleaned_text)):
         embedding = get_embeddings(chunk)
         vector_data = {
             "embedding": embedding,
             "chunk_index": i,
-            "article_id": article_id,
+            "document_id": document_id,
         }
-        client.table("article_vectors").insert(vector_data).execute()
+        client.table("document_vectors").insert(vector_data).execute()
 
 
-async def get_articles():
+async def get_documents():
     client = init_supa_client()
-    res, _ = client.table("articles").select("*").execute()
+    res, _ = client.table("documents").select("*").execute()
     _, data = res
     return data
 
 
-async def delete_article(article_id):
+async def delete_document(document_id):
     client = init_supa_client()
-    res, _ = client.table("articles").delete().eq("id", article_id).execute()
+    res, _ = client.table("documents").delete().eq("id", document_id).execute()
     _, data = res
     return data
+
+
+async def check_if_document_exists(url):
+    client = init_supa_client()
+    res, _ = client.table("documents").select("*").eq("url", url).execute()
+    _, data = res
+    return data
+
+
+async def get_summary(data):
+    res_string = ""
+    for document in data:
+        res_string += f"- {document['ai_summary']}\n"
+    return res_string

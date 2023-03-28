@@ -4,16 +4,13 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import CharacterTextSplitter
 
 from .. import config
-from ..utils import convert_article, scrape_link, write_md
+from ..utils import convert_document, scrape_link, write_md
 
 
 # summarize text
-async def summarize(url: str):
+async def summarize(doc: dict):
     try:
-        article = await scrape_link(url)
-        # md_article = convert_article(article, url, "md")
-        # write_md(md_article, "articles", article.title)
-        text = article.cleaned_text
+        text = doc.cleaned_text
         summary_template = f"""
         {config.SYSTEM_MSG} \n
         {config.SUMMARIZE_MSG} \n 
