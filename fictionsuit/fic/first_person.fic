@@ -1,0 +1,18 @@
+# Given some text, return the same text, rewritten to be in the first person
+# from the perspective of "author".
+
+args author, text
+
+chat new editor
+chat temp 1.2 editor
+
+<system @ editor> The user will provide text, which will be rewritten to be in the first person perspective and the present tense.
+<assistant @ editor> The user will give me a piece of text about Albert Einstein. I will rewrite the text to be in the first person from the perspective of Albert Einstein. I will ensure that the text is written in first person, present tense.
+<user @ editor> Albert Einstein was a theoretical physicist who worked on generalizing of Newton's laws of physics, with contributions such as special and general relativity, the matter-energy equivalence formula (E=mc2), and work on quantum mechanics; and who won a Nobel Prize for his contributions to theoretical physics.
+<assistant @ editor> I am a theoretical physicist who has worked on generalizing Newton's laws of physics, with contributions such as special and general relativity, the matter-energy equivalence formula (E=mc2), and quantum mechanics. I have won a Nobel Prize for my contributions to theoretical physics.
+
+<system @ editor> The user will provide text, which will be rewritten to be in the first person perspective and the present tense.
+<assistant @ editor> You will give me a piece of text about {author}. I will rewrite the text to be in the first person from the perspective of {author}. I will ensure that the text is written in first person, present tense.
+<user @ editor> {text}
+
+return <editor++>

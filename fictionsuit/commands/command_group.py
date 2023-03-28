@@ -134,7 +134,7 @@ class CommandGroup:
     async def cmd_cmds(self, message: UserMessage, args: str) -> str | None:
         """`cmds` - print out a list of all available commands"""
         response = f"**__{self.__class__.__name__}__**\n  > "
-        response += "\n  > ".join(self.get_all_commands())
+        response += "\n  > ".join(self.get_command_names())
         return response
 
     @default_on_none(PartialReply(""))
@@ -146,7 +146,7 @@ class CommandGroup:
         `help` - with no command, acts as an alias for `cmds`"""
         if args == "":
             response = f"**__{self.__class__.__name__}__**\n  > "
-            response += "\n  > ".join(self.get_all_commands())
+            response += "\n  > ".join(self.get_command_names())
             return response
 
         command = args.split(maxsplit=1)[0]
@@ -172,8 +172,15 @@ class CommandGroup:
         cmds = [x for x in self.__class__.__dict__ if x.startswith("cmd_")]
         return [x[4:] for x in cmds if hasattr(self.__class__.__dict__[x], "is_slow")]
 
-    def get_all_commands(self) -> list[str]:
+    def get_command_names(self) -> list[str]:
         return [x[4:] for x in self.__class__.__dict__ if x.startswith("cmd_")]
+
+    def get_commands(self) -> dict[str, Callable]:
+        return {
+            x[4:]: self.__class__.__dict__[x]
+            for x in self.__class__.__dict__
+            if x.startswith("cmd_")
+        }
 
 
 # TODO: Unit testing

@@ -15,6 +15,6 @@ chat temp 1.2 helper
 
 <system @ helper> Complete the sentence: {context}
 
-| result = chat continue helper
+| result = <helper++>
 
 return | result

@@ -36,6 +36,12 @@ class Chat(CommandGroup):
         if len(role_chat_split) < 2:
             role = "user"
             chat = role_chat_split[0]
+            if chat.endswith("++"):
+                chat = chat[:-2]
+                return f"chat continue {chat}"
+            elif chat.endswith("+"):
+                chat = chat[:-1]
+                return f"chat continue {chat} + {message}"
         else:
             role = role_chat_split[0]
             chat = role_chat_split[1]
@@ -100,6 +106,21 @@ class _Chat(CommandGroup):
             return CommandFailure(f'No ChatInstance called "{split[1]}" in scope.')
         try:
             scope[split[1]].max_tokens = int(split[0])
+        except ValueError:
+            return CommandFailure("Chat limit must be an int.")
+
+    async def cmd_model(self, message: UserMessage, args: str):
+        """Set a ChatInstance's model"""
+        split = [x.strip() for x in args.split(maxsplit=1)]
+        if len(split) == 1:
+            return CommandFailure(
+                "Not enough arguments. TODO: better help message here"
+            )
+        scope = self.parent._get_scope()
+        if split[1] not in scope:
+            return CommandFailure(f'No ChatInstance called "{split[1]}" in scope.')
+        try:
+            scope[split[1]].model = split[0]
         except ValueError:
             return CommandFailure("Chat limit must be an int.")
 
@@ -176,6 +197,16 @@ class _Chat(CommandGroup):
                     args = split[1]
             except ValueError:
                 pass
+
+        if "+" in args:
+            split = [x.strip() for x in args.rsplit("+", maxsplit=1)]
+            if len(split) == 1:
+                return CommandFailure("issue with + sign")
+
+            result = await self.cmd_user(message, f"{split[0]}: {split[1]}")
+            if type(result) is CommandFailure:
+                return CommandFailure(f"cmd_user failed:\n{result}")
+
         scope = self.parent._get_scope()
         if args not in scope:
             return CommandFailure(f'No ChatInstance called "{args}" in scope.')

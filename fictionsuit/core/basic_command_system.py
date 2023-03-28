@@ -29,7 +29,7 @@ class BasicCommandSystem(System):
         self.respond_on_unrecognized = respond_on_unrecognized
 
         all_commands = [
-            command for group in command_groups for command in group.get_all_commands()
+            command for group in command_groups for command in group.get_command_names()
         ]
 
         # TODO: this doesn't actually work; figure out why
@@ -67,7 +67,7 @@ class BasicCommandSystem(System):
                 if type(content) is CommandFailure:
                     if return_failures:
                         return content
-                    message.reply(
+                    await message.reply(
                         f"Failed in content interceptor of command group {group.__class__.__name__}:\n{content}"
                     )
                     return

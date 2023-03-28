@@ -37,8 +37,17 @@ class TextIOClient:
             self.print(f"{greeting}{input_indicator}")
             self.skip_next_newline = True
         try:
+            message_lines = []
             for line in self.text_in:
-                wrap = TextIOMessage(self, line)
+                line = line.rstrip()
+                if line.endswith("--"):
+                    self.text_out.write("--> ")
+                    self.text_out.flush()
+                    message_lines.append(line[:-2])
+                    continue
+                message_lines.append(line)
+                wrap = TextIOMessage(self, "\n".join(message_lines))
+                message_lines = []
                 wrap.no_react = not self.reactions
                 await self.system.enqueue_message(wrap)
                 self.text_out.write(input_indicator)

@@ -37,5 +37,5 @@ load_fic $FIC/face/face_aspect.fic
 | goals = fic face aspect: {prompt}, the character's goals and desires, The character seeks to, Sauron, {sauron goals}
 
 # Pack the variables into a new scope and return the scope
-# TODO: syntactic sugar for pack? (e.g. "return [name, description, style, goals]")
+# TODO: syntactic sugar for pack? (e.g. "return |: name, description, style, goals")
 return pack name, description, style, goals

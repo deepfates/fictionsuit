@@ -9,12 +9,12 @@ class Scope:
         self.vars = vars if vars else {}
         if name is None:
             if parent is None:
-                self.name = "| (base)"
+                self.name = "(base)"
             else:
                 self.name = f"{parent.name} > anon"
         else:
             if parent is None:
-                self.name = f"| {name}"
+                self.name = f"{name}"
             else:
                 self.name = f"{parent.name} > {name}"
         self._has_defaulting_args = False
@@ -23,12 +23,12 @@ class Scope:
         self.parent = new_parent
         if new_name is None:
             if new_parent is None:
-                self.name = "| (base)"
+                self.name = "(base)"
             else:
                 self.name = f"{new_parent.name} > anon"
         else:
             if new_parent is None:
-                self.name = f"| {new_name}"
+                self.name = f"{new_name}"
             else:
                 self.name = f"{new_parent.name} > {new_name}"
 
@@ -73,12 +73,12 @@ class Scope:
                     return {}
                 visited.append(s)
                 nonscopes = {
-                    f"{pfx} {var}": s.vars[var]
+                    f"{pfx} {var}".lstrip(): s.vars[var]
                     for var in s.vars
                     if type(s.vars[var]) is not Scope
                 }
                 scopes = {
-                    f"{pfx} {var}": s.vars[var]
+                    f"{pfx} {var}".lstrip(): s.vars[var]
                     for var in s.vars
                     if type(s.vars[var]) is Scope
                 }
@@ -93,7 +93,7 @@ class Scope:
                     )
                 return scope_vars
 
-            vars = {**get_child_vars(self, f"|", visited), **self.vars}
+            vars = {**get_child_vars(self, "", visited), **self.vars}
         else:
             vars = self.vars
 

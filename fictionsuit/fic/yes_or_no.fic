@@ -16,7 +16,7 @@ chat limit 5 c
 <c> {query}
 
 # Get the response, check if it is just a yes or a no
-| response = chat continue c
+| response = <c++>
 | y = just_yes {response}
 | n = just_no {response}
 

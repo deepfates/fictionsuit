@@ -9,4 +9,4 @@ chat new c
 <assistant @ c> I am ready to answer your question about the text.
 <user @ c> {query}
 
-return chat continue c
+return <c++>
