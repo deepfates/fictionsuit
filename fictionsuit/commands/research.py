@@ -37,7 +37,6 @@ class Research(CommandGroup):
             await message.reply(summary)
             # get tags
             tags = await get_tags_from_text(summary)
-            await message.reply(tags)
             if config.UPLOAD_TO_SUPABASE:
                 document_id = await upload_document(document, args, summary)
                 await upload_document_embeddings(document, document_id)
