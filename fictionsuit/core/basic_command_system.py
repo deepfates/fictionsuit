@@ -1,14 +1,12 @@
 from typing import Sequence
 
-from ..api_wrap.openai import ChatInstance
-
 from .. import config
+from ..api_wrap.openai import ChatInstance
 from ..commands.command_group import (
     CommandFailure,
     CommandGroup,
     CommandHandled,
     CommandNotFound,
-    CommandReply,
     PartialReply,
     command_split,
 )
@@ -25,15 +23,13 @@ class BasicCommandSystem(System):
         stats_ui: bool = True,
         respond_on_unrecognized: bool = False,
         enable_scripting: bool = False,
-        prefix: str = config.COMMAND_PREFIX,
     ):
         self.command_groups = command_groups
         self.stats_ui = stats_ui
         self.respond_on_unrecognized = respond_on_unrecognized
-        self.prefix = prefix
 
         all_commands = [
-            command for group in command_groups for command in group.get_all_commands()
+            command for group in command_groups for command in group.get_command_names()
         ]
 
         # TODO: this doesn't actually work; figure out why
@@ -46,10 +42,10 @@ class BasicCommandSystem(System):
         self.slow_commands = None
 
         if enable_scripting:
-            self.command_groups += [Scripting(self, self.command_groups)]
+            self.command_groups += [Scripting(self.command_groups)]
 
         for group in self.command_groups:
-            group.command_prefix = prefix
+            group.system = self
             group.inspect_other_groups(self.command_groups)
 
     async def enqueue_message(
@@ -57,25 +53,32 @@ class BasicCommandSystem(System):
         message: UserMessage,
         return_failures: bool = False,
         return_returns: bool = False,
+        return_whatever: bool = False,
     ):
         content = message.content
+
+        if return_whatever:
+            return_failures = True
+            return_returns = True
 
         try:
             for group in self.command_groups:
                 content = await group.intercept_content(content)
                 if type(content) is CommandFailure:
-                    return content if return_failures else None
+                    if return_failures:
+                        return content
+                    await message.reply(
+                        f"Failed in content interceptor of command group {group.__class__.__name__}:\n{content}"
+                    )
+                    return
         except Exception as e:
             await message.reply(f"Content interceptor threw an exception: {e}")
             content = message.content
 
-        if not message.has_prefix(self.prefix):
-            return  # Not handling non-prefixed messages, for now
-
-        (cmd, args) = command_split(content, self.prefix)
+        (cmd, args) = command_split(content)
 
         if cmd is None:
-            return  # Nothing but a prefix. Nothing to do.
+            return  # Nothing to do.
 
         if self.slow_commands is None:
             self.slow_commands = []
@@ -101,10 +104,9 @@ class BasicCommandSystem(System):
                     await message.react("❌")
                     await message.reply(f'Command "{cmd}" failed:\n{result}')
                     return result if return_failures else None
-                # if type(result) is CommandReply:
-                #     await message.reply(result)
-                #     return
                 if return_returns and cmd == "return":
+                    return result
+                elif return_whatever:
                     return result
                 if type(result) is PartialReply:
                     accumulator = result
@@ -127,12 +129,19 @@ class BasicCommandSystem(System):
             if cmd_is_slow:
                 await message.undo_react("⏳")
             await message.reply(accumulator)
+            if return_whatever:
+                return accumulator
             return
 
         await message.undo_react("⏳")
 
         if self.respond_on_unrecognized:
             await self.direct_chat(message)
+        else:
+            if return_failures:
+                return CommandFailure(f'Command "{cmd}" not recognized.')
+            else:
+                await message.reply(f'Command "{cmd}" not recognized.')
 
     async def direct_chat(self, message: UserMessage):
         if hasattr(message, "discord_message"):

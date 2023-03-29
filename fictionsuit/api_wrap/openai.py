@@ -30,6 +30,9 @@ class ChatInstance:
         self.history = []
         self.name = name
 
+    def inspect(self):
+        return f'ChatInstance **{self.name}**\nUsing model "{self.model}"\nMax {self.max_tokens} tokens per response\nTemperature = {self.temperature}\nTop P = {self.top_p}\n\nHistory: {len(self.history)} messages (try `chat dump {self.name}` for full history)'
+
     def __str__(self):
         return f"ChatInstance {self.name}"
 

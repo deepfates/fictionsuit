@@ -12,6 +12,7 @@ class System(ABC):
         message: UserMessage,
         return_failures: bool = False,
         return_returns: bool = False,
+        return_whatever: bool = False,
     ):
         """Called whenever a new user message arrives."""
         pass

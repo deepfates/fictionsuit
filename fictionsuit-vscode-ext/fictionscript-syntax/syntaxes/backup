@@ -1,0 +1,32 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "FictionScript",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.fictionscript",
+				"match": "\\b(if|return|then|else|chat)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.fictionscript",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.fictionscript",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "main.fic"
+}

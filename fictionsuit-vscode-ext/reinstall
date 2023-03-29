@@ -1,0 +1,2 @@
+rm -rf ~/.vscode/extensions/fictionscript-syntax/
+cp -r . ~/.vscode/extensions/
