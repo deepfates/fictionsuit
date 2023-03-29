@@ -15,9 +15,6 @@ class UserMessage(ABC):
         self.disable_interactions = False
         self.no_react = False
 
-    def has_prefix(self, prefix: str) -> bool:
-        return self.content.lower().startswith(prefix.lower())
-
     @abstractmethod
     async def _get_timestamp(self) -> float:
         pass

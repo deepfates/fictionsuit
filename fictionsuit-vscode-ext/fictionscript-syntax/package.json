@@ -1,0 +1,25 @@
+{
+  "name": "fictionscript-syntax",
+  "displayName": "FictionScript Syntax",
+  "description": "FictionScript Syntax Highlighting",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.76.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "fictionscript",
+      "aliases": ["FictionScript", "fictionscript"],
+      "extensions": [".fic"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "fictionscript",
+      "scopeName": "source.fic",
+      "path": "./syntaxes/fictionscript.tmLanguage.json"
+    }]
+  }
+}

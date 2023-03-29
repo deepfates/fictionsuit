@@ -1,6 +1,7 @@
-from ..core.user_message import UserMessage
 from .. import config
-from .command_group import CommandGroup, auto_reply
+from ..core.core import scrape_link, summarize
+from ..core.user_message import UserMessage
+from .command_group import CommandGroup
 from ..core.core import summarize, scrape_link
 from ..db.supa_tools import (
     upload_document,
@@ -11,21 +12,19 @@ from ..db.supa_tools import (
     get_summary,
 )
 from ..db.search import (
-    embed_query,
     create_mappings,
+    embed_query,
     get_cosine_similarity,
     get_document_data,
     render_document_data,
     set_cache_needs_update,
 )
+from .command_group import CommandGroup
 
 
 class Research(CommandGroup):
-    @auto_reply
     async def cmd_read(self, message: UserMessage, args: str) -> str:
-        """**__Read__**
-        `prefix read` - returns a summary of the linked document, uploads, and embeds
-        """
+        """`read` - returns a summary of the linked article, uploads, and embeds"""
         document_exists = await check_if_document_exists(args)
         if document_exists:
             summary = await get_summary(document_exists)
@@ -37,7 +36,6 @@ class Research(CommandGroup):
             summary = await summarize(document)
             await message.reply(summary)
             if config.UPLOAD_TO_SUPABASE:
-
                 document_id = await upload_document(document, args, summary)
                 await upload_document_embeddings(document, document_id)
                 set_cache_needs_update()
@@ -45,19 +43,13 @@ class Research(CommandGroup):
                     f"document uploaded to Supabase with ID: {document_id}"
                 )
 
-    @auto_reply
     async def cmd_scrape(self, message: UserMessage, args: str):
-        """**__Scrape__**
-        `prefix scrape` - returns scraped URL
-        """
+        """`scrape` - returns scraped URL"""
         document = await scrape_link(args)
         return document.cleaned_text
 
-    @auto_reply
     async def cmd_list_documents(self, message, args):
-        """**__Recall__**
-        `prefix list_documents` - returns a list of all documents in the database
-        """
+        """`list_documents` - returns a list of all documents in the database"""
         documents = await get_documents()
         ar_list = ""
         for document in documents:
@@ -67,18 +59,14 @@ class Research(CommandGroup):
         return ar_list
 
     async def cmd_delete_document(self, message, args):
-        """**__Delete__**
-        `prefix delete_document` - deletes an document from the database
-        """
+        """`delete_document` - deletes a document from the database"""
         document_id = args
         await delete_document(document_id)
         set_cache_needs_update()
         await message.reply(f"document <{document_id}> deleted from database")
 
-    @auto_reply
     async def cmd_search(self, message, args):
-        """**__Search__**
-        `prefix search` - searches for similar documents in the database"""
+        """`search` - searches for similar documents in the database"""
         query = args
         embeddings_list, id_mappings = create_mappings()
         query_embedding = await embed_query(query)

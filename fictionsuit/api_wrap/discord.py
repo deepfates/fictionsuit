@@ -2,11 +2,10 @@ import discord
 from discord import Message
 from discord.ext import commands
 
-from .openai import ApiMessages, api_message
-
 from .. import config
 from ..core.system import System
 from ..core.user_message import UserMessage
+from .openai import ApiMessages, api_message
 
 
 class DiscordBotClient(commands.Bot):
@@ -35,6 +34,14 @@ class DiscordBotClient(commands.Bot):
         if message.author == self.user:
             # Don't self-reply
             return
+
+        content = message.content.lstrip()
+
+        if not content.lower().startswith(self.command_prefix.lower()):
+            return
+
+        message.content = content[len(self.command_prefix) :].lstrip()
+
         wrap = DiscordMessage(self, message)
         await self.system.enqueue_message(wrap)
 
@@ -52,6 +59,10 @@ class DiscordBotClient(commands.Bot):
                 return member
         raise Exception("Anattā")
 
+    async def set_nickname(self, server, nickname):
+        botMember = await self.get_self_as_member(server)
+        await botMember.edit(nick=nickname)
+
 
 class DiscordMessage(UserMessage):
     """Wraps a discord message for platform-agnostic use."""
@@ -61,6 +72,9 @@ class DiscordMessage(UserMessage):
         super().__init__(message.content, message.author.name)
         self.char_limit = 2000
         self.client = client
+
+    async def set_nickname(self, nickname: str):
+        await self.client.set_nickname(self.discord_message.guild, nickname)
 
     async def _send(self, message_content: str) -> bool:
         try:

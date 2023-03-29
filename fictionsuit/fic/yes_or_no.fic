@@ -1,0 +1,32 @@
+# Given a text and a yes-or-no question about the text, attempts to get ChatGPT to answer
+# the question with a simple "yes" or "no".
+
+# Define arguments
+args text, query
+
+# Instantiate a new chat instance and configure it
+chat new c
+chat temp 1.2 c
+chat limit 5 c
+
+# Fill in the prompt to get the instance to answer the question
+<system @ c> I answer yes-or-no questions about segments of text.
+<user @ c> Here is some text: {text}
+<assistant @ c> I am ready to answer your yes-or-no question about the text.
+<c> {query}
+
+# Get the response, check if it is just a yes or a no
+| response = <c++>
+| y = just_yes {response}
+| n = just_no {response}
+
+# If so, return it
+if just_yes {response} then | result := yes
+if just_no {response} then | result := no
+
+# | foo > bar > baz
+
+# Fail otherwise
+if fails | result then fail ChatGPT failed to answer your question with a simple "yes" or "no". Here's its response:\n{response} 
+
+return | result

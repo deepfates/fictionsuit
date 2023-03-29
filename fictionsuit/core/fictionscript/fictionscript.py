@@ -1,6 +1,6 @@
 class FictionScript:
     def __init__(self, lines, source=None, name=None):
-        self.lines = lines
+        self.lines = [l.rstrip("\n") for l in lines]
         self.source = source
         self.name = name  # TODO: the FictionScript type should be responsible for determining script names from filenames...
 
@@ -18,6 +18,16 @@ class FictionScript:
                     self.args.append(arg_line[4:].split(":=", maxsplit=1)[0].strip())
                 else:
                     self.args.append(arg_line[4:].split("=", maxsplit=1)[0].strip())
+
+    def inspect(self):
+        top_comments = []
+        for line in self.lines:
+            if line.startswith("#"):
+                top_comments.append(line[1:])
+            else:
+                break
+        doc = "\n".join(top_comments)
+        return f"FictionScript **{self.name}**\n```\n{doc}\n```"
 
     def __str__(self):
         return f"FictionScript {self.name}"
