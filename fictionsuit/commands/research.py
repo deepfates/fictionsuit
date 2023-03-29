@@ -9,6 +9,8 @@ from ..db.supa_tools import (
     delete_document,
     check_if_document_exists,
     get_summary,
+    get_tags_from_text,
+    upload_tags,
 )
 from ..db.search import (
     embed_query,
@@ -31,19 +33,19 @@ class Research(CommandGroup):
             summary = await get_summary(document_exists)
             await message.reply(summary)
         else:
-            await message.reply("scraping...")
             document = await scrape_link(args)
-            await message.reply("scraping done, now summarizing...")
             summary = await summarize(document)
             await message.reply(summary)
+            # get tags
+            tags = await get_tags_from_text(summary)
+            await message.reply(tags)
             if config.UPLOAD_TO_SUPABASE:
-
                 document_id = await upload_document(document, args, summary)
                 await upload_document_embeddings(document, document_id)
                 set_cache_needs_update()
-                await message.reply(
-                    f"document uploaded to Supabase with ID: {document_id}"
-                )
+                # upload tags to supabase
+                await upload_tags(tags, document_id)
+                await message.reply(f"tags uploaded:{tags}")
 
     @auto_reply
     async def cmd_scrape(self, message: UserMessage, args: str):

@@ -6,7 +6,6 @@ from . import config
 from typing import List, Dict
 import openai
 
-
 # will likely change w api update
 # https://platform.openai.com/docs/guides/chat/managing-tokens
 def num_tokens_from_messages(
@@ -115,3 +114,16 @@ def get_embeddings(text):
     )
     embeddings = response["data"][0]["embedding"]
     return embeddings
+
+
+# yes i know we have other ways, i don't wanna make a whole big chat object, etc
+async def get_chat_completion(prompt):
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=50,
+        n=1,
+        stop=None,
+        temperature=0.7,
+    )
+    return completion.choices[0].message.content
