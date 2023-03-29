@@ -45,7 +45,6 @@ class Research(CommandGroup):
                 set_cache_needs_update()
                 # upload tags to supabase
                 await upload_tags(tags, document_id)
-                await message.reply(f"tags uploaded:{tags}")
 
     @auto_reply
     async def cmd_scrape(self, message: UserMessage, args: str):
