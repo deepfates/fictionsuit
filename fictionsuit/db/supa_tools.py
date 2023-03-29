@@ -86,7 +86,7 @@ async def check_if_tag_exists(tag):
     return data
 
 
-async def get_tags_from_text(text, n_tags=5):
+async def get_tags_from_text(text, n_tags=3):
     try:
         # query all tags in supabase
         existing_tags = await get_tags()
