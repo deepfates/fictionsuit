@@ -2,7 +2,7 @@
 # the question with a simple "yes" or "no".
 
 # Define arguments
-args text, query
+args :text, :query
 
 # Instantiate a new chat instance and configure it
 <chat> c

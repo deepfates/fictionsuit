@@ -111,6 +111,3 @@ class TextIOMessage(UserMessage):
 
     async def _get_timestamp(self) -> float:
         return self.timestamp
-
-    async def _retrieve_history(self) -> ApiMessages:
-        return []

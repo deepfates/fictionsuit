@@ -1,8 +1,8 @@
 # Create a chat instance where the assistant is playing a character based on a name and optionally a description
 # If a description is given and it is a URL, a summary of the web page will be used as the description
 
-arg spirit
-arg description := A spirit to be summoned from the word-machine.
+arg :spirit
+arg :description := A spirit to be summoned from the word-machine.
 
 | url yes or no = <yes or no> {description}, Is the text a URL?
 | use web summary = is_yes {url yes or no}

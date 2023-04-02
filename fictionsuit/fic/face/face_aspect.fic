@@ -1,4 +1,4 @@
-args prompt, aspect, context, example character, example result
+args :prompt, :aspect, :context, :example character, :example result
 
 <chat> helper
 

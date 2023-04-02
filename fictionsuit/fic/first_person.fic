@@ -1,7 +1,7 @@
 # Given some text, return the same text, rewritten to be in the first person
 # from the perspective of "author".
 
-args author, text
+args :author, :text
 
 <chat> editor
 

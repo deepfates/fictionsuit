@@ -51,6 +51,8 @@ class BasicCommandSystem(System):
             group.system = self
             group.inspect_other_groups(self.command_groups)
 
+        self.message_history = []
+
     async def enqueue_message(
         self,
         message: UserMessage,

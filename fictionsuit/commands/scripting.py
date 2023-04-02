@@ -145,8 +145,6 @@ class Scripting(CommandGroup):
 
         (cmd, args) = command_split(content)
 
-        content = content.replace("\\n", "\n")
-
         unchanged = ""
 
         if cmd == "...":
@@ -175,6 +173,8 @@ class Scripting(CommandGroup):
             if len(split) > 1:
                 unchanged = f"{after} {split[1].lstrip()}".lstrip()
             content = split[0].rstrip()
+
+        content = content.replace("\\n", "\n")
 
         if cmd in self.escape_commas:
             content = content.replace("\\,", COMMA_ESCAPE)
@@ -211,11 +211,12 @@ class Scripting(CommandGroup):
     async def cmd_drop(self, message: UserMessage, args: str):
         """Drop a variable from the current scope."""
         try:
-            del self.vars[args]
+            del self.vars.vars[args]
         except KeyError:
             return CommandFailure(f"No such variable: {args}")
 
     @no_preprocessing_after(":")
+    @slow_command
     async def cmd_for(self, message: UserMessage, args: str):
         """Iterate over a scope's contents.
         Usage:
@@ -240,7 +241,12 @@ class Scripting(CommandGroup):
         if not isinstance(source_scope, Scope):
             return CommandFailure(f"Expected a scope, got `{source_scope}`")
 
-        execution_scope = Scope(parent=source_scope, name=f"for {loop_variable}")
+        execution_scope = Scope(
+            parent=source_scope, name=f"for {loop_variable} execution context"
+        )
+        execution_scope["results"] = Scope(
+            parent=execution_scope, name=f"for {loop_variable}"
+        )
 
         script = None
         if "\n" in command:
@@ -248,6 +254,7 @@ class Scripting(CommandGroup):
 
         for variable_name in source_scope.vars:
             execution_scope[loop_variable] = source_scope[variable_name]
+            execution_scope["name"] = variable_name
             if script is None:
                 result = await self._evaluate(
                     message, command, "for loop command", execution_scope
@@ -257,7 +264,7 @@ class Scripting(CommandGroup):
             if isinstance(result, CommandFailure):
                 return CommandFailure(f"Failed evaluating for loop command.\n{result}")
 
-        return execution_scope
+        return execution_scope["results"]
 
     async def cmd_where(self, message: UserMessage, args: str) -> str:
         """Internal metacommand for debugging.
@@ -338,6 +345,7 @@ class Scripting(CommandGroup):
     elsefinder = re.compile("\s+else\s+")
 
     @no_preprocessing_after("")
+    @slow_command
     async def cmd_if(self, message: UserMessage, args: str):
         """if {condition} then {y} (optional:) else {z}"""
         cond_then_split = [
@@ -387,6 +395,7 @@ class Scripting(CommandGroup):
             return await self._evaluate(message, block, f"{clause} clause", scope)
 
     @no_preprocessing_after("")
+    @slow_command
     async def cmd_while(self, message: UserMessage, args: str):
         """while {condition} \n {body}"""
         cond_do_split = [x.strip() for x in args.split("\n", maxsplit=1)]
@@ -446,7 +455,7 @@ class Scripting(CommandGroup):
 
         result = scope
         for name in split:
-            if name in scope:
+            if name in result:
                 result = result[name]
             else:
                 return CommandFailure(f'"{name}" not found.')
@@ -548,6 +557,8 @@ class Scripting(CommandGroup):
             return CommandFailure(
                 "Arguments without defaults must precede arguments with defaults."
             )
+        if args.startswith(":"):
+            args = args[1:]
         echo = ":=" in args
         if echo:
             arg_name = args.split(":=", maxsplit=1)[0].strip()
@@ -572,6 +583,8 @@ class Scripting(CommandGroup):
             )
         args_split = [arg.strip() for arg in args.split(",")]
         for arg in args_split:
+            if arg.startswith(":"):
+                arg = arg[1:]
             if arg not in self.vars:
                 return CommandFailure(f"Missing argument: {args}")
 
@@ -661,9 +674,19 @@ class Scripting(CommandGroup):
             )
 
         for i in range(len(arg_values)):
+            echo = False
+            arg_value = arg_values[i]
+            param = params[i]
+            if param.startswith(":"):
+                param = param[1:]
+                echo = True
+            if arg_value.startswith(":"):
+                arg_value = arg_value[1:]
+                echo = True
+            assignment_op = ":=" if echo else "="
             result = await enqueue(
                 ScriptLineMessage(
-                    f"var {params[i]} := {arg_values[i]}", script_name, message
+                    f"var {param} {assignment_op} {arg_value}", script_name, message
                 )
             )
             if result is not None:

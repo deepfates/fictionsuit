@@ -1,6 +1,8 @@
 import aiohttp
 import openai
 
+from ..core.fictionscript.scope import Scope
+
 from ..commands.failure import CommandFailure
 
 from .. import config
@@ -62,7 +64,10 @@ class ChatInstance:
             return CommandFailure(f'Expected an integer, got "{n}".')
         if n < 1:
             return CommandFailure(f'Expected a positive integer, got "{n}".')
-        return [x["content"] for x in self.history[-n:]]
+        if n == 1:
+            return self.history[-1]["content"]
+        last = [x["content"] for x in self.history[-n:]]
+        return Scope(name=f"{self.name} last", vars={str(i): last[i] for i in range(n)})
 
     async def sm_default(self, content):
         await self.sm_user(content)
@@ -144,6 +149,11 @@ class ChatInstance:
         if n == 1:
             self.history.extend(api_message("assistant", response[0]))
             return response[0]
+
+        response = Scope(
+            name=f"{self.name} continuations",
+            vars={str(i): response[i] for i in range(n)},
+        )
 
         return response
 
