@@ -605,7 +605,11 @@ class Scripting(CommandGroup):
 
         split = [x.strip() for x in args.split(" as ", maxsplit=1)]
         if len(split) == 1:
-            var_name = ntpath.basename(args)[:-4].replace("_", " ").lower()
+            var_name = ntpath.basename(args)
+            if var_name.endswith(".fic"):
+                var_name = var_name[:-4].replace("_", " ").lower()
+        else:
+            var_name = split[1]
 
         try:
             script = FictionScript.from_file(split[0], var_name)
