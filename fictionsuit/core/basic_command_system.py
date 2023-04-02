@@ -1,9 +1,10 @@
 from typing import Sequence
 
+from ..commands.failure import CommandFailure
+
 from .. import config
 from ..api_wrap.openai import ChatInstance
 from ..commands.command_group import (
-    CommandFailure,
     CommandGroup,
     CommandHandled,
     CommandNotFound,
@@ -40,9 +41,11 @@ class BasicCommandSystem(System):
             )
 
         self.slow_commands = None
+        self.scripting_group = None
 
         if enable_scripting:
-            self.command_groups += [Scripting(self.command_groups)]
+            self.scripting_group = Scripting(self.command_groups)
+            self.command_groups += [self.scripting_group]
 
         for group in self.command_groups:
             group.system = self
@@ -64,7 +67,7 @@ class BasicCommandSystem(System):
         try:
             for group in self.command_groups:
                 content = await group.intercept_content(content)
-                if type(content) is CommandFailure:
+                if isinstance(content, CommandFailure):
                     if return_failures:
                         return content
                     await message.reply(
@@ -97,8 +100,9 @@ class BasicCommandSystem(System):
                 result = await group.handle(message, cmd, args, accumulator)
             else:
                 result = await group.handle(message, cmd, args)
-            if type(result) is not CommandNotFound:
-                if type(result) is CommandFailure:
+            if not isinstance(result, CommandNotFound):
+                self.last = result
+                if isinstance(result, CommandFailure):
                     if cmd_is_slow:
                         await message.undo_react("⏳")
                     await message.react("❌")
@@ -108,14 +112,18 @@ class BasicCommandSystem(System):
                     return result
                 elif return_whatever:
                     return result
-                if type(result) is PartialReply:
+                if isinstance(result, PartialReply):
                     accumulator = result
                     continue
-                if type(result) is CommandHandled:
+                if isinstance(result, CommandHandled):
                     if cmd_is_slow:
                         await message.undo_react("⏳")
                     await message.react("✅")
                     return
+                if self.scripting_group is not None and hasattr(result, "name"):
+                    if result.name is None or result.name == "":
+                        result.name = "anon"
+                    self.scripting_group.vars[result.name] = result
                 try:
                     result = str(result)
                 except ValueError:

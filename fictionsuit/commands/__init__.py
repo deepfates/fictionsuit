@@ -1,6 +1,5 @@
-from .chat import Chat
+from .methods import Methods
 from .command_group import (
-    CommandFailure,
     CommandGroup,
     CommandHandled,
     CommandNotFound,

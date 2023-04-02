@@ -1,7 +1,8 @@
 args prompt, aspect, context, example character, example result
 
-chat new helper
-chat temp 1.2 helper
+<chat> helper
+
+<temp @ helper> 1.2
 
 <system @ helper> I will assist the user in inventing a character. In particular, I will be helping them come up with {aspect}. My response should be worded so that it would fit in as the end of this sentence: "{context}...". I will not include "{context}" in my reply, just the rest of the sentence, and no further commentary.
 
@@ -15,6 +16,5 @@ chat temp 1.2 helper
 
 <system @ helper> Complete the sentence: {context}
 
-| result = <helper++>
 
-return | result
+return <helper++>

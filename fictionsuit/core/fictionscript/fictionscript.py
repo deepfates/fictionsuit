@@ -2,7 +2,7 @@ class FictionScript:
     def __init__(self, lines, source=None, name=None):
         self.lines = [l.rstrip("\n") for l in lines]
         self.source = source
-        self.name = name  # TODO: the FictionScript type should be responsible for determining script names from filenames...
+        self.name = name  # TODO: the FictionScript type should be responsible for determining script names from filenames
 
         arg_lines = [
             line
@@ -19,7 +19,7 @@ class FictionScript:
                 else:
                     self.args.append(arg_line[4:].split("=", maxsplit=1)[0].strip())
 
-    def inspect(self):
+    async def sm_inspect(self, _):
         top_comments = []
         for line in self.lines:
             if line.startswith("#"):
@@ -28,6 +28,12 @@ class FictionScript:
                 break
         doc = "\n".join(top_comments)
         return f"FictionScript **{self.name}**\n```\n{doc}\n```"
+
+    async def sm_dump(self, _):
+        return "\n".join(f"{i+1: >3} {line}" for i, line in enumerate(self.lines))
+
+    async def sm_default(self, _):
+        return f"TODO: make the default action run a script"
 
     def __str__(self):
         return f"FictionScript {self.name}"

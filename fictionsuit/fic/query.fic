@@ -1,12 +1,14 @@
 # Asks a new ChatInstance a question about some text.
+# Unrelatedly to this file's purpose, this is also a good example of
+# a doc comment. All consecutive comment lines at the start of a .fic
+# file are considered to be the doc comment for the file.
 
 args text, query
 
-chat new c
+<chat c>
 
 <system @ c> I answer questions about segments of text.
 <c> Here is some text:\n{text}
 <assistant @ c> I am ready to answer your question about the text.
-<user @ c> {query}
 
-return <c++>
+return <c+> {query}

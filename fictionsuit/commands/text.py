@@ -1,5 +1,7 @@
 import re
 
+from .failure import CommandFailure
+
 from ..core.user_message import UserMessage
 from .command_group import CommandGroup
 
@@ -8,6 +10,12 @@ class Text(CommandGroup):
     """Text manipulation & interpretation helper methods."""
 
     _cleaner = re.compile("[^a-zA-Z]")
+
+    async def cmd_reverse(
+        self, message: UserMessage, args: str
+    ) -> str | CommandFailure:
+        """Reverse the order of the characters in the given text."""
+        return args[::-1]
 
     # Tetralemma
     def _which(self, a: str, b: str, text: str) -> tuple[bool, str]:

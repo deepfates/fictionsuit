@@ -7,53 +7,68 @@ class Scope:
     ):
         self.parent = parent
         self.vars = vars if vars else {}
-        if name is None:
-            if parent is None:
-                self.name = "(base)"
-            else:
-                self.name = f"{parent.name} > anon"
-        else:
-            if parent is None:
-                self.name = f"{name}"
-            else:
-                self.name = f"{parent.name} > {name}"
+        self.name = name
         self._has_defaulting_args = False
+
+    def full_name(self):
+        if self.name is None:
+            if self.parent is None:
+                return "(base)"
+            else:
+                return f"{self.parent.name} > anon"
+        else:
+            if self.parent is None:
+                return f"{self.name}"
+            else:
+                return f"{self.parent.name} > {self.name}"
 
     def recontextualize(self, new_name, new_parent):
         self.parent = new_parent
-        if new_name is None:
-            if new_parent is None:
-                self.name = "(base)"
-            else:
-                self.name = f"{new_parent.name} > anon"
-        else:
-            if new_parent is None:
-                self.name = f"{new_name}"
-            else:
-                self.name = f"{new_parent.name} > {new_name}"
+        self.name = new_name
 
-    def inspect(self):
+    async def sm_dump(self, _):
         if len(self.vars) == 0:
-            return f"{self.name}\n```\nEmpty scope.\n```"
+            return f"{self.full_name()}\n```\nEmpty scope.\n```"
         longest = max([len(key) for key in self.vars])
+        keys = self.vars
+        if longest > 25:
+            longest = 25
+            keys_l = {f"{k[:22]}...": keys[k] for k in keys if len(k) > 25}
+            keys_s = {k: keys[k] for k in keys if len(k) <= 25}
+            keys = {**keys_l, **keys_s}
         dump = [
-            f"{' ' * (1 + longest - len(key))}{{{key}}} : {self.vars[key]}"
-            for key in self.vars
+            f"{' ' * (1 + longest - len(key))}{{{key}}} : {keys[key]}" for key in keys
         ]
         dump_split = []
         for line in dump:
             while len(line) > 80:
+                if "\n" in line:
+                    index = line.index("\n")
+                    if index < 80:
+                        dump_split.append(line[:index])
+                        after = line[index + 1 :]
+                        line = f"{' ' * (5 + longest)} {after}"
+                        continue
                 dump_split.append(line[:80])
                 line = f"{' ' * (5 + longest)} {line[80:]}"
             dump_split.append(line)
         result = "\n".join(dump_split)
-        return f"Scope {self.name}\n```\n{result}\n```"
+        return f"Scope {self.full_name()}\n```\n{result}\n```"
+
+    async def sm_inspect(self, _):
+        if len(self.vars) == 0:
+            return f"{self.full_name()}\n```\nEmpty scope.\n```"
+        vars = "\n".join(f"  {k}" for k in self.vars)
+        return f"{self.full_name()}\n```\n{vars}\n```"
+
+    async def sm_default(self, _):
+        return f"TODO: make the default action run a script"
 
     def __str__(self):
-        return f"[Scope] {self.name} >"
+        return f"[Scope] {self.full_name()} >"
 
     def __repr__(self):
-        return f"[Scope] {self.name} >"
+        return f"[Scope] {self.full_name()} >"
 
     def move_up(self, k):
         self.parent[k] = self[k]
@@ -75,12 +90,12 @@ class Scope:
                 nonscopes = {
                     f"{pfx} {var}".lstrip(): s.vars[var]
                     for var in s.vars
-                    if type(s.vars[var]) is not Scope
+                    if not isinstance(s.vars[var], Scope)
                 }
                 scopes = {
                     f"{pfx} {var}".lstrip(): s.vars[var]
                     for var in s.vars
-                    if type(s.vars[var]) is Scope
+                    if isinstance(s.vars[var], Scope)
                 }
                 scope_vars = {}
                 if nonscopes is not None:
