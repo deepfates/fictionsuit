@@ -1,0 +1,12 @@
+# fly.toml file generated for fictionsuit on 2023-03-30T07:58:16-06:00
+
+app = "fictionsuit"
+kill_signal = "SIGINT"
+kill_timeout = 5
+primary_region = "den"
+processes = []
+
+[env]
+
+[experimental]
+  auto_rollback = true
