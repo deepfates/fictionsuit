@@ -25,7 +25,19 @@
 					"include": "#setexpr"
 				},
 				{
+					"include": "#chat_b"
+				},
+				{
 					"include": "#chat"
+				},
+				{
+					"include": "#fail_b"
+				},
+				{
+					"include": "#fail"
+				},
+				{
+					"include": "#keywords"
 				}
 			]
 		},
@@ -38,7 +50,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.fictionscript",
-				"match": "\\b(return|chat|arg|args|load_fic|fails|fail|fic|var|scope|\\$FIC|\\$\\.FIC)\\b"
+				"match": "\\b(return|arg|args|load_fic|fails|pack|while|not|for|fic|var|scope|\\$FIC|\\$\\.FIC)\\b"
 			}]
 		},
 		"setliteral": {
@@ -171,8 +183,8 @@
 			"patterns": [
 				{
 					"name": "string.quoted.double.fictionscript",
-					"begin": "(<)\\s*(?:(system|user|assistant)\\s*(@))?\\s*(.*?)\\s*(>)",
-					"end": "$",
+					"begin": "(<)\\s*(?:(.+)\\s*(@))?\\s*(.*?)\\s*(>)",
+					"end": "(?<!\\s*--\\s*)$",
 					"beginCaptures": {
 						"1": {
 							"name": "constant.language.fictionscript"
@@ -190,6 +202,104 @@
 							"name": "constant.language.fictionscript"
 						}
 					},
+					"patterns": [
+						{
+							"name": "variable.name.fictionscript",
+							"match": "{.*?}"
+						},
+						{
+							"name": "constant.character.escape",
+							"match": "\\\\n"
+						},
+						{
+							"name": "markup.italic",
+							"match": "."
+						},
+						{
+							"name": "constant.language.fictionscript",
+							"match": "\\s*--\\s*$"
+						}
+					]
+				}
+			]
+		},
+		"chat_b": {
+			"patterns": [
+				{
+					"name": "string.quoted.double.fictionscript",
+					"begin": "(<)\\s*(?:(.+)\\s*(@))?\\s*(.*?)\\s*(>).*(---)",
+					"end": "\\s*(?<!-)(--)(?!-)\\s*$",
+					"beginCaptures": {
+						"1": {
+							"name": "constant.language.fictionscript"
+						},
+						"2": {
+							"name": "keyword.control.fictionscript"
+						},
+						"3": {
+							"name": "constant.language.fictionscript"
+						},
+						"4": {
+							"name": "variable.name.fictionscript"
+						},
+						"5": {
+							"name": "constant.language.fictionscript"
+						},
+						"6": {
+							"name": "constant.language.fictionscript"
+						}
+					},
+					"endCaptures": {
+						"1": {
+							"name": "constant.language.fictionscript"
+						}
+					},
+					"patterns": [
+						{
+							"name": "variable.name.fictionscript",
+							"match": "{.*?}"
+						},
+						{
+							"name": "constant.character.escape",
+							"match": "\\\\n"
+						},
+						{
+							"name": "markup.italic",
+							"match": "."
+						}
+					]
+				}
+			]
+		},
+		"fail": {
+			"patterns": [
+				{
+					"name": "invalid.illegal",
+					"begin": "(^|\\s)*fail\\s",
+					"end": "(?<!\\s*--\\s*)$",
+					"patterns": [
+						{
+							"name": "variable.name.fictionscript",
+							"match": "{.*?}"
+						},
+						{
+							"name": "constant.character.escape",
+							"match": "\\\\n"
+						},
+						{
+							"name": "markup.italic",
+							"match": "."
+						}
+					]
+				}
+			]
+		},
+		"fail_b": {
+			"patterns": [
+				{
+					"name": "invalid.illegal",
+					"begin": "(^|\\s)*fail\\s.*(---)",
+					"end": "\\s*(?<!-)(--)(?!-)\\s*$",
 					"patterns": [
 						{
 							"name": "variable.name.fictionscript",

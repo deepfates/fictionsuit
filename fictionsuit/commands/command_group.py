@@ -4,6 +4,8 @@ import string
 import traceback
 from typing import Any, Callable
 
+from .failure import CommandFailure
+
 from ..core.user_message import UserMessage
 
 # TODO: this file is doing way too many things. probably best to extract to a module
@@ -15,11 +17,6 @@ class CommandNotFound:
 
 class CommandHandled:
     pass
-
-
-class CommandFailure(str):
-    def __new__(cls, *args, **kwargs):
-        return str.__new__(cls, *args, **kwargs)
 
 
 class CommandReply(str):

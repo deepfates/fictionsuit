@@ -1,4 +1,3 @@
-from ...api_wrap.openai import ApiMessages
 from ...core.user_message import UserMessage
 
 
@@ -23,9 +22,6 @@ class ScriptLineMessage(UserMessage):
     async def _get_timestamp(self) -> float:
         return await self.invoker._get_timestamp()
 
-    async def _retrieve_history(self) -> ApiMessages:
-        return await self.invoker._retrieve_history()
-
 
 class ExpressionMessage(UserMessage):
     def __init__(self, content: str, context: str, invoker: UserMessage):
@@ -47,6 +43,3 @@ class ExpressionMessage(UserMessage):
 
     async def _get_timestamp(self) -> float:
         return await self.invoker._get_timestamp()
-
-    async def _retrieve_history(self) -> ApiMessages:
-        return await self.invoker._retrieve_history()

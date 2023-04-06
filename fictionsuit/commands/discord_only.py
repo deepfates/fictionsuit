@@ -1,5 +1,6 @@
+from .failure import CommandFailure
 from ..core.user_message import UserMessage
-from .command_group import CommandFailure, CommandGroup
+from .command_group import CommandGroup
 
 
 class DiscordOnly(CommandGroup):

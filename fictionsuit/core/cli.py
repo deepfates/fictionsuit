@@ -38,13 +38,29 @@ class TextIOClient:
             self.skip_next_newline = True
         try:
             message_lines = []
+            auto_collecting = False
             for line in self.text_in:
                 line = line.rstrip()
-                if line.endswith("--"):
+                if not auto_collecting and line.endswith("--"):
+                    if line[-3] == "-":
+                        auto_collecting = True
+                        self.text_out.write("--> ")
+                        self.text_out.flush()
+                        message_lines.append(line[:-3].rstrip())
+                        continue
                     self.text_out.write("--> ")
                     self.text_out.flush()
-                    message_lines.append(line[:-2])
+                    message_lines.append(line[:-2].rstrip())
                     continue
+                if auto_collecting:
+                    if not line.endswith("--"):
+                        self.text_out.write("--> ")
+                        self.text_out.flush()
+                        message_lines.append(line)
+                        continue
+                    auto_collecting = False
+                    line = line[:-2].rstrip()
+
                 message_lines.append(line)
                 wrap = TextIOMessage(self, "\n".join(message_lines))
                 message_lines = []
@@ -95,6 +111,3 @@ class TextIOMessage(UserMessage):
 
     async def _get_timestamp(self) -> float:
         return self.timestamp
-
-    async def _retrieve_history(self) -> ApiMessages:
-        return []

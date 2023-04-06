@@ -4,10 +4,10 @@
 # {goals} - An explanation of the character's motivation or purpose
 
 # Define a variable that must be provided by the user
-arg name
+arg :name
 # Define a variable that will use a default value if not provided by the user
 # ":=" is shorthand for "= echo" here
-arg initial description := All I've really decided so far is the name of the character.
+arg :initial description := All I've really decided so far is the name of the character.
 
 # Load in a helper method from another file
 # $FIC is shorthand for ".fictionsuit/fic"
@@ -20,22 +20,22 @@ load_fic $FIC/face/face_aspect.fic
 | einstein description := a theoretical physicist who worked on generalizing of Newton's laws of physics, with contributions such as special and general relativity, the matter-energy equivalence formula (E=mc2), and work on quantum mechanics; and who won a Nobel Prize for his contributions to theoretical physics
 
 # call the "face aspect" fictionscript, and store its return value as "description"
-| description = fic face aspect: {prompt}, the character's description, The character is, Albert Einstein, {einstein description}
+| description = <face aspect> {prompt}, the character's description, The character is, Albert Einstein, {einstein description}
 
 
 | prompt := {name}:\n\n{name} is {description}
 
 | wallace style := neurotic, excessively self-conscious at times, lengthy, philosophical, bringing a cerebral view to the profound and mundane alike, at once elevating and mocking each subject
 
-| style = fic face aspect: {prompt}, the character's distinctive writing style, The character's writings are, David Foster Wallace, {wallace style}
+| style = <face aspect> {prompt}, the character's distinctive writing style, The character's writings are, David Foster Wallace, {wallace style}
 
 
 | prompt := {name}:\n\n{name} is {description}\n\n{name}'s writings are {style}
 
 | sauron goals := acquire his ring and rule Middle Earth, and emulate his master, Morgoth, also known as Melkor
 
-| goals = fic face aspect: {prompt}, the character's goals and desires, The character seeks to, Sauron, {sauron goals}
+| goals = <face aspect> {prompt}, the character's goals and desires, The character seeks to, Sauron, {sauron goals}
 
 # Pack the variables into a new scope and return the scope
-# TODO: syntactic sugar for pack? (e.g. "return |: name, description, style, goals")
+# TODO: syntactic sugar for pack?
 return pack name, description, style, goals

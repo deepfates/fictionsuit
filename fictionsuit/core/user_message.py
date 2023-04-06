@@ -1,6 +1,5 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-
-from ..api_wrap.openai import ApiMessages
 
 
 class UserMessage(ABC):
@@ -46,12 +45,6 @@ class UserMessage(ABC):
         Return True if the reaction was removed successfully."""
         pass
 
-    @abstractmethod
-    async def _retrieve_history(self) -> list[ApiMessages]:
-        """Retrieve the history of messages
-        Return a list of message contents."""
-        pass
-
     # TODO: find a way to reduce the repetition here with higher-order functions
 
     async def _try_reply(self, reply_content: str) -> bool:
@@ -89,15 +82,6 @@ class UserMessage(ABC):
                 return True
             attempts += 1
         return False
-
-    async def _try_retrieve_history(self) -> list[ApiMessages]:
-        attempts = 0
-        while attempts < self.MAX_ATTEMPTS:
-            history = await self._retrieve_history()
-            if history:
-                return history
-            attempts += 1
-        return None
 
     # NOTE: this algorithm has some room for optimization.
     # I'll take care of that eventually if it becomes a problem or bothers me too much - John
@@ -145,9 +129,6 @@ class UserMessage(ABC):
         if self.disable_interactions or self.no_react:
             return False
         return await self._try_undo_react(reaction)
-
-    async def retrieve_history(self) -> ApiMessages:
-        return await self._try_retrieve_history()
 
     async def send(self, message_content: str) -> bool:
         if self.disable_interactions:

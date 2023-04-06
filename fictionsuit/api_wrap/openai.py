@@ -1,11 +1,17 @@
 import aiohttp
 import openai
 
+from ..core.fictionscript.scope import Scope
+
+from ..commands.failure import CommandFailure
+
 from .. import config
 
 ApiMessages = list[dict[str, str]]
 
 OPENAI_COMPLETIONS_ENDPOINT = "https://api.openai.com/v1/chat/completions"
+
+ESCAPES = ["``COM", "```COM", "``MSG", "``OBJ"]
 
 
 class ChatInstance:
@@ -30,8 +36,8 @@ class ChatInstance:
         self.history = []
         self.name = name
 
-    def inspect(self):
-        return f'ChatInstance **{self.name}**\nUsing model "{self.model}"\nMax {self.max_tokens} tokens per response\nTemperature = {self.temperature}\nTop P = {self.top_p}\n\nHistory: {len(self.history)} messages (try `chat dump {self.name}` for full history)'
+    async def sm_inspect(self, _):
+        return f'ChatInstance **{self.name}**\nUsing model "{self.model}"\nMax {self.max_tokens} tokens per response\nTemperature = {self.temperature}\nTop P = {self.top_p}\n\nHistory: {len(self.history)} messages (try `<{self.name}??>` for full history)'
 
     def __str__(self):
         return f"ChatInstance {self.name}"
@@ -49,8 +55,85 @@ class ChatInstance:
             "n": n,
         }
 
+    async def sm_last(self, args):
+        if args == "":
+            return self.history[-1]["content"]
+        try:
+            n = int(args)
+        except:
+            return CommandFailure(f'Expected an integer, got "{n}".')
+        if n < 1:
+            return CommandFailure(f'Expected a positive integer, got "{n}".')
+        if n == 1:
+            return self.history[-1]["content"]
+        last = [x["content"] for x in self.history[-n:]]
+        return Scope(name=f"{self.name} last", vars={str(i): last[i] for i in range(n)})
+
+    async def sm_default(self, content):
+        await self.sm_user(content)
+
+    async def sm_increment(self, args: str) -> str:
+        if args == "":
+            return await self._continue(1)
+        try:
+            n = int(args)
+        except:
+            return CommandFailure(f'Expected an integer, got "{n}".')
+        if n < 1:
+            return CommandFailure(f'Expected a positive integer, got "{n}".')
+        return await self._continue(n)
+
+    async def sm_decrement(self, _) -> str:
+        return self.history.pop()["content"]
+
+    async def sm_add(self, content):
+        await self.sm_user(content)
+        return await self._continue(1)
+
+    async def sm_subtract(self, n):
+        try:
+            n = int(n)
+        except:
+            return CommandFailure("Chat subtraction requires an integer argument.")
+        if n < 1:
+            return CommandFailure(
+                "Chat subtraction requires a positive integer argument."
+            )
+        for _ in range(n):
+            self.history.pop()
+
+    async def sm_temp(self, temperature):
+        try:
+            temperature = float(temperature)
+        except:
+            return CommandFailure("Chat temperature must be a number.")
+        self.temperature = temperature
+
+    async def sm_limit(self, limit):
+        try:
+            limit = int(limit)
+        except:
+            return CommandFailure("Chat token limit must be an integer.")
+        self.max_tokens = limit
+
+    async def sm_top_p(self, top_p):
+        try:
+            top_p = float(top_p)
+        except:
+            return CommandFailure("Chat Top-P must be a number.")
+        self.top_p = top_p
+
+    async def sm_model(self, model):
+        self.model = model
+
+    async def sm_dump(self, _) -> str:
+        formatted_messages = [
+            f'**__{m["role"]}__**:\n{m["content"]}\n' for m in self.history
+        ]
+        return "\n".join(formatted_messages)
+
     # named this way because continue is a reserved word
-    async def continue_(self, n: int = 1) -> str | list[str]:
+    async def _continue(self, n: int = 1) -> str | list[str]:
         completion = await self._get_completion(self.history, n)
 
         if "error" in completion:
@@ -67,15 +150,35 @@ class ChatInstance:
             self.history.extend(api_message("assistant", response[0]))
             return response[0]
 
+        response = Scope(
+            name=f"{self.name} continuations",
+            vars={str(i): response[i] for i in range(n)},
+        )
+
         return response
 
-    async def user(self, content):
+    async def sm_user(self, content):
+        for escape in ESCAPES:
+            if escape in content:
+                return CommandFailure(
+                    f'Escape sequence "{escape}" appeared in a chat command. This is probably a bug.'
+                )
         self.history.extend(api_message("user", content))
 
-    async def system(self, content):
+    async def sm_system(self, content):
+        for escape in ESCAPES:
+            if escape in content:
+                return CommandFailure(
+                    f'Escape sequence "{escape}" appeared in a chat command. This is probably a bug.'
+                )
         self.history.extend(api_message("system", content))
 
-    async def assistant(self, content):
+    async def sm_assistant(self, content):
+        for escape in ESCAPES:
+            if escape in content:
+                return CommandFailure(
+                    f'Escape sequence "{escape}" appeared in a chat command. This is probably a bug.'
+                )
         self.history.extend(api_message("assistant", content))
 
     async def _get_completion(self, messages: ApiMessages, n: int) -> dict:
@@ -88,6 +191,11 @@ class ChatInstance:
                 response_data = await response.json()
 
         return response_data
+
+
+class ChatFactory:
+    async def sm_default(self, content):
+        return ChatInstance(name=content)
 
 
 def api_message(role: str, content: str) -> ApiMessages:

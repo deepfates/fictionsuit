@@ -1,0 +1,10 @@
+
+load_fic $FIC/tests/for_loop.fic
+
+# TODO: fix syntax highlighting
+# TODO: check that the output of the for loops is actually correct
+if fails <for loop> --
+    then fail Simple for loops are failing.
+
+
+
