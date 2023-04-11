@@ -55,6 +55,23 @@ class ChatInstance:
             "n": n,
         }
 
+    async def sm_script(self, args):
+        out = []
+        out.append(f"<chat> {self.name}")
+        out.append(f"<model @ {self.name}> {self.model}")
+        out.append(f"<temp @ {self.name}> {self.temperature}")
+        out.append(f"<top_p @ {self.name}> {self.top_p}")
+        out.append(f"<limit @ {self.name}> {self.max_tokens}")
+        for message in self.history:
+            content = message["content"]
+            if "\n" in content:
+                content = content.replace("\n", "---\n", 1) + "--"
+            content.replace("{", "{{")
+            content.replace("}", "}}")
+            out.append(f"<{message['role']} @ {self.name}> {content}")
+        out.append(f"return | {self.name}")
+        return "\n".join(out)
+
     async def sm_last(self, args):
         if args == "":
             return self.history[-1]["content"]
@@ -71,6 +88,9 @@ class ChatInstance:
 
     async def sm_default(self, content):
         await self.sm_user(content)
+
+    async def sm_retry(self, args: str):
+        pass  # TODO
 
     async def sm_increment(self, args: str) -> str:
         if args == "":
@@ -158,27 +178,12 @@ class ChatInstance:
         return response
 
     async def sm_user(self, content):
-        for escape in ESCAPES:
-            if escape in content:
-                return CommandFailure(
-                    f'Escape sequence "{escape}" appeared in a chat command. This is probably a bug.'
-                )
         self.history.extend(api_message("user", content))
 
     async def sm_system(self, content):
-        for escape in ESCAPES:
-            if escape in content:
-                return CommandFailure(
-                    f'Escape sequence "{escape}" appeared in a chat command. This is probably a bug.'
-                )
         self.history.extend(api_message("system", content))
 
     async def sm_assistant(self, content):
-        for escape in ESCAPES:
-            if escape in content:
-                return CommandFailure(
-                    f'Escape sequence "{escape}" appeared in a chat command. This is probably a bug.'
-                )
         self.history.extend(api_message("assistant", content))
 
     async def _get_completion(self, messages: ApiMessages, n: int) -> dict:

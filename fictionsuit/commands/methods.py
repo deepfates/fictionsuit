@@ -12,6 +12,8 @@ from .scripting import (
 
 
 class Methods(CommandGroup):
+    """This group contains commands that expose python methods of objects for use in fictionscript."""
+
     def inspect_other_groups(self, groups: list[CommandGroup]):
         self.scripting_group = None
         for group in groups:
@@ -72,6 +74,17 @@ class Methods(CommandGroup):
     @slow_command
     @no_preprocessing_after("``MSG")
     async def cmd__obj_method(self, message: UserMessage, args: str):
+        """Call a script method on an object, if it exists.
+        For a high-level "how do I actually use this" sort of explanation, check the "methods" section of `fic/README.md`.
+        Usage:
+        If you don't have to, you should not use this command (or any other command that starts with an underscore) directly. There is a much more user-friendly syntax for calling methods, which gets automatically converted into an invocation of this command.
+        `_obj_method {method name} ``OBJ {object name} ``MSG {message}`
+        {object name} will first be interpreted as a variable in the current scope.
+        If no such variable is found, it will be interpreted as a variable in the `fic` scope.
+        If the object is a `FictionScript` object and the method is `default`, the script will be executed, with {message} as its arguments.
+        If the object is a scope, the method will be interpreted as the name of a fictionscript within that scope, which will be executed, with {message} as its arguments.
+        If the object is not a scope, then "sm_" will be prepended to the method name, and an async method with one argument (the message) will be called.
+        """
         split = [x.strip() for x in args.split("``OBJ", maxsplit=1)]
         if len(split) < 2:
             return CommandFailure("A method and object must be specified.")
@@ -81,7 +94,7 @@ class Methods(CommandGroup):
         object = split[0]
         method_args = None
         if len(split) == 2:
-            method_args = split[1]
+            method_args = split[1].replace("\\n", "\n")
         scope = self._get_scope()
 
         specials = ["default", "inspect", "dump"]

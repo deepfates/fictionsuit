@@ -1,20 +1,33 @@
+# This script uses ChatGPT to help write up various aspects of a character design, such as their description, goals, and writing style.
+
+# All these args start with ":", meaning that the passed values will be interpreted as literal strings instead of being evaluated by the interpreter.
 args :prompt, :aspect, :context, :example character, :example result
 
-<chat> helper
+# Create a ChatInstance, called "writer"
+<chat> writer
 
-<temp @ helper> 1.2
+# These are some pretty extreme settings, but they seem to work well for this script.
+<temp @ writer> 2.0
+<top_p @ writer> 0.955
+<model @ writer> gpt-3.5-turbo
 
-<system @ helper> I will assist the user in inventing a character. In particular, I will be helping them come up with {aspect}. My response should be worded so that it would fit in as the end of this sentence: "{context}...". I will not include "{context}" in my reply, just the rest of the sentence, and no further commentary.
+# First, the system message lays out the purpose of this chat
+<system @ writer> I will assist the user in inventing a character. In particular, I will be helping them come up with {aspect}. My response should be worded so that it would fit in as the end of this sentence: "{context}...". I will not include "{context}" in my reply, just the rest of the sentence, and no further commentary.
 
-<helper> Hello! I have a character idea and I need your help deciding on {aspect}. Also, I need you to reply only by completing the sentence "{context}..." and producing no other output. To show that you understand, please tell me what you would write for the character {example character}.
+# Now, a user asks the assistant for help, reiterating the format of the reply.
+<writer> Hello! I have a character idea and I need your help deciding on {aspect}. Also, I need you to reply only by completing the sentence "{context}..." and producing no other output. To show that you understand, please tell me what you would write for the character {example character}.
 
-<system @ helper> Complete the sentence: {context}
+# The system reminds the assistant of the context of its reply
+<system @ writer> Complete the sentence: {context}
 
-<assistant @ helper> {example result}.
+# We fill in the kind of reply we'd expect for our example character
+<assistant @ writer> {example result}.
 
-<helper> Excellent, you got the reply format exactly right. Now, here\'s my character idea: {prompt}
+# Now, the user asks for help with the actual character
+<writer> Excellent, you got the reply format exactly right. Now, here\'s my character idea: {prompt}
 
-<system @ helper> Complete the sentence: {context}
+# The system reminds the assistant of the context of its reply once more
+<system @ writer> Complete the sentence: {context}
 
-
-return <helper++>
+# And now we make the actual OpenAI api request, and hopefully we get a good result for our efforts.
+return <writer++>

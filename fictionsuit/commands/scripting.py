@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import gc
 import glob
 import ntpath
 import os
 import re
 import traceback
+
+from ..api_wrap.bluesky import BlueskyClientFactory
 
 from .failure import CommandFailure
 
@@ -19,14 +20,12 @@ from ..core.fictionscript import (
 from ..core.user_message import UserMessage
 from .command_group import (
     CommandGroup,
-    CommandHandled,
     command_split,
     slow_command,
 )
 
 COMMA_ESCAPE = "``COM"
 COMMA_ESCAPE_B = "```COM"
-
 
 # This file is doing way too many things
 
@@ -37,6 +36,8 @@ def escape_commas(command):
 
 
 def no_preprocessing_after(sequence: str, unless: str = None):
+    """Marks a command, telling the preprocessor not to modify any of the text after the given sequence."""
+
     def decorator(command):
         command.no_preprocessing_after = sequence
         command.unless = unless
@@ -45,14 +46,22 @@ def no_preprocessing_after(sequence: str, unless: str = None):
     return decorator
 
 
-def lsnap(string: str, delimiter: str):
+def lsnap(string: str, delimiter: str) -> tuple[str, str]:
+    """Breaks a string into two parts, splitting at the first instance of the delimiter.
+    The delimiter (and any whitespace surrounding it) is not included in either part.
+    If the delimiter is not found, the first part is the entire string, and the second part is the empty string.
+    """
     split = string.split(delimiter, maxsplit=1)
     if len(split) < 2:
         return (string, "")
     return (split[0].rstrip(), split[1].lstrip())
 
 
-def rsnap(string: str, delimiter: str):
+def rsnap(string: str, delimiter: str) -> tuple[str, str]:
+    """Breaks a string into two parts, splitting at the last instance of the delimiter.
+    The delimiter (and any whitespace surrounding it) is not included in either part.
+    If the delimiter is not found, the second part is the entire string, and the second part is the empty string.
+    """
     split = string.rsplit(delimiter, maxsplit=1)
     if len(split) < 2:
         return ("", string)
@@ -60,11 +69,15 @@ def rsnap(string: str, delimiter: str):
 
 
 class Scripting(CommandGroup):
+    """This command group contains the fundamental commands necessary for scripting.
+    Many of these commands have special syntax, though they can also be called normally.
+    """
+
     def __init__(self, command_groups: list[CommandGroup]):
         self.command_groups = command_groups + [self]
         self.base = Scope()  # TODO: save and load scopes?
         self.vars = self.base
-        # TODO: Concurrency & scopes might be a mess
+        # TODO: Concurrency -- probably easiest to just put every user in their own scope
         # TODO: add a more general preprocessor outside of Scripting for parsing scripts
         # from a nicer syntax down into runnable commands
         # TODO: maybe add config options for folders instead of just hard-coding things...
@@ -72,6 +85,7 @@ class Scripting(CommandGroup):
         self.load_scripts("fictionsuit/fic", self.vars["fic"])
         self.load_scripts("fictionsuit/.fic", self.vars["fic"])
         self.vars["fic"]["chat"] = ChatFactory()
+        self.vars["bsky"] = BlueskyClientFactory()
 
         self.evaluators = {}
         self.escape_commas = []
@@ -88,6 +102,11 @@ class Scripting(CommandGroup):
                     self.escape_commas.append(cmd)
 
     async def intercept_content(self, content: str) -> str | CommandFailure:
+        """This method modifies incoming commands, converting fictionscript syntax into
+        normal commands.
+        The syntax of these commands is described in the docstrings of the commands themselves,
+        as well as in `fic/README.md`.
+        """
         # print(f"Begin Interception: [{content}]")
         # print(self.vars.inspect())
 
@@ -171,28 +190,32 @@ class Scripting(CommandGroup):
                 if split is None:
                     split = content.split(after, maxsplit=1)
             if len(split) > 1:
-                unchanged = f"{after} {split[1].lstrip()}".lstrip()
+                unchanged = f"{after} {split[1].lstrip()}"
+                if unchanged[0] != "\n":
+                    unchanged = unchanged.lstrip()
             content = split[0].rstrip()
-
-        content = content.replace("\\n", "\n")
 
         if cmd in self.escape_commas:
             content = content.replace("\\,", COMMA_ESCAPE)
             content = content.replace(",", COMMA_ESCAPE_B)
         try:
             content = content.format(**self.vars.get_vars())
+            content = content.replace("}", "}}")
+            content = content.replace("{", "{{")
         except KeyError as k:
             return CommandFailure(f"No such variable: {k}")
         if cmd in self.escape_commas:
             content = content.replace(",", COMMA_ESCAPE)
             content = content.replace(COMMA_ESCAPE_B, ",")
 
+        content = content.replace("\\n", "\n")
         content = f"{content} {unchanged}".strip()
 
         # print(f"End Interception: [{content}]")
         return content
 
     def load_scripts(self, directory_name, scope: Scope):
+        """Load all .fic scripts from a directory into a scope."""
         for file in glob.glob(os.path.join(directory_name, "*.fic")):
             var_name = ntpath.basename(file)
             script = FictionScript.from_file(file, var_name)
@@ -200,16 +223,10 @@ class Scripting(CommandGroup):
                 var_name = var_name[:-4].replace("_", " ").lower()
             scope[var_name] = script
 
-    @slow_command
-    async def cmd__preprocess(self, message: UserMessage, args: str) -> str:
-        """Internal metacommand for debugging.
-        Usage:
-        `preprocess {text}` runs pre-processing to fill in variables and escape certain characters
-        """
-        return await self.intercept_content(args)
-
     async def cmd_drop(self, message: UserMessage, args: str):
-        """Drop a variable from the current scope."""
+        """Drop a variable from the current scope.
+        Usage:
+        `drop {variable name}`"""
         try:
             del self.vars.vars[args]
         except KeyError:
@@ -267,10 +284,10 @@ class Scripting(CommandGroup):
         return execution_scope["results"]
 
     async def cmd_where(self, message: UserMessage, args: str) -> str:
-        """Internal metacommand for debugging.
-        Returns the name of the current scope.
+        """Returns the current scope.
         Usage:
-        `|`"""
+        `|` (shorthand)
+        `where`"""
         return self.vars
 
     async def cmd_scope(self, message: UserMessage, args: str) -> Scope:
@@ -280,12 +297,13 @@ class Scripting(CommandGroup):
         return Scope(parent=self.vars)
 
     async def cmd_into(self, message: UserMessage, args: str) -> Scope:
-        """Enters a scope.
+        """Enters a scope, creating the scope if it does not already exist.
+        Fails if the variable exists but is not a scope.
         Usage:
-        `into {scope}`"""
+        `into {target scope}`"""
         vars = self.vars.get_vars()
         if args not in self.vars:
-            return CommandFailure(f"No such variable: `{args}`")
+            vars[args] = Scope(parent=self.vars, name=args)
         target = vars[args]
         if not isinstance(target, Scope):
             return CommandFailure(f"Variable `{args}` is not a scope.")
@@ -293,6 +311,7 @@ class Scripting(CommandGroup):
 
     async def cmd_out(self, message: UserMessage, args: str) -> None | CommandFailure:
         """Exits the current scope, moving to its parent scope.
+        Fails if the current scope has no parent.
         Usage:
         `out`"""
         if self.vars.parent is None:
@@ -300,13 +319,16 @@ class Scripting(CommandGroup):
         self._return_to_scope(self.vars.parent)
 
     async def cmd_base(self, message: UserMessage, args: str) -> None:
-        """Returns to the base scope.
+        """Enters the base scope.
         Usage:
         `base`"""
         self._return_to_scope(self.base)
 
     async def cmd_outer(self, message: UserMessage, args: str):
-        """Returns the value of a variable from the parent scope."""
+        """Retrieve the value of a variable from the parent scope.
+        Fails if the current scope has no parent.
+        Usage:
+        `outer {variable name}`"""
         if args == "":
             if self.vars.parent is None:
                 return CommandFailure(
@@ -317,6 +339,13 @@ class Scripting(CommandGroup):
 
     @no_preprocessing_after("")
     async def cmd_inspect(self, message: UserMessage, args: str):
+        """Call the `sm_inspect` scripting method of a variable in the current scope.
+        Fails if the variable does not have such a method.
+        A `sm_inspect` method should provide a concise representation of the variable's state.
+        Usage:
+        `inspect {variable name}`
+        `| {variable name} ?` (shorthand)
+        `<variable name?>` (shorthand)"""
         result = await self._evaluate(message, args, "inspection")
         if hasattr(result, "sm_inspect"):
             try:
@@ -331,6 +360,13 @@ class Scripting(CommandGroup):
 
     @no_preprocessing_after("")
     async def cmd_dump(self, message: UserMessage, args: str):
+        """Call the `sm_dump` scripting method of a variable in the current scope.
+        Fails if the variable does not have such a method.
+        A `sm_dump` method should provide a verbose representation of the variable's state.
+        Usage:
+        `dump {variable name}`
+        `| {variable name} ??` (shorthand)
+        `<variable name??>` (shorthand)"""
         result = await self._evaluate(message, args, "dump")
         if hasattr(result, "sm_dump"):
             try:
@@ -347,7 +383,13 @@ class Scripting(CommandGroup):
     @no_preprocessing_after("")
     @slow_command
     async def cmd_if(self, message: UserMessage, args: str):
-        """if {condition} then {y} (optional:) else {z}"""
+        """Evaluates a condition and executes a block of code if the condition is true.
+        Optionally, another block of code can be provided that will be executed if the condition is false.
+        Fails if the condition does not return a boolean value.
+        Usage:
+        `if {condition} then {then block}`
+        `if {condition} then {then block} else {else block}`
+        The then and else blocks can be multiple lines."""
         cond_then_split = [
             x.strip() for x in Scripting.thenfinder.split(args, maxsplit=1)
         ]
@@ -397,7 +439,10 @@ class Scripting(CommandGroup):
     @no_preprocessing_after("")
     @slow_command
     async def cmd_while(self, message: UserMessage, args: str):
-        """while {condition} \n {body}"""
+        """Repeatedly evaluates a condition and executes a block of code until the condition is false.
+        Fails if the condition ever returns a non-boolean value.
+        Usage:
+        `while {condition} \n {body}`"""
         cond_do_split = [x.strip() for x in args.split("\n", maxsplit=1)]
         if len(cond_do_split) < 2:
             return CommandFailure("A while loop needs a body.")
@@ -425,26 +470,39 @@ class Scripting(CommandGroup):
                 return CommandFailure(f"Failed in body of while loop:\n{result}")
 
     async def cmd_fail(self, message: UserMessage, args: str):
+        """Return a CommandFailure.
+        An explanation can be provided. This is not required but it is strongly recommended.
+        Usage:
+        `fail {reason}`
+        `fail` (returns a CommandFailure with "No explanation." as the message)"""
         if args == "":
             args = "No explanation."
         return CommandFailure(args)
 
     @no_preprocessing_after("")
     async def cmd_silently(self, message: UserMessage, args: str):
-        """Attempt to evaluate a command. Returns nothing, even if the command fails."""
+        """Attempt to evaluate a command. Returns nothing, even if the command fails.
+        Usage:
+        `silently {command}`"""
         await self._evaluate(message, args, "silenced evaluation")
 
     async def cmd_retrieve(self, message: UserMessage, args: str):
         """Retrieve a value from within a scope, or from scopes within scopes.
-        You can just write | as a stand-in for this command."""
+        This command can also be used to index into any variable that supports indexing.
+        The index will be parsed as an integer if possible.
+        Usage:
+        `retrieve {variable name}`
+        `| {variable name}` (shorthand)
+        `| {scope name} > {variable within that scope}`
+        `| {index} @ {variable that supports indexing}`"""
         index = None
         index_split = [x.strip() for x in args.split("@", maxsplit=1)]
         if len(index_split) == 2:
             try:
                 index = int(index_split[0])
-                args = index_split[1]
             except ValueError:
-                pass  # Not an index.
+                index = index_split[0]
+            args = index_split[1]
 
         scope = self.vars
         while len(args) > 0 and args[0] == "|" and scope.parent is not None:
@@ -473,7 +531,9 @@ class Scripting(CommandGroup):
     @no_preprocessing_after("")
     async def cmd_not(self, message: UserMessage, args: str):
         """Evaluate an expression, and return its negation.
-        Returns a CommandFailure if the expression does not return a boolean."""
+        Returns a CommandFailure if the expression does not return a boolean.
+        Usage:
+        `not {expression}`"""
         result = await self._evaluate(message, args, "negation")
         if isinstance(result, CommandFailure):
             return CommandFailure(f"Failed while evaluating expression:\n{result}")
@@ -485,8 +545,12 @@ class Scripting(CommandGroup):
 
     @no_preprocessing_after("=", unless=":=")
     async def cmd_insert(self, message: UserMessage, args: str):
-        """Assign a value from within a scope, or from scopes within scopes.
-        You can just write | as a stand-in for this command."""
+        """Evaluate an expression and store its return value in a variable within a scope within the current scope.
+        If ":=" is used instead of "=", the expression will be treated as a string literal instead of being evaluated.
+        Usage:
+        `insert {scope name} > {variable within that scope} = {expression}`
+        `| {scope name} > {variable within that scope} = {expression}` (shorthand)
+        `| {scope} > {variable} := {string literal}`"""
         echo = False
         if ":=" in args:
             split = [x.strip() for x in args.split(":=", maxsplit=1)]
@@ -536,20 +600,26 @@ class Scripting(CommandGroup):
 
     @no_preprocessing_after("")
     async def cmd_fails(self, message: UserMessage, args: str):
+        """Evaluate an expression. Returns True if the expression returns a CommandFailure, False otherwise.
+        Usage:
+        `fails {expression}`"""
         result = await self._evaluate(message, args, "failure check")
         return isinstance(result, CommandFailure)
 
     @no_preprocessing_after("=", unless=":=")
     @slow_command
     async def cmd_arg(self, message: UserMessage, args: str) -> None | CommandFailure:
-        """Returns a failure if the variable has not been defined.
-        Alternatively, you can provide a default value.
-        Arguments with no default values cannot follow an argument with a default value.
-        Does nothing otherwise.
-        If used within a ficscript document, this defines a required input for the script.
+        """This command is primarily for use in fictionscripts, to define required inputs.
+        If a variable with the argument's name exists, this command does nothing. If no such variable exists,
+        this command will fail unless a default value is provided.
+        In a script, args with no default values cannot follow an argument with a default value.
+        If an argument starts with ":", the value provided for the argument will be interpreted as a string literal.
+        Otherwise, the value will be evaluated as an expression.
         Usage:
         `arg {name of argument}`
-        `arg {name of argument} = {default value}`"""
+        `arg {name of argument} = {expression that returns a default value}`
+        `arg {name of argument} := {default value, as a literal string}`
+        `arg :{name}` (defines a string argument with no default value)"""
         defaulting = "=" in args
         if defaulting:
             self.vars._has_defaulting_args = True
@@ -573,9 +643,11 @@ class Scripting(CommandGroup):
         """Returns a failure if any of the arguments have not been defined.
         Does nothing otherwise.
         This is typically used at the start of a script file, to ensure that every script input is defined.
-        Names of arguments cannot contain commas, since commas are the separator.
+        Names of arguments cannot contain commas, since commas are the separator. To define an argument with a comma,
+        use the `arg` command instead.
+        If an argument starts with ":", the value provided for the argument will be interpreted as a string literal.
         Usage:
-        `args {name of argument}, {name of another argument}, {and another}, {and so on any number of times...} ...`
+        `args {name of argument}, {name of another argument}, :{and a string argument}, {and so on any number of times...}`
         """
         if self.vars._has_defaulting_args:
             return CommandFailure(
@@ -587,6 +659,21 @@ class Scripting(CommandGroup):
                 arg = arg[1:]
             if arg not in self.vars:
                 return CommandFailure(f"Missing argument: {args}")
+
+    @slow_command
+    async def cmd_load_text(self, message: UserMessage, args: str) -> str:
+        """Load the text of a file and return it.
+        Usage:
+        `load_text {filename}`"""
+        if "$FIC" in args:
+            args = args.replace("$FIC", "./fictionsuit/fic")
+        if "$.FIC" in args:
+            args = args.replace("$.FIC", "./fictionsuit/.fic")
+        try:
+            with open(args, "r") as f:
+                return f.read()
+        except FileNotFoundError:
+            return CommandFailure(f"File not found: {args}")
 
     @slow_command
     async def cmd_load_fic(self, message: UserMessage, args: str) -> str:
@@ -624,13 +711,35 @@ class Scripting(CommandGroup):
 
         return var_name
 
+    async def cmd_dynamic_fic(
+        self, message: UserMessage, args: str
+    ) -> FictionScript | CommandFailure:
+        """Executes its arguments, and attempts to parse the result as a fictionscript.
+        Usage:
+        `dynamic_fic {expression that returns a string that can be parsed as a fictionscript}`
+        """
+        result = await self._evaluate(message, args, "dynamic script provider")
+        if isinstance(result, CommandFailure):
+            return CommandFailure(
+                f"Failed to evaluate dynamic fictionscript content provider:\n{result}"
+            )
+        if not isinstance(result, str):
+            return CommandFailure(
+                f"Dynamic fictionscript content provider returned a non-string:\n{result}"
+            )
+        try:
+            return FictionScript(lines=result.split("\n"))
+        except Exception as e:
+            return CommandFailure(f"Failed to parse ficscript: {e}")
+
     @no_preprocessing_after("\n")
     @slow_command
     async def cmd_def_fic(self, message: UserMessage, args: str) -> str:
-        """Define a fictionscript. You should probably look at some examples in the `fic/` folder, and
+        """Define a fictionscript. You should probably look at some examples and README.md in the `fic/` folder, and
         familiarize yourself with the documentation of the commands from the `Scripting` command group.
         Usage:
         `def_fic {name}\\n{script}`"""
+        print(f"def_fic[{args}]")
         split = [x.strip() for x in args.split("\n")]
         var_name = split[0]
         if len(split) < 2:
@@ -644,7 +753,9 @@ class Scripting(CommandGroup):
         script: FictionScript,
         scope: Scope | None = None,
     ) -> CommandFailure:
-        """See docs for cmd_fic"""
+        """Execute a fictionscript. If a scope is provided, the script will be executed in that scope.
+        Otherwise, the script will execute inside a new temporary scope called "{script name} execution".
+        """
         split = args.split(":", maxsplit=1)
         if len(split) > 1:
             arg_values = [
@@ -743,10 +854,14 @@ class Scripting(CommandGroup):
     @escape_commas
     @slow_command
     async def cmd_fic(self, message: UserMessage, args: str) -> CommandFailure:
-        """Run a fictionscript. Scripts must first be loaded from a file with `load_fic` or defined with `def_fic`.
-        If the script has only one returned variable, this command will return its value.
+        """Run a fictionscript.
+        This command will first check the current scope for the script, then the
+        `fic` scope, which is automatically populated with the scripts in the `fic/` and `.fic/` folders.
+        Finally, it will check the filesystem for the script.
+        If the script returns a value, this command will return that value.
         Usage:
-        `fic {name of script}`"""
+        `fic {name of script}: {arguments}`
+        `<name of script> {arguments}` (shorthand)"""
         scope_before = self.vars
         disabled_before = message.disable_interactions
         try:
@@ -782,7 +897,10 @@ class Scripting(CommandGroup):
             message.disable_interactions = disabled_before
 
     async def cmd_pack(self, message: UserMessage, args: str):
-        """Pack several variables into a scope, and return it."""
+        """Copy several variables from the current scope into a new scope, and return it.
+        If any of the variables are scopes, the new scope will become their parent.
+        Usage:
+        `pack {variable name}, {another variable}, {and so on...}`"""
         vars = [x.strip() for x in args.split(",")]
         scope = Scope(parent=self.vars, name="pack")
 
@@ -797,7 +915,12 @@ class Scripting(CommandGroup):
 
     @no_preprocessing_after("")
     async def cmd_return(self, message: UserMessage, args: str):
-        """Evaluate and return an expression."""
+        """Evaluate an expression and return its value.
+        Outside of a script, `return {expr}` and `{expr}` are basically equivalent.
+        If used inside a script, however, this will immediately end execution of the script,
+        and cause the script to return the value.
+        Usage:
+        `return {expression}`"""
         return await self._evaluate(message, args, "return")
 
     async def _evaluate(
@@ -807,6 +930,7 @@ class Scripting(CommandGroup):
         context: str,
         scope: Scope | None = None,
     ):
+        """Evaluate an expression. If a scope is provided, the expression will be evaluated from within that scope."""
         previous_dis_int_value = message.disable_interactions
         message.disable_interactions = True
         initial_scope = self.vars
@@ -823,9 +947,13 @@ class Scripting(CommandGroup):
     @no_preprocessing_after("=", unless=":=")
     @slow_command
     async def cmd_var(self, message: UserMessage, args: str):
-        """Attempts to store the result of another command as a variable.
+        """Evaluates an expression and stores its result in a variable in the current scope.
+        Fails if the expression returns no value.
+        If ":=" is used instead of "=", the arguments will be interpreted as a string literal instead of being evaluated as an expression.
         Usage:
-        `var {name of variable} = {command and its arguments}`"""
+        `var {name of variable} = {expression}`
+        `| {variable} = {expression}` (shorthand)
+        `| {variable} := {string literal}`"""
 
         echo = ":=" in args
         if echo:
@@ -863,4 +991,7 @@ class Scripting(CommandGroup):
             result.recontextualize(var_name, scope)
 
         if isinstance(result, ChatInstance):
+            result.name = var_name
+
+        if isinstance(result, FictionScript):
             result.name = var_name

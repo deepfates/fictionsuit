@@ -1,3 +1,9 @@
+import os
+
+
+base_path = "./fictionsuit/.fic"
+
+
 class FictionScript:
     def __init__(self, lines, source=None, name=None):
         self.lines = [l.rstrip("\n") for l in lines]
@@ -34,6 +40,12 @@ class FictionScript:
 
     async def sm_default(self, _):
         return f"TODO: make the default action run a script"
+
+    async def sm_save(self, path):
+        path = os.path.join(base_path, path)
+        with open(path, "w") as f:
+            f.write("\n".join(self.lines))
+            f.write("\n")
 
     def __str__(self):
         return f"FictionScript {self.name}"

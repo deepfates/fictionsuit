@@ -126,10 +126,48 @@ class CommandGroup:
 
     @default_on_none(PartialReply(""))
     @multi_command(
+        lambda x, y: PartialReply("\n\n\n".join((x, y))) if y is not None else x
+    )
+    async def cmd_docs(self, message: UserMessage, args: str) -> str | None:
+        """Return the help text for every command.
+        Usage:
+        `docs`"""
+        commands = self.get_command_names()
+        handlers = {command: getattr(self, f"cmd_{command}") for command in commands}
+
+        def make_legible(name):
+            return string.capwords(name.replace("_", " "))
+
+        def format_name(command_name):
+            return f"**__{make_legible(command_name)}__**"
+
+        def strip_doc(doc):
+            """Remove leading and trailing whitespace from each line of the docstring."""
+            return "\n".join(x.strip() for x in doc.split("\n"))
+
+        def format_docs(handler):
+            if handler.__doc__ is None:
+                # TODO: maybe just print the source code of the command handler?
+                # or do some galaxy brain nonsense like checking the git history
+                # to tell the user who to bother about it
+                return "Unfortunately, this command has no documentation."
+            return strip_doc(handler.__doc__)
+
+        docs = {format_name(x): format_docs(handlers[x]) for x in handlers}
+        docs = "\n\n".join([f"{x}\n{docs[x]}" for x in docs])
+        header = f'**__Command Group "{make_legible(self.__class__.__name__)}"__**'
+        if self.__class__.__doc__ is not None:
+            header = f"{header}\n{self.__class__.__doc__}"
+        return f"{header}\n\n{docs}"
+
+    @default_on_none(PartialReply(""))
+    @multi_command(
         lambda x, y: PartialReply("\n\n".join((x, y))) if y is not None else x
     )
     async def cmd_cmds(self, message: UserMessage, args: str) -> str | None:
-        """`cmds` - print out a list of all available commands"""
+        """Return a list of all available commands.
+        Usage:
+        `cmds`"""
         response = f"**__{self.__class__.__name__}__**\n  > "
         response += "\n  > ".join(self.get_command_names())
         return response
@@ -139,8 +177,10 @@ class CommandGroup:
         lambda x, y: PartialReply("\n\n".join((x, y)).strip()) if y is not None else x
     )
     async def cmd_help(self, message: UserMessage, args: str) -> str | None:
-        """`help {cmd}` - print the help for command `cmd`
-        `help` - with no command, acts as an alias for `cmds`"""
+        """Return the help text for a command, or a list of all commands if no command is specified.
+        Usage:
+        `help {cmd}`
+        `help`"""
         if args == "":
             response = f"**__{self.__class__.__name__}__**\n  > "
             response += "\n  > ".join(self.get_command_names())
@@ -152,11 +192,15 @@ class CommandGroup:
 
         command_handler_name = f"cmd_{command}".lower()
 
+        def strip_doc(doc):
+            """Remove leading and trailing whitespace from each line of the docstring."""
+            return "\n".join(x.strip() for x in doc.split("\n"))
+
         if hasattr(self, command_handler_name):
             handler = getattr(self, command_handler_name)
             if handler.__doc__ is not None:
                 name = string.capwords(handler.__name__[4:].replace("_", " "))
-                response = f"**__{name}__**\n{handler.__doc__}"
+                response = f"**__{name}__**\n{strip_doc(handler.__doc__)}"
             else:
                 response = f'Sorry, the "{command}" command is missing documentation.'
 
@@ -180,7 +224,6 @@ class CommandGroup:
         }
 
 
-# TODO: Unit testing
 def command_split(content: str) -> tuple[str, str]:
     """given a string containing a command, returns the command and its arguments as a tuple.
 

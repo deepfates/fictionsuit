@@ -1,0 +1,11 @@
+# Create a fictionscript that will reproduce the chat in its current state
+# The syntax for this could definitely be improved
+
+# The name of the chat, and the path to save it to
+args :chat, :path
+
+# Call Chat.sm_script, interpret the result as a fictionscript, store it as "script"
+| script = dynamic_fic <script@{chat}>
+
+# Call FictionScript.sm_save
+<save@script> {path}

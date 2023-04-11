@@ -7,7 +7,9 @@ class DiscordOnly(CommandGroup):
     """Commands that are only available in the Discord server."""
 
     async def cmd_discord_nickname(self, message: UserMessage, args: str):
-        """Set the bot's nickname in the current server."""
+        """Set the bot's nickname in the current server.
+        Usage:
+        `discord_nickname {nickname}`"""
         if not hasattr(message, "set_nickname"):
             return CommandFailure("This command is only available on Discord.")
         try:

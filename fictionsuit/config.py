@@ -34,3 +34,7 @@ UPLOAD_TO_SUPABASE = True
 
 # Embedding globals
 embeddings_cache = {"embeddings_list": [], "id_mappings": [], "needs_update": True}
+
+# Bluesky social
+BSKY_USERNAME = os.getenv("BSKY_USERNAME")
+BSKY_PASSWORD = os.getenv("BSKY_PASSWORD")

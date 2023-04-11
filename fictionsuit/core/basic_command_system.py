@@ -112,11 +112,11 @@ class BasicCommandSystem(System):
                     return result if return_failures else None
                 if return_returns and cmd == "return":
                     return result
-                elif return_whatever:
-                    return result
                 if isinstance(result, PartialReply):
                     accumulator = result
                     continue
+                if return_whatever:
+                    return result
                 if isinstance(result, CommandHandled):
                     if cmd_is_slow:
                         await message.undo_react("⏳")

@@ -14,7 +14,9 @@ class Text(CommandGroup):
     async def cmd_reverse(
         self, message: UserMessage, args: str
     ) -> str | CommandFailure:
-        """Reverse the order of the characters in the given text."""
+        """Reverse the order of the characters in the given text.
+        Usage:
+        `reverse {text}`"""
         return args[::-1]
 
     # Tetralemma

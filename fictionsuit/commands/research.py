@@ -24,7 +24,10 @@ from .command_group import CommandGroup
 
 class Research(CommandGroup):
     async def cmd_read(self, message: UserMessage, args: str) -> str:
-        """`read` - returns a summary of the linked article, uploads, and embeds"""
+        """Returns a summary of the linked article.
+        If the environment variable UPLOAD_TO_SUPABASE is defined, the article will be uploaded to the database.
+        Usage:
+        `read {uri of article}`"""
         document_exists = await check_if_document_exists(args)
         if document_exists:
             summary = await get_summary(document_exists)
@@ -44,12 +47,16 @@ class Research(CommandGroup):
                 )
 
     async def cmd_scrape(self, message: UserMessage, args: str):
-        """`scrape` - returns scraped URL"""
+        """Scrapes a web page and returns the text.
+        Usage:
+        `scrape {uri}`"""
         document = await scrape_link(args)
         return document.cleaned_text
 
     async def cmd_list_documents(self, message, args):
-        """`list_documents` - returns a list of all documents in the database"""
+        """Lists all documents in the database.
+        Usage:
+        `list_documents`"""
         documents = await get_documents()
         ar_list = ""
         for document in documents:
@@ -59,14 +66,18 @@ class Research(CommandGroup):
         return ar_list
 
     async def cmd_delete_document(self, message, args):
-        """`delete_document` - deletes a document from the database"""
+        """Deletes a document from the database.
+        Usage:
+        `delete_document {document id}`"""
         document_id = args
         await delete_document(document_id)
         set_cache_needs_update()
         await message.reply(f"document <{document_id}> deleted from database")
 
     async def cmd_search(self, message, args):
-        """`search` - searches for similar documents in the database"""
+        """Searches for documents in the database with similar embeddings to the query.
+        Usage:
+        `search {query}`"""
         query = args
         embeddings_list, id_mappings = create_mappings()
         query_embedding = await embed_query(query)

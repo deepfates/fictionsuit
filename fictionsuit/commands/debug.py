@@ -9,7 +9,9 @@ from .command_group import CommandGroup
 
 class Debug(CommandGroup):
     async def cmd_ping(self, message: UserMessage, args: str) -> str:
-        """`Returns the one-way latency from the user to the bot"""
+        """Returns the one-way latency from the user to the bot.
+        Usage:
+        `ping`"""
         timestamp = await message.get_timestamp()
         now = time.time()
         latency = round(now - timestamp)
@@ -17,7 +19,9 @@ class Debug(CommandGroup):
         return response
 
     async def cmd_lorem(self, message: UserMessage, args: str) -> str:
-        """Returns a few paragraphs of lorem ipsum"""
+        """Returns a few paragraphs of lorem ipsum.
+        Usage:
+        `lorem`"""
         return "\n".join(
             paragraph.strip()
             for paragraph in """
@@ -36,23 +40,29 @@ class Debug(CommandGroup):
         )
 
     async def cmd_react(self, message: UserMessage, args: str) -> None:
-        """Reacts to the message."""
+        """Reacts to the message.
+        Usage:
+        `react`
+        `react {emoji}`"""
         await message.react()
 
     async def cmd_react_then_unreact(self, message: UserMessage, args: str) -> None:
-        """Reacts to the message, waits a second, then removes the reaction."""
+        """Reacts to the message, waits a second, then removes the reaction.
+        Usage:
+        `react_then_unreact`"""
         await message.react()
         time.sleep(1)
         await message.undo_react()
 
     async def cmd_echo(self, message: UserMessage, args: str) -> str:
-        """Repeats back the arguments."""
+        """Returns the arguments.
+        Usage:
+        `echo {text}`"""
         return args
 
     async def cmd_yell(self, message: UserMessage, args: str) -> str:
-        """Replies with the arguments.
-        This is distinct from echo in that it will reply even when called from within
-        a script, which would normally disable replies.
+        """Returns the arguments, and replies to the message.
+        This is distinct from echo in that it will reply even when called from within a script, which would normally disable replies.
         This should pretty much only be used for debugging, and should not appear in finished scripts.
         """
         previous_state = message.disable_interactions
@@ -63,11 +73,15 @@ class Debug(CommandGroup):
 
     # TODO: a more graceful cmd_exit would be nice - one that shuts the process down in a more controlled manner
     async def cmd_kill(self, message: UserMessage, args: str) -> None:
-        """Immediately and unceremoniously kills the entire python process."""
+        """Immediately and unceremoniously kills the entire python process.
+        Usage:
+        `kill`"""
         exit()
 
     async def cmd_tokens(self, message: UserMessage, args: str) -> int:
-        """Returns the number of tokens in the given text."""
+        """Returns the number of tokens in the `cl100k_base` tiktoken encoding of the given text.
+        Usage:
+        `tokens {text}`"""
         try:
             encoding = tiktoken.encoding_for_model(config.OAI_MODEL)
         except KeyError:

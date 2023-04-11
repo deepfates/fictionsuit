@@ -1,0 +1,189 @@
+# Creates a gpt4-backed chat with the full documentation of FictionScript loaded into its context.
+# Be warned: this uses a lot of tokens! gpt-3.5-turbo will be a lot cheaper but might have a harder time understanding the language.
+
+<chat> helper
+<temp @ helper> 0.5
+<model @ helper> gpt-4
+
+| docs = docs
+
+| summon script = load_text $FIC/summon.fic
+| face script = load_text $FIC/auto_face.fic
+| aspect script = load_text $FIC/face/face_aspect.fic
+| yes or no script = load_text $FIC/yes_or_no.fic
+
+<system @ helper> FictionScript is a scripting language that exists as part of the FictionSuit project, primarily designed for interacting with language models.---
+
+# FictionScript: A brief introduction
+
+## Scopes
+Scopes store variables that have string names. Sometimes those variables are other scopes. A scope is essentially just a Python dictionary with a name and (optionally) a parent scope. When the FictionSuit CLI starts up, it will be in the "base" scope.
+There is always some scope that has been marked as the "current" scope. The interpreter is said to be "in" this scope.
+Inside the base scope, there will be a scope called "fic", into which several scripts will automatically be loaded when the app starts up. Think of these as the "standard library" of FictionScript.
+
+When looking for a variable in the current scope, if the variable is not found, the interpreter will check the parent scope, and the parent's parent, and so on, all the way up to the base scope.
+
+## User Messages
+User messages are the primary way that the interpreter interacts with the user. Messages can come from the CLI, or from discord, BlueSky, or from a .fic file.
+To use FictionScript, it is not necessary to understand UserMessages - they are only relevant if you are seeking to extend the system with new commands.
+
+## Commands and Command Groups
+Most of the functionality of FictionScript is provided by commands. Commands are async Python functions that accept a "UserMessage" and a string of arguments.
+Every message that the system receives is passed through a set of interceptors that convert FictionScript syntax into a simpler command syntax.
+The interceptors are also responsible for filling in variables from the current scope, using Python's string formatting syntax. Some commands will override this behavior, so that their arguments are parsed literally, without variable substitution. This is usually the case for commands that pass their arguments back into the interpreter.
+The simple command syntax is a string of the form "command_name and then some arguments". The string is split at the first space. The first word becomes the command name, and the rest of the string becomes the arguments.
+
+Here is the documentation of every available command:
+
+{docs}
+
+## FictionScript Syntax
+
+Some of the more advanced FictionScript syntax will have been explained by the documentation of the commands above. However, here is a more complete explanation.
+
+### Comments
+`# this is a comment`
+Comments at the top of a .fic file are considered the docstring of the file. Comments are ignored by the interpreter.
+
+### The Omnibar
+The symbol "|" is used as a shorthand for several other commands, depending on the context of its use. These commands are all related to retrieving and storing the values of variables.
+
+`|` - returns the current scope
+`| foo bar` - returns the value of the variable "foo bar" from the current scope.
+`| foo bar > baz` - returns the values of the variable "baz" from the scope "foo bar", assuming "foo bar" is a scope within the current scope.
+`| x > y = z` - executes the command `z`, and stores the result in the variable `y` in the scope `x`.
+
+The documentation for the commands "where", "retrieve", "insert", and "var" will explain the bahavior of the omnibar in more detail.
+
+### Multi-Line Messages
+There is an important distinction, in FictionScript, between lines and messages. Messages can contain any number of newline characters. The fundamental unit of fictionscript code is the message, not the line. If a user is using FictionSuit from the discord interface, they can natively include newlines in their messages. If, however, they are writing .fic files or using the FictionSuit CLI, they will need to end each line with two dashes ("--") to indicate to the interpreter that the message continues on the next line.
+This can become somewhat tedious, so there is a shorthand for longer messages. If a line ends with three dashes ("---"), the interpreter will continue to append lines to the message until it encounters a line that ends with two dashes ("--"), at which point the message will finally be complete.
+
+To reiterate: the FictionScript interpreter does not execute "lines" of code, it executes "messages". The distinction is subtle, but important.
+
+### Methods
+The method syntax is very flexible. It has several uses:
+
+`<method @ object name> these are the arguments`
+Assuming there is a variable called "object name" in the current scope, this will call the script method "method" of that object, passing it the arguments "these are the arguments". Script methods are just Python functions that start with "sm_". The "sm_" is appended automatically. In this case, the method will be called "sm_method".
+
+`<object name> arguments`
+In this case, there is no method name provided. The interpreter will treat this as if it was `<default @ object name> arguments`.
+
+Aside from sm_default, there are some other operators with shorthand:
+`<object+> arguments` -> `<add @ object> arguments`
+`<object-> arguments` -> `<subtract @ object> arguments`
+`<object++> arguments` -> `<increment @ object> arguments`
+`<object--> arguments` -> `<decrement @ object> arguments`
+`<object?> arguments` -> `<inspect @ object> arguments`
+`<object??> arguments` -> `<dump @ object> arguments`
+
+In the case where the object cannot be found in the current scope (or any of its parent scopes), the interpreter will also check the `base > fic` scope. If the object is a FictionScript and the method is "default", the FictionScript will be executed. For example:
+
+`<summon> Abraham Lincoln, civil-war-era american president` - if there is no "summon" variable in the current scope, this will call the "summon" script from the `fic` scope, with two arguments, "Abraham Lincoln" and "civil-war-era american president".
+
+In the case where the object is a scope, things are slightly different: instead of looking for a "sm_" method on the class Scope, the interpreter will look for a FictionScript with that name, contained within the scope. This works with the shorthand operators as well.
+
+`<scope name++>` - if there is a scope called "scope name" in the current scope, this will look for a FictionScript called "increment" in that scope, and execute it with no arguments.
+
+## Chat
+
+One of the main features of FictionScript is the ability to interact with ChatGPT through ChatInstances. A ChatInstance keeps track of the message history of a conversation with ChatGPT, and has several script methods. Additionally, there is a variable called "chat" in the `base > fic` scope, which is a ChatFactory. The sm_default method of `chat` creates a new ChatInstance. It is used like this:
+
+`<chat> conversation` - this creates a new ChatInstance with the name "conversation".
+
+Once the chat is created, it has several script methods:
+`<system @ conversation> message` - this adds a message with the role "system" to the chat.
+`<assistant @ conversation> message` - this adds a message with the role "assistant" to the chat. This is the role that ChatGPT "sees" as "itself".
+`<user @ conversation> message` - this adds a message by user "user" to the chat. This is also the sm_default method.
+`<temp @ conversation> 1.2` - sets the GPT model's temperature to 1.2
+`<model @ conversation> gpt-4` - tells the system to use the GPT-4 model for this chat.
+`<top_p @ conversation> 0.8` - sets the GPT model's top_p parameter to 0.8
+`<limit @ conversation> 50` - limits the model to only output up to 50 tokens at a time. (-1 means no limit)
+`<conversation++>` - this "increments" the chat, by calling the OpenAI API and having ChatGPT write up the next assistant message.
+`<conversation-->` - this "decrements" the chat, by removing the last message.
+`<conversation?>` - prints out the model parameters, name of the chat, and the number of messages in its history
+`<conversation??>` - prints out the full history of the chat
+
+## Example Scripts
+
+### Summon
+
+This is a set of FictionScripts that will produce a ChatInstance that is playing a certain character. It consists of three scripts, summon, auto face, and face aspect.
+The "face aspect" script is used by the "auto face" script to help flesh out a description of the character.
+
+Here are the scripts:
+summon.fic
+```
+{summon script}
+```
+
+auto_face.fic
+```
+{face script}
+```
+
+face/face_aspect.fic
+```
+{aspect script}
+```
+
+The usage of the Summon fic looks like this:
+
+```
+| abe = <summon> Abraham Lincoln
+<user @ abe> Hey there, Abe. What would you say was your biggest accomplishment?
+<abe++>
+# An API call is made here, and an assistant message along the lines of "My biggest accomplishment as the President of the United States was the preservation of the Union during the Civil War, a period where secession from the Union threatened the fabric of our country. By committing to restoring unity..." is added to the chat history and returned.
+```
+
+### Yes or No
+
+This is a simple script that will ask ChatGPT a yes-or-no question about a piece of text, and then try to convert a wordy answer like "The answer is yes, because ..." into a simple "yes" or "no".
+
+yes_or_no.fic
+```
+{yes or no script}
+```
+
+--
+<assistant @ helper> I am ready to begin helping the user with their questions about FictionScript.
+<user @ helper> hey bot. how do I get the docs of a command in the cli?
+<assistant @ helper> You can use the Help command to retrieve the documentation for any command. It will automatically read the docstring of the function that defines the command.---
+For example, if you want to get the docstring of the "where" command, you can type `help where` into the CLI.
+If you want to get a full list of the available commands, you can just write `help` by itself.
+--
+<user @ helper> Can you write up a fictionscript that prompts an LLM to write a poem?
+<assistant @ helper> Sure, that shouldn't be too hard:---
+
+poem.fic
+```
+# This is a FictionScript that will prompt an LLM to write a poem.
+
+# The ":" here just means that when the user calls this script with something like "<poem> love", the argument "love" will be treated as a string instead of a command to be executed.
+arg :topic
+
+# Create a chat called "poet" with temperature 1.2
+<chat> poet
+<temp @ poet> 1.2
+
+# This is a fairly simple prompt, you could probably workshop it a bit more to get better results.
+<system @ poet> I am a great poet. I can write a poem for you, or give advice about writing poems. Please tell me what you would like me to write about.
+
+# Now we ask our ChatGPT poet to write up a prompt for itself
+| prompt = <poet+> Please write a prompt that will ask its reader to write a beautiful ten-line poem about {{topic}}. Please tell the writer to write in a detailed style, with a distinctive voice, and try to relay some specific advice to them. Please keep your prompt short, no more than one paragraph long.
+
+# Roll back assistant & user messages, keeping only the system message.
+<poet-> 2
+
+# Now we have the prompt that the poet chat produced, but the poet chat has forgotten everything but its system message.
+
+# Raise the temperature so that the poetry will be a little "looser" and more interesting
+<temp @ poet> 1.4
+
+# Now we feed the prompt back into the chat, and return the poem it produces. We'll also ask our poet to keep it nice and short.
+return <poet+> Please write a poem, no more than ten lines long, following these instructions: \n{{prompt}}\nRemember, your poem should be no more than ten lines long.
+```
+--
+
+return | helper
