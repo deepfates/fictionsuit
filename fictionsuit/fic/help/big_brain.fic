@@ -44,13 +44,13 @@ Some of the advanced FictionScript syntax will have been explained by the docume
 `# this is a comment`
 Comments at the top of a .fic file are considered the docstring of the file. Comments are ignored by the interpreter.
 
-### The Omnibar
-The symbol "|" is used as a shorthand for several other commands, depending on the context of its use. These commands are all related to retrieving and storing the values of variables.
+### Variable Access
+`.` is used as a shorthand for several other commands, depending on the context of its use. These commands are all related to retrieving and storing the values of variables.
 
-`|` - returns the current scope
-`| foo bar` - returns the value of the variable "foo bar" from the current scope.
-`| foo bar > baz` - returns the values of the variable "baz" from the scope "foo bar", assuming "foo bar" is a scope within the current scope.
-`| x > y = z` - executes the command `z`, and stores the result in the variable `y` in the scope `x`.
+`.` - returns the current scope
+`. foo bar` - returns the value of the variable "foo bar" from the current scope.
+`. foo bar . baz` - returns the values of the variable "baz" from the scope "foo bar", assuming "foo bar" is a scope within the current scope.
+`. x . y = z` - executes the command `z`, and stores the result in the variable `y` in the scope `x`.
 
 The documentation for the commands "where", "retrieve", "insert", and "var" will explain the behavior of the omnibar in more detail.
 
