@@ -6,21 +6,19 @@ arg :spirit
 arg :description := A spirit to be summoned from the word-machine.
 
 # Call the "yes or no" fictionscript
-| url yes or no = <yes or no> {description}, Is the text a URL?
-| use web summary = is_yes {url yes or no}
+. url yes or no = <yes or no> {description}, Is the text a URL?
+. use web summary = is_yes {url yes or no}
 
-#if not | use web summary then | wiki yes or no = fic yes or no: {description}, Does the text mention Wikipedia?
-
-if | use web summary -- 
-    then | description = read {description}
+if .use web summary -- 
+    then .description = read {description}
 
 # Generate a face for the spirit
-| spirit's face = <auto face> {spirit}, {description}
+. spirit's face = <auto face> {spirit}, {description}
 
 # Convert to first person
-| spirit description = <first person> {spirit}, {spirit} is {spirit's face > description}
-| spirit style = <first person> {spirit}, {spirit}'s writings are {spirit's face > style}
-| spirit goals = <first person> {spirit}, {spirit} intends to {spirit's face > goals}
+. spirit description = <first person> {spirit}, {spirit} is {spirit's face . description}
+. spirit style = <first person> {spirit}, {spirit}'s writings are {spirit's face . style}
+. spirit goals = <first person> {spirit}, {spirit} intends to {spirit's face . goals}
 
 # Use the face to generate an introduction
 <chat> introduction
@@ -55,9 +53,9 @@ Beheld, then, such seared dual being pervasively invading dimensions once raptur
 
 # "<introduction+> Message" Adds the message to the chat as a User message, then
 # generates a response, appends the response to the chat, and returns the response.
-| spirit intro = <introduction+> Thank you, {spirit}. Now please give your full introduction.
+. spirit intro = <introduction+> Thank you, {spirit}. Now please give your full introduction.
 
-| seance := {spirit} Seance
+. seance := {spirit} Seance
 
 <chat> {seance}
 <temp @ {seance}> 2.0
@@ -77,4 +75,4 @@ Beheld, then, such seared dual being pervasively invading dimensions once raptur
 <user @ {seance}> {spirit}, I summon you. Speak, introduce yourself.
 <assistant @ {seance}> {spirit intro}
 
-return | {seance}
+return . {seance}

@@ -132,6 +132,13 @@ class CommandGroup:
         """Return the help text for every command.
         Usage:
         `docs`"""
+        if args != "":
+            if not any(
+                x.strip().lower() in ["all", self.__class__.__name__.lower()]
+                for x in args.split(",")
+            ):
+                return None
+
         commands = self.get_command_names()
         handlers = {command: getattr(self, f"cmd_{command}") for command in commands}
 
@@ -139,7 +146,7 @@ class CommandGroup:
             return string.capwords(name.replace("_", " "))
 
         def format_name(command_name):
-            return f"**__{make_legible(command_name)}__**"
+            return f"#### {make_legible(command_name)}"
 
         def strip_doc(doc):
             """Remove leading and trailing whitespace from each line of the docstring."""
@@ -150,12 +157,12 @@ class CommandGroup:
                 # TODO: maybe just print the source code of the command handler?
                 # or do some galaxy brain nonsense like checking the git history
                 # to tell the user who to bother about it
-                return "Unfortunately, this command has no documentation."
+                return "No docstring found."
             return strip_doc(handler.__doc__)
 
         docs = {format_name(x): format_docs(handlers[x]) for x in handlers}
         docs = "\n\n".join([f"{x}\n{docs[x]}" for x in docs])
-        header = f'**__Command Group "{make_legible(self.__class__.__name__)}"__**'
+        header = f'### Command Group "{make_legible(self.__class__.__name__)}"'
         if self.__class__.__doc__ is not None:
             header = f"{header}\n{self.__class__.__doc__}"
         return f"{header}\n\n{docs}"

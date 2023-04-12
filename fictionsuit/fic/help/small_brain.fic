@@ -1,0 +1,143 @@
+# Creates a gpt4-backed chat with the full documentation of FictionScript loaded into its context.
+# Be warned: this uses a lot of tokens! gpt-3.5-turbo will be a lot cheaper but might have a harder time understanding the language.
+
+# Commands
+
+<chat> commands
+<temp @ commands> 0.5
+<model @ commands> gpt-3.5-turbo
+
+. docs = docs
+
+. summon script = load_text $FIC/summon.fic
+. face script = load_text $FIC/auto_face.fic
+. aspect script = load_text $FIC/face/face_aspect.fic
+. yes or no script = load_text $FIC/yes_or_no.fic
+
+<system @ commands> The user will ask questions about the FictionScript CLI commands, and the assistant will answer them.---
+
+# Basic FictionScript concepts
+
+## Scopes
+Variables in FictionScript exist within scopes. A scope is a Python dictionary with a name and (usually) a parent scope. When the FictionSuit CLI starts up, it will be in the "base" scope.
+There is always a scope that is marked as the "current" scope. The interpreter is said to be "in" this scope.
+Inside the base scope, there will be a scope called "fic", into which several scripts will automatically be loaded when the app starts up. Think of these as the "standard library" of FictionScript.
+
+When looking for a variable in the current scope, if the variable is not found, the interpreter will check the parent scope, and the parent's parent, and so on, all the way up to the base scope.
+
+## Commands and Command Groups
+Most of the functionality of FictionScript is provided by commands. Commands are async Python functions that accept all their arguments as a single string that they are responsible for parsing.
+Every message that the system receives is passed through a set of interceptors that convert FictionScript syntax into a simpler command syntax.
+The interceptors are also responsible for filling in variables from the current scope, using Python's string formatting syntax. Some commands will override this behavior, so that their arguments are parsed literally, without variable substitution. This is usually the case for commands that pass their arguments back into the interpreter.
+The simple command syntax is a string of the form "command_name and then some arguments". The string is split at the first space. The first word becomes the command name, and the rest of the string becomes the arguments.
+
+Here is every available command:
+
+{docs}
+--
+
+<assistant @ commands> I am ready to begin helping the user with their questions about these commands.
+<user @ commands> hey bot. how do I get the docs of a command in the cli?
+<assistant @ commands> You can use the Help command to retrieve the documentation for any command. It will automatically read the docstring of the function that defines the command.---
+For example, if you want to get the docstring of the "where" command, you can type `help where` into the CLI.
+If you want to get a full list of the available commands, you can just write `help` by itself.
+--
+
+# Scripting
+
+. scripting docs = docs scripting, methods
+
+<chat> scripting
+<temp @ scripting> 0.5
+<model @ scripting> gpt-3.5-turbo
+
+<system @ scripting> The user will ask questions about the FictionScript scripting language, and the assistant will answer them.---
+
+# Basic FictionScript concepts
+
+## Scopes
+Variables in FictionScript exist within scopes. A scope is a Python dictionary with a name and (usually) a parent scope. When the FictionSuit CLI starts up, it will be in the "base" scope.
+There is always a scope that is marked as the "current" scope. The interpreter is said to be "in" this scope.
+Inside the base scope, there will be a scope called "fic", into which several scripts will automatically be loaded when the app starts up. Think of these as the "standard library" of FictionScript.
+
+When looking for a variable in the current scope, if the variable is not found, the interpreter will check the parent scope, and the parent's parent, and so on, all the way up to the base scope.
+
+## Commands and Command Groups
+Most of the functionality of FictionScript is provided by commands. Commands are async Python functions that accept all their arguments as a single string that they are responsible for parsing.
+Every message that the system receives is passed through a set of interceptors that convert FictionScript syntax into a simpler command syntax.
+The interceptors are also responsible for filling in variables from the current scope, using Python's string formatting syntax. Some commands will override this behavior, so that their arguments are parsed literally, without variable substitution. This is usually the case for commands that pass their arguments back into the interpreter.
+The simple command syntax is a string of the form "command_name and then some arguments". The string is split at the first space. The first word becomes the command name, and the rest of the string becomes the arguments.
+
+Here are scripting-related commands:
+
+{scripting docs}
+
+## FictionScript Syntax
+
+Some of the advanced FictionScript syntax will have been explained by the documentation above. Here is a more complete explanation.
+
+### Comments
+`# this is a comment`
+Comments at the top of a .fic file are considered the docstring of the file. Comments are ignored by the interpreter.
+
+### The Omnibar
+The symbol "|" is used as a shorthand for several other commands, depending on the context of its use. These commands are all related to retrieving and storing the values of variables.
+
+`|` returns the current scope
+`| foo bar` returns the value of the variable "foo bar" from the current scope.
+`| foo bar > baz` returns the values of the variable "baz" from the scope "foo bar", assuming "foo bar" is a scope within the current scope.
+`| x > y = z` executes the command `z`, and stores the result in the variable `y` in the scope `x`.
+
+### Multi-Line Messages
+There is an important distinction, in FictionScript, between lines and messages. Messages can contain any number of newline characters. The fundamental unit of fictionscript code is the message, not the line. If a user is using FictionSuit from the discord interface, they can natively include newlines in their messages. If, however, they are writing .fic files or using the FictionSuit CLI, they will need to end each line with two dashes ("--") to indicate to the interpreter that the message continues on the next line.
+This can become somewhat tedious, so there is a shorthand for longer messages. If a line ends with three dashes ("---"), the interpreter will continue to append lines to the message until it encounters a line that ends with two dashes ("--"), at which point the message will finally be complete.
+
+To reiterate: the FictionScript interpreter does not execute "lines" of code, it executes "messages". The distinction is subtle, but important.
+
+### Methods
+The method syntax is very flexible. It has several uses:
+
+`<method @ object name> these are the arguments`
+Assuming there is a variable called "object name" in the current scope, this will call the script method "method" of that object, passing it the arguments "these are the arguments". Script methods are just Python functions that start with "sm_". The "sm_" is appended automatically. In this case, the method will be called "sm_method".
+
+`<object name> arguments`
+In this case, there is no method name provided. The interpreter will treat this as if it was `<default @ object name> arguments`.
+
+Aside from sm_default, there are some other operators with shorthand:
+`<object+>` == `<add @ object>`
+`<object->` == `<subtract @ object>`
+`<object++>` == `<increment @ object>`
+`<object-->` == `<decrement @ object>`
+`<object?>` == `<inspect @ object>`
+`<object??>` == `<dump @ object>`
+
+In the case where the object cannot be found in the current scope (or any of its parent scopes), the interpreter will also check the `base > fic` scope. If the object is a FictionScript and the method is "default", the FictionScript will be executed.
+
+In the case where the object is a scope, things are slightly different: instead of looking for a "sm_" method on the class Scope, the interpreter will look for a FictionScript with that name, contained within the scope. This works with the shorthand operators as well.
+
+`<scope name++>` if there is a scope called "scope name" in the current scope, this will look for a FictionScript called "increment" in that scope, and execute it with no arguments.
+
+## Chat
+
+One of the main features of FictionScript is the ability to interact with ChatGPT through ChatInstances. A ChatInstance keeps track of the message history of a conversation with ChatGPT, and has several script methods. Additionally, there is a variable called "chat" in the `base > fic` scope, which is a ChatFactory. The sm_default method of `chat` creates a new ChatInstance. It is used like this:
+
+`<chat> x` this creates a new ChatInstance with the name "x".
+
+Once the chat is created, it has several script methods:
+`<system @ x> message` this adds a message with the role "system" to the chat.
+`<assistant @ x> message` this adds a message with the role "assistant" to the chat. This is the role that ChatGPT "sees" as "itself".
+`<user @ x> message` this adds a message by user "user" to the chat. This is also the sm_default method.
+`<temp @ x> 1.2`sets the GPT model's temperature to 1.2
+`<model @ x> gpt-4` tells the system to use the GPT-4 model for this chat.
+`<top_p @ x> 0.8` sets the GPT model's top_p parameter to 0.8
+`<limit @ x> 50` limits the model to only output up to 50 tokens at a time. (-1 means no limit)
+`<x++>` this "increments" the chat, by calling the OpenAI API and having ChatGPT write up the next assistant message.
+`<x-->` this "decrements" the chat, by removing the last message.
+`<x?>` prints out the model parameters, name of the chat, and the number of messages in its history
+`<x??>` prints out the full history of the chat
+
+--
+<assistant @ scripting> I am ready to begin helping the user with their questions about scripting.
+
+
+return pack commands, scripting

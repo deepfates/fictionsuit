@@ -80,6 +80,9 @@ class BasicCommandSystem(System):
             await message.reply(f"Content interceptor threw an exception: {e}")
             content = message.content
 
+        if content.startswith("#"):
+            return  # Comment.
+
         (cmd, args) = command_split(content)
 
         if cmd is None:

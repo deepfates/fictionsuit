@@ -5,7 +5,7 @@
 args :chat, :path
 
 # Call Chat.sm_script, interpret the result as a fictionscript, store it as "script"
-| script = dynamic_fic <script@{chat}>
+. script = dynamic_fic <script@{chat}>
 
 # Call FictionScript.sm_save
 <save@script> {path}

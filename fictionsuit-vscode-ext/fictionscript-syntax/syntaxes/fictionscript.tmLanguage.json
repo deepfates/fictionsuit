@@ -57,7 +57,7 @@
 			"patterns": [
 				{
 					"name": "string.quoted.double.fictionscript",
-					"begin": "(\\||arg|var)(?:\\s*(.*?)\\s*(>))*?\\s*(.*?)\\s*(:=)",
+					"begin": "(\\.|arg|var)(?:\\s*(.*?)\\s*(\\.))*?\\s*(.*?)\\s*(:=)",
 					"end": "$",
 					"beginCaptures": {
 						"1": {
@@ -79,7 +79,7 @@
 					"patterns": [
 						{
 							"name": "variable.name.fictionscript",
-							"match": "{.*?}"
+							"match": "(?<!{){[^{}]*?}"
 						},
 						{
 							"name": "constant.character.escape",
@@ -97,7 +97,7 @@
 			"patterns": [
 				{
 					"name": "meta.selector.fictionscript",
-					"begin": "(\\||arg|var)(?:\\s*(.*?)\\s*(>))*?\\s*(.*?)\\s*(=)",
+					"begin": "(\\.|arg|var)(?:\\s*(.*?)\\s*(\\.))*?\\s*(.*?)\\s*(=)",
 					"end": "$",
 					"beginCaptures": {
 						"1": {
@@ -152,7 +152,7 @@
 			"patterns": [
 				{
 					"name": "meta.selector.fictionscript",
-					"begin": "(\\||retrieve)(?:\\s*(.*?)\\s*(>))*\\s*(.+)\\s*(\\?)?\\s*",
+					"begin": "(\\.|retrieve)(?:\\s*(.*?)\\s*(\\.))*\\s*(.+)\\s*(\\?)?\\s*",
 					"end": "$",
 					"beginCaptures": {
 						"1": {
@@ -205,7 +205,7 @@
 					"patterns": [
 						{
 							"name": "variable.name.fictionscript",
-							"match": "{.*?}"
+							"match": "(?<!{){[^{}]*?}"
 						},
 						{
 							"name": "constant.character.escape",
@@ -257,7 +257,7 @@
 					"patterns": [
 						{
 							"name": "variable.name.fictionscript",
-							"match": "{.*?}"
+							"match": "(?<!{){[^{}]*?}"
 						},
 						{
 							"name": "constant.character.escape",
@@ -280,7 +280,7 @@
 					"patterns": [
 						{
 							"name": "variable.name.fictionscript",
-							"match": "{.*?}"
+							"match": "(?<!{){[^{}]*?}"
 						},
 						{
 							"name": "constant.character.escape",
@@ -303,7 +303,7 @@
 					"patterns": [
 						{
 							"name": "variable.name.fictionscript",
-							"match": "{.*?}"
+							"match": "(?<!{){[^{}]*?}"
 						},
 						{
 							"name": "constant.character.escape",

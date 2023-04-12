@@ -1,9 +1,9 @@
-| a := Test 1
-| b := Test 2
-| c := Test 3
-| d := Test 4
+.a := Test 1
+.b := Test 2
+.c := Test 3
+.d := Test 4
 
-| e = echo
+.e = echo
 
 for x : pack d, c, b, a ---
     yell Before

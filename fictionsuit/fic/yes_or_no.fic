@@ -15,19 +15,19 @@ args :text, :query
 <assistant @ c> I am ready to answer your yes-or-no question about the text.
 
 # Get the response, check if it is just a yes or a no
-| response = <c+> {query}
+. response = <c+> {query}
 
 # If so, return it
 if just_yes {response} --
-    then || result := yes
+    then .. result := yes
 
 if just_no {response} -- 
-    then || result := no
+    then .. result := no
 
 # Fail otherwise
-if fails | result -- 
+if fails .result -- 
     then fail -- --
         ChatGPT failed to answer your question with a simple "yes" or "no". -- --
         Here's its response: --\n{response}
 
-return | result
+return .result

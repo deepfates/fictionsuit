@@ -1,0 +1,50 @@
+
+# Leave our execution scope and go to a new temporary scope within base
+base
+into fic
+# Overwrite this very script with a scope
+scope help
+into help
+
+# Load up chat instances
+
+# Separate gpt3.5 helper instances for commands and scripting, for basic questions
+#load_fic $FIC/help/small_brain.fic as g3.5
+#| g3.5 help instances = <g3.5>
+# These just don't work well at all.
+
+# gpt4 with all command docs & scripting syntax, for more advanced questions
+load_fic $FIC/help/big_brain.fic as g4
+. g4 help instance = <g4>
+
+def_fic default ---
+    arg :query
+    .res = <g4 help instance+> {query}
+    <g4 help instance-> 2
+    return .res
+    --
+
+#def_fic add ---
+#    arg :query
+#    | c = | g3.5 help instances > scripting
+#    | res = <c+> {query}
+#    <c-> 2
+#    return | res
+#    --
+
+#def_fic default ---
+#    arg :query
+#    # Load the appropriate chat instance
+#    | c = | g3.5 help instances > commands
+#    # Ask it the user's question
+#    | res = <c+> {query}
+#    # Remove the query and response from the instance's history before we return the result
+#    <c-> 2
+#    return | res
+#    --
+
+# Give the user a guide to the various sources of help available to them
+return echo Help---
+You can type `help {{command}}` if you just want information about a command.
+Use `<help> {query}` to ask a gpt-4 instance an advanced question about commands and scripting. Be warned: this uses a lot of tokens! Expect questions to be ~25 cents each.
+--

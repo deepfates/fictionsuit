@@ -4,6 +4,7 @@ import glob
 import ntpath
 import os
 import re
+import string
 import traceback
 
 from ..api_wrap.bluesky import BlueskyClientFactory
@@ -68,6 +69,11 @@ def rsnap(string: str, delimiter: str) -> tuple[str, str]:
     return (split[0].rstrip(), split[1].lstrip())
 
 
+class VarFormatter(string.Formatter):
+    def get_field(self, field_name, args, kwargs):
+        return super().get_field(field_name.replace(".", ">"), args, kwargs)
+
+
 class Scripting(CommandGroup):
     """This command group contains the fundamental commands necessary for scripting.
     Many of these commands have special syntax, though they can also be called normally.
@@ -85,10 +91,12 @@ class Scripting(CommandGroup):
         self.load_scripts("fictionsuit/fic", self.vars["fic"])
         self.load_scripts("fictionsuit/.fic", self.vars["fic"])
         self.vars["fic"]["chat"] = ChatFactory()
-        self.vars["bsky"] = BlueskyClientFactory()
+        self.vars["fic"]["bsky"] = BlueskyClientFactory()
 
         self.evaluators = {}
         self.escape_commas = []
+
+        self.var_formatter = VarFormatter()
 
         for group in self.command_groups:
             cmds = group.get_commands()
@@ -116,25 +124,25 @@ class Scripting(CommandGroup):
             return content
 
         if cmd[0] == "#":
-            return ""  # Comment
+            return content  # Comment; do nothing
 
-        def handle_omnibar(content: str, cmd: str, args: str) -> str:
-            # print(f"Handle Omnibar: [{content}]")
+        def handle_scope_access(content: str, cmd: str, args: str) -> str:
+            # print(f"Handle scope access: [{content}]")
             # print(f"cmd: [{cmd}]")
             # print(f"args: [{args}]")
             n = 1
             if cmd is None:
                 return content
-            if cmd[0] not in "|?":
+            if cmd[0] not in ".?":
                 return content
             if "=" in content:
-                if ">" not in content[: content.index("=")]:
+                if "." not in content[1 : content.index("=")]:
                     expansion = "var"
                 else:
                     expansion = "insert"
             else:
                 content = content.strip()
-                if content == f"|":
+                if content == f".":
                     expansion = "where"
                 elif content == f"?":
                     expansion = "inspect where"
@@ -157,10 +165,10 @@ class Scripting(CommandGroup):
                     else:
                         expansion = "retrieve"
             x = " ".join([expansion, cmd[n:], args])
-            # print(f"Omnibar expansion: [{x}]")
+            # print(f"Scope access expansion: [{x}]")
             return x
 
-        content = handle_omnibar(content, cmd, args)
+        content = handle_scope_access(content, cmd, args)
 
         (cmd, args) = command_split(content)
 
@@ -199,7 +207,7 @@ class Scripting(CommandGroup):
             content = content.replace("\\,", COMMA_ESCAPE)
             content = content.replace(",", COMMA_ESCAPE_B)
         try:
-            content = content.format(**self.vars.get_vars())
+            content = self.var_formatter.format(content, **self.vars.get_vars())
             content = content.replace("}", "}}")
             content = content.replace("{", "{{")
         except KeyError as k:
@@ -286,7 +294,7 @@ class Scripting(CommandGroup):
     async def cmd_where(self, message: UserMessage, args: str) -> str:
         """Returns the current scope.
         Usage:
-        `|` (shorthand)
+        `.` (shorthand)
         `where`"""
         return self.vars
 
@@ -344,7 +352,7 @@ class Scripting(CommandGroup):
         A `sm_inspect` method should provide a concise representation of the variable's state.
         Usage:
         `inspect {variable name}`
-        `| {variable name} ?` (shorthand)
+        `. {variable name} ?` (shorthand)
         `<variable name?>` (shorthand)"""
         result = await self._evaluate(message, args, "inspection")
         if hasattr(result, "sm_inspect"):
@@ -365,7 +373,7 @@ class Scripting(CommandGroup):
         A `sm_dump` method should provide a verbose representation of the variable's state.
         Usage:
         `dump {variable name}`
-        `| {variable name} ??` (shorthand)
+        `. {variable name} ??` (shorthand)
         `<variable name??>` (shorthand)"""
         result = await self._evaluate(message, args, "dump")
         if hasattr(result, "sm_dump"):
@@ -492,9 +500,9 @@ class Scripting(CommandGroup):
         The index will be parsed as an integer if possible.
         Usage:
         `retrieve {variable name}`
-        `| {variable name}` (shorthand)
-        `| {scope name} > {variable within that scope}`
-        `| {index} @ {variable that supports indexing}`"""
+        `. {variable name}` (shorthand)
+        `. {scope name} . {variable within that scope}`
+        `. {index} @ {variable that supports indexing}`"""
         index = None
         index_split = [x.strip() for x in args.split("@", maxsplit=1)]
         if len(index_split) == 2:
@@ -505,11 +513,11 @@ class Scripting(CommandGroup):
             args = index_split[1]
 
         scope = self.vars
-        while len(args) > 0 and args[0] == "|" and scope.parent is not None:
+        while len(args) > 0 and args[0] == "." and scope.parent is not None:
             args = args[1:].lstrip()
             scope = scope.parent
 
-        split = [x.strip() for x in args.split(">") if x != ""]
+        split = [x.strip() for x in args.split(".") if x != ""]
 
         result = scope
         for name in split:
@@ -548,9 +556,9 @@ class Scripting(CommandGroup):
         """Evaluate an expression and store its return value in a variable within a scope within the current scope.
         If ":=" is used instead of "=", the expression will be treated as a string literal instead of being evaluated.
         Usage:
-        `insert {scope name} > {variable within that scope} = {expression}`
-        `| {scope name} > {variable within that scope} = {expression}` (shorthand)
-        `| {scope} > {variable} := {string literal}`"""
+        `insert {scope name} . {variable within that scope} = {expression}`
+        `. {scope name} . {variable within that scope} = {expression}` (shorthand)
+        `. {scope} . {variable} := {string literal}`"""
         echo = False
         if ":=" in args:
             split = [x.strip() for x in args.split(":=", maxsplit=1)]
@@ -564,11 +572,11 @@ class Scripting(CommandGroup):
         insertion = split[1]
 
         scope = self.vars
-        while len(retrieval) > 0 and retrieval[0] == "|" and scope.parent is not None:
+        while len(retrieval) > 0 and retrieval[0] == "." and scope.parent is not None:
             retrieval = retrieval[1:].lstrip()
             scope = scope.parent
 
-        retrieval_split = [x.strip() for x in retrieval.split(">")]
+        retrieval_split = [x.strip() for x in retrieval.split(".")]
         if len(retrieval_split) == 1:
             if retrieval_split[0] == "":
                 return CommandFailure("No insert destination.")
@@ -711,6 +719,23 @@ class Scripting(CommandGroup):
 
         return var_name
 
+    async def cmd_echo(self, message: UserMessage, args: str) -> str:
+        """Returns the arguments.
+        Usage:
+        `echo {text}`"""
+        return args
+
+    async def cmd_yell(self, message: UserMessage, args: str) -> str:
+        """Returns the arguments, and replies to the message.
+        This is distinct from echo in that it will reply even when called from within a script, which would normally disable replies.
+        This should pretty much only be used for debugging, and should not appear in finished scripts.
+        """
+        previous_state = message.disable_interactions
+        message.disable_interactions = False
+        await message.reply(args)
+        message.disable_interactions = previous_state
+        return args
+
     async def cmd_dynamic_fic(
         self, message: UserMessage, args: str
     ) -> FictionScript | CommandFailure:
@@ -739,7 +764,6 @@ class Scripting(CommandGroup):
         familiarize yourself with the documentation of the commands from the `Scripting` command group.
         Usage:
         `def_fic {name}\\n{script}`"""
-        print(f"def_fic[{args}]")
         split = [x.strip() for x in args.split("\n")]
         var_name = split[0]
         if len(split) < 2:
@@ -813,11 +837,6 @@ class Scripting(CommandGroup):
         collecting = False
         for index, line in enumerate(script.lines):
             line = line.rstrip()
-            if line == "":
-                continue
-            if line.startswith("#"):
-                # print(f"{index+1: >3} {line[1:].lstrip()}")
-                continue
             if line.endswith("--"):
                 if not collecting:
                     if line[-3] == "-":
@@ -833,6 +852,13 @@ class Scripting(CommandGroup):
                     message_lines.append(line)
                     continue
             message_lines.append(line)
+            message_content = "\n".join(message_lines)
+            if message_content.startswith("#"):
+                message_lines = []
+                continue
+            if message_content == "":
+                message_lines = []
+                continue
             message = ScriptLineMessage("\n".join(message_lines), script_name, message)
             result = await enqueue(message)
             message_lines = []
@@ -952,8 +978,8 @@ class Scripting(CommandGroup):
         If ":=" is used instead of "=", the arguments will be interpreted as a string literal instead of being evaluated as an expression.
         Usage:
         `var {name of variable} = {expression}`
-        `| {variable} = {expression}` (shorthand)
-        `| {variable} := {string literal}`"""
+        `. {variable} = {expression}` (shorthand)
+        `. {variable} := {string literal}`"""
 
         echo = ":=" in args
         if echo:
@@ -969,7 +995,7 @@ class Scripting(CommandGroup):
         scope = self.vars
 
         var_name = arg_split[0]
-        while len(var_name) > 0 and var_name[0] == "|" and scope.parent is not None:
+        while len(var_name) > 0 and var_name[0] == "." and scope.parent is not None:
             var_name = var_name[1:].lstrip()
             scope = scope.parent
 

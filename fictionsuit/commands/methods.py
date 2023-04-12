@@ -71,6 +71,13 @@ class Methods(CommandGroup):
             else self._scope
         )
 
+    def _get_var_formatter(self):
+        return (
+            self.scripting_group.var_formatter
+            if self.scripting_group is not None
+            else None
+        )
+
     @slow_command
     @no_preprocessing_after("``MSG")
     async def cmd__obj_method(self, message: UserMessage, args: str):
@@ -97,10 +104,18 @@ class Methods(CommandGroup):
             method_args = split[1].replace("\\n", "\n")
         scope = self._get_scope()
 
-        specials = ["default", "inspect", "dump"]
+        specials = [
+            "default",
+            "inspect",
+            "dump",
+            "increment",
+            "decrement",
+            "add",
+            "subtract",
+        ]
 
         if object not in scope:
-            if object == "|":
+            if object == ".":
                 obj = self._get_scope()
             elif method in specials and object in self.scripting_group.vars["fic"]:
                 obj = self.scripting_group.vars["fic"][object]
@@ -129,7 +144,7 @@ class Methods(CommandGroup):
                     fic_command = f"fic {method}: {method_args}"
                     execution_scope = obj
                 else:
-                    return CommandFailure(f"{object} > {method} is not a script.")
+                    return CommandFailure(f"{object} . {method} is not a script.")
             else:
                 return CommandFailure(f'No "{method}" found in scope "{object}".')
 
@@ -184,7 +199,8 @@ class Methods(CommandGroup):
             content = content.replace("\\,", COMMA_ESCAPE)
             content = content.replace(",", COMMA_ESCAPE_B)
         try:
-            content = content.format(**self._get_scope().get_vars())
+            formatter = self._get_var_formatter()
+            content = formatter.format(content, **self._get_scope().get_vars())
         except KeyError as k:
             return CommandFailure(f"No such variable: {k}")
         if hasattr(handler, "escape_commas"):
