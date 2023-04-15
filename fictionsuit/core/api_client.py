@@ -5,6 +5,7 @@ from io import TextIOBase
 from typing import List
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
 from hypercorn.config import Config
@@ -26,6 +27,14 @@ class ApiClient:
 
     def run(self):
         app = FastAPI()
+
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["http://localhost:5173"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"]
+        )
 
         @app.post("/fic")
         async def fic(request: RequestBody):

@@ -1,0 +1,86 @@
+.token.fic-comment {
+  color: var(--ficscript-comment);
+}
+
+.token.fic-brackets {
+  color: var(--ficscript-brackets);
+}
+
+.token.fic-accessors {
+  color: var(--ficscript-accessors);
+  font-weight: bolder;
+}
+
+.token.fic-string {
+  color: var(--ficscript-string);
+  font-style: italic;
+}
+
+.token.fic-variable {
+  color: var(--ficscript-variable);
+}
+
+.token.fic-method {
+  color: var(--ficscript-method);
+}
+
+.token.punctuation {
+  color: #999;
+}
+
+.token.namespace {
+  opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol {
+  color: #0cf;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin {
+  color: yellow;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.token.variable,
+.token.inserted {
+  color: yellowgreen;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: deeppink;
+}
+
+.token.regex,
+.token.important {
+  color: orange;
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
+
+.token.deleted {
+  color: red;
+}
