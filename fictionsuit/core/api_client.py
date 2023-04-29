@@ -11,6 +11,10 @@ import asyncio
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 
+from ..commands.command_group import CommandHandled
+
+from .fictionscript.fictionscript import FictionScript
+
 from .fictionscript.scope import Scope
 
 from ..commands.failure import CommandFailure
@@ -47,19 +51,19 @@ class ApiClient:
                 ApiMessage(self, request), return_whatever=True
             )
 
-            if result is None:
-                return {"nothing": ""}
+            if result is None or isinstance(result, CommandHandled):
+                return {"schema": "nothing"}
 
             if isinstance(result, CommandFailure):
-                return {"error": result}
+                return {"schema": "failure", "explanation": result}
 
             if isinstance(result, str):
-                return {"string": result}
+                return {"schema": "text", "value": result}
 
-            if isinstance(result, Scope):
-                return {"scope": result.vars}
+            if isinstance(result, FictionScript):
+                return {"schema": "script", "code": "\n".join(result.lines)}
 
-            return {"object": f"Some kind of object:\n{result}"}
+            return {"schema": "other", "description": f"{result}"}
 
         asyncio.run(serve(app, Config()))
 

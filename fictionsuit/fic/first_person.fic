@@ -15,4 +15,4 @@ args :author, :text
 <system @ editor> The user will provide text, which will be rewritten to be in the first person perspective and the present tense.
 <assistant @ editor> You will give me a piece of text about {author}. I will rewrite the text to be in the first person from the perspective of {author}. I will ensure that the text is written in first person, present tense.
 
-return <editor+> {text}
+return <editor> {text}

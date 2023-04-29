@@ -1,0 +1,53 @@
+pre {
+    color: var(--plaintext);
+}
+
+pre p {
+    color: var(--plaintext);
+}
+
+pre p:not(:last-child) {
+    padding-bottom: 0.5em; 
+}
+
+pre code {
+    background-color: var(--markdown-code);
+    border-radius: 0.5em;
+    border-left: 0.4em solid var(--markdown-code);
+    border-right: 0.4em solid var(--markdown-code);
+
+    margin-top: -2px;
+}
+
+pre pre {
+    margin: 0;
+    background-color: var(--markdown-code);
+    border-radius: 0.5em;
+}
+
+pre pre code {
+    border: 0;
+    background-color: transparent;
+}
+
+pre hr {
+    border: 0;
+    border-top: 1px solid var(--pane-divider);
+}
+
+a {
+    color: var(--markdown-link);
+}
+
+ul li {
+    list-style-type: square;
+    list-style-position: inside;
+}
+
+ul {
+    padding-left: 0.5em;
+}
+
+ol {
+    padding-left: 0.5em;
+}

@@ -5,12 +5,12 @@
 <temp @ helper> 0.5
 <model @ helper> gpt-4
 
-. docs = docs
+.docs = docs
 
-. summon script = load_text $FIC/summon.fic
-. face script = load_text $FIC/auto_face.fic
-. aspect script = load_text $FIC/face/face_aspect.fic
-. yes or no script = load_text $FIC/yes_or_no.fic
+.summon script = load_text $FIC/summon.fic
+.face script = load_text $FIC/auto_face.fic
+.aspect script = load_text $FIC/face/face_aspect.fic
+.yes or no script = load_text $FIC/yes_or_no.fic
 
 <system @ helper> FictionScript is a scripting language. It is part of the FictionSuit project, a framework for working with language models.---
 
@@ -109,23 +109,23 @@ Once the chat is created, it has several script methods:
 ### Summon
 
 summon.fic
-```
+```fictionscript
 {summon script}
 ```
 
 auto_face.fic
-```
+```fictionscript
 {face script}
 ```
 
 face/face_aspect.fic
-```
+```fictionscript
 {aspect script}
 ```
 
 The usage of the Summon fic looks like this:
 
-```
+```fictionscript
 | abe = <summon> Abraham Lincoln
 <user @ abe> Hey there, Abe. What would you say was your biggest accomplishment?
 <abe++>
@@ -135,7 +135,7 @@ The usage of the Summon fic looks like this:
 ### Yes or No
 
 yes_or_no.fic
-```
+```fictionscript
 {yes or no script}
 ```
 
@@ -150,7 +150,7 @@ If you want to get a full list of the available commands, you can just write `he
 <assistant @ helper> Sure, that shouldn't be too hard:---
 
 poem.fic
-```
+```fictionscript
 # This is a FictionScript that will prompt an LLM to write a poem.
 
 # The ":" here just means that when the user calls this script with something like "<poem> love", the argument "love" will be treated as a string instead of a command to be executed.

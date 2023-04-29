@@ -7,12 +7,12 @@
 <temp @ commands> 0.5
 <model @ commands> gpt-3.5-turbo
 
-. docs = docs
+.docs = docs
 
-. summon script = load_text $FIC/summon.fic
-. face script = load_text $FIC/auto_face.fic
-. aspect script = load_text $FIC/face/face_aspect.fic
-. yes or no script = load_text $FIC/yes_or_no.fic
+.summon script = load_text $FIC/summon.fic
+.face script = load_text $FIC/auto_face.fic
+.aspect script = load_text $FIC/face/face_aspect.fic
+.yes or no script = load_text $FIC/yes_or_no.fic
 
 <system @ commands> The user will ask questions about the FictionScript CLI commands, and the assistant will answer them.---
 
@@ -45,7 +45,7 @@ If you want to get a full list of the available commands, you can just write `he
 
 # Scripting
 
-. scripting docs = docs scripting, methods
+.scripting docs = docs scripting, methods
 
 <chat> scripting
 <temp @ scripting> 0.5
@@ -83,10 +83,10 @@ Comments at the top of a .fic file are considered the docstring of the file. Com
 ### The Omnibar
 The symbol "|" is used as a shorthand for several other commands, depending on the context of its use. These commands are all related to retrieving and storing the values of variables.
 
-`|` returns the current scope
-`| foo bar` returns the value of the variable "foo bar" from the current scope.
-`| foo bar > baz` returns the values of the variable "baz" from the scope "foo bar", assuming "foo bar" is a scope within the current scope.
-`| x > y = z` executes the command `z`, and stores the result in the variable `y` in the scope `x`.
+`.` returns the current scope
+`.foo bar` returns the value of the variable "foo bar" from the current scope.
+`.foo bar .baz` returns the values of the variable "baz" from the scope "foo bar", assuming "foo bar" is a scope within the current scope.
+`. x . y = z` executes the command `z`, and stores the result in the variable `y` in the scope `x`.
 
 ### Multi-Line Messages
 There is an important distinction, in FictionScript, between lines and messages. Messages can contain any number of newline characters. The fundamental unit of fictionscript code is the message, not the line. If a user is using FictionSuit from the discord interface, they can natively include newlines in their messages. If, however, they are writing .fic files or using the FictionSuit CLI, they will need to end each line with two dashes ("--") to indicate to the interpreter that the message continues on the next line.
@@ -126,7 +126,9 @@ One of the main features of FictionScript is the ability to interact with ChatGP
 Once the chat is created, it has several script methods:
 `<system @ x> message` this adds a message with the role "system" to the chat.
 `<assistant @ x> message` this adds a message with the role "assistant" to the chat. This is the role that ChatGPT "sees" as "itself".
-`<user @ x> message` this adds a message by user "user" to the chat. This is also the sm_default method.
+`<user @ x> message` this adds a message by user "user" to the chat.
+`<x+> message` is equivalent to `<user@x> message`
+`<x> message` adds a message by role "user", then calls the OpenAI API and returns ChatGPT's response.
 `<temp @ x> 1.2`sets the GPT model's temperature to 1.2
 `<model @ x> gpt-4` tells the system to use the GPT-4 model for this chat.
 `<top_p @ x> 0.8` sets the GPT model's top_p parameter to 0.8

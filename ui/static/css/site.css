@@ -4,22 +4,55 @@ body {
     border: 0;
     overflow: hidden;
 
+    font-size: 0.8em;
+    
+    --code-font: Consolas, 'Fira Code', Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-family: var(--code-font);
+
     --workspace-background: #CCEEFF;
     --workspace-grid: rgba(0, 0, 0, 0.3);
     
     --pane-header: #1b5757;
     --pane-divider: #1b5757;
-    --pane-backdrop: #022222;
-    --pane-title: #ceddff;
+    --pane-backdrop: #051616;
+    --pane-title: #CCEEFF;
 
     --drag-handle: rgba(255, 255, 255, 0.5);
 
 
-    --ficscript-editor-background: #232a2e;
+    --code-editor-background: #021616;
+    
     --ficscript-comment: #30A330;
     --ficscript-brackets: #4d5bd4;
     --ficscript-accessors: #4d5bd4;
-    --ficscript-string: #EEAA88;
+    --ficscript-string: #ffeecc;
     --ficscript-variable: #00CCFF;
     --ficscript-method: #AA77FF;
+    --ficscript-failure: #FF3b3b;
+
+    --plaintext: #CEDDFF;
+    --text-background: #022222;
+
+    --markdown-code: #021616;
+    --markdown-link: #309FFF;
+}
+
+pre {
+    font-family: var(--code-font);
+}
+
+p {
+    margin: 0;
+}
+
+html {
+    box-sizing: border-box;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+
+.pointerEventsNone {
+    pointer-events: none;
 }

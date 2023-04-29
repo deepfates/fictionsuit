@@ -78,7 +78,7 @@ class ChatInstance:
         try:
             n = int(args)
         except:
-            return CommandFailure(f'Expected an integer, got "{n}".')
+            return CommandFailure(f'Expected an integer, got "{args}".')
         if n < 1:
             return CommandFailure(f'Expected a positive integer, got "{n}".')
         if n == 1:
@@ -88,6 +88,7 @@ class ChatInstance:
 
     async def sm_default(self, content):
         await self.sm_user(content)
+        return await self._continue(1)
 
     async def sm_retry(self, args: str):
         pass  # TODO
@@ -108,7 +109,6 @@ class ChatInstance:
 
     async def sm_add(self, content):
         await self.sm_user(content)
-        return await self._continue(1)
 
     async def sm_subtract(self, n):
         try:

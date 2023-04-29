@@ -15,7 +15,7 @@ args :prompt, :aspect, :context, :example character, :example result
 <system @ writer> I will assist the user in inventing a character. In particular, I will be helping them come up with {aspect}. My response should be worded so that it would fit in as the end of this sentence: "{context}...". I will not include "{context}" in my reply, just the rest of the sentence, and no further commentary.
 
 # Now, a user asks the assistant for help, reiterating the format of the reply.
-<writer> Hello! I have a character idea and I need your help deciding on {aspect}. Also, I need you to reply only by completing the sentence "{context}..." and producing no other output. To show that you understand, please tell me what you would write for the character {example character}.
+<writer+> Hello! I have a character idea and I need your help deciding on {aspect}. Also, I need you to reply only by completing the sentence "{context}..." and producing no other output. To show that you understand, please tell me what you would write for the character {example character}.
 
 # The system reminds the assistant of the context of its reply
 <system @ writer> Complete the sentence: {context}
@@ -24,7 +24,7 @@ args :prompt, :aspect, :context, :example character, :example result
 <assistant @ writer> {example result}.
 
 # Now, the user asks for help with the actual character
-<writer> Excellent, you got the reply format exactly right. Now, here\'s my character idea: {prompt}
+<writer+> Excellent, you got the reply format exactly right. Now, here\'s my character idea: {prompt}
 
 # The system reminds the assistant of the context of its reply once more
 <system @ writer> Complete the sentence: {context}

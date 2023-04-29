@@ -1,49 +1,53 @@
-<script>
-    /**
-     * @type string value
-     */
-    export let value;
+<script lang="ts">
+    import SvelteMarkdown from "svelte-markdown";
+    import CodeBlock from "./markdown/code_block.svelte";
+
+    export let message: PlainText;
 </script>
 
 <div class=display-container>
-    <pre class=display>{value}</pre>
+    <!-- TODO: make "use markdown" a setting in PlainText
+        <pre class=display>{message.value}</pre>
+    -->
+    <pre class=display><SvelteMarkdown 
+        source={message.value} 
+        renderers={{ code: CodeBlock }}
+        /></pre>
 </div>
+
+<svelte:head>
+    <link rel="stylesheet" href="css/markdown.css" />
+</svelte:head>
 
 <style>
     .display-container {
+        display: block;
+        position: relative;
         margin: 0;
         padding: 0;
-
-        position: relative;
+        border: 0;
         width: 100%;
-        height: 100%;
-        background-color: var(--ficscript-editor-background);
+        padding-bottom: 1em;
+        background-color: var(--text-background);
     }
 
     .display {
-        position: absolute;
+        position: relative;
         padding: 0;
         margin: 0;
-        top: 10px;
-        left: 10px;
-        width: calc(100% - 20px);
-        height: calc(100% - 20px);
-        color: white;
-        font: 1em monospace;
+        top: 0.5em;
+        left: 0.5em;
+        width: calc(100% - 1em);
         word-wrap: break-word;
         overflow: auto;
         white-space: pre-wrap;
-
-
-        color: var(--ficscript-string);
-        font-style: italic;
     }
 
     /* Identical to scrollbar styling of script_input.svelte. consider extracting to site.css */
     ::-webkit-scrollbar {
-        width: 10px;
+        width: 0.5em;
         position: absolute;
-        right: 10px;
+        right: 0.5em;
     }
 
     ::-webkit-scrollbar-track {

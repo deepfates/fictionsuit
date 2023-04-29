@@ -10,6 +10,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		"@babel/core": "^7.21.4",
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/kit": "^1.5.0",
 		"@types/feather-icons": "^4.29.1",
@@ -23,6 +24,7 @@
 	"type": "module",
 	"dependencies": {
 		"feather-icons": "^4.29.0",
-		"prismjs": "^1.29.0"
+		"prismjs": "^1.29.0",
+		"svelte-markdown": "^0.2.3"
 	}
 }

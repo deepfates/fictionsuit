@@ -189,9 +189,7 @@ class CommandGroup:
         `help {cmd}`
         `help`"""
         if args == "":
-            response = f"**__{self.__class__.__name__}__**\n  > "
-            response += "\n  > ".join(self.get_command_names())
-            return response
+            return ""
 
         command = args.split(maxsplit=1)[0]
 

@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
     // @ts-nocheck
     // typescript hates what we're doing here
 
-    import Prism from 'prismjs';
     import { onMount } from 'svelte';
+    import Transmitter from '../../wiring/transmitter.svelte';
 
     Prism.languages['fictionscript'] = {
         'fic-comment': /^\s*#.*/,
@@ -128,8 +128,10 @@
             update(element.value); // Update text to include indent
         }
 
-        if(event.shiftKey && (event.key === "Enter" || event.keyCode === 13)) {
+        if(!event.shiftKey && (event.key === "Enter" || event.keyCode === 13)) {
             onSubmit(code);
+            //transmitter.send({ schema: "script", code: code, language: "fictionscript" });
+            transmitter.send({ schema: "command", command: code });
             element.value = "";
             update("");
             event.preventDefault();
@@ -151,11 +153,13 @@
      */
     let code_display_content_element;
 
+    let transmitter;
+
     export let width = "100%";
     export let height = "100%";
     export let padding = "10";
 
-    export let font_size = "1rem";
+    export let font_size = "1em";
 
     export let code = "";
 
@@ -187,6 +191,8 @@
         <code class="language-fictionscript code-display-content"
             bind:this={code_display_content_element} />
     </pre>
+
+    <Transmitter bind:this={transmitter} />
 </div>
 
 <svelte:head>
@@ -212,7 +218,7 @@
         border: 0;
         width: 100%;
         height: 100%;
-        background-color: var(--ficscript-editor-background);
+        background-color: var(--code-editor-background);
     }
     
     .code-input, .code-display {
@@ -260,8 +266,8 @@
 
     .code-input, .code-display, .code-display * {
         /* Also add text styles to highlighing tokens */
-        font-family: monospace;
-        line-height: 1.5;
+        font-family: var(--code-font);
+        line-height: 1.5em !important;
         tab-size: 4;
     }
     
@@ -313,7 +319,7 @@
     
     /* Paragraphs; First Image */
     * {
-        font-family: "Fira Code", monospace;
+        font-family: var(--code-font);
     }
     
     /* Syntax Highlighting from prism.js starts below, partly modified: */
@@ -327,13 +333,15 @@
     */
     
     code[class*="language-"] {
-        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        font-family: var(--code-font);
         text-align: left;
         white-space: pre-wrap;
         word-spacing: normal;
         word-break: normal;
         word-wrap: break-word;
         line-height: 1.5;
+
+        border: 0;
     
         -moz-tab-size: 4;
         -o-tab-size: 4;

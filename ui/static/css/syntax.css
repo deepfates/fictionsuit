@@ -1,3 +1,5 @@
+/* Ficscript-specific tokens */
+
 .token.fic-comment {
   color: var(--ficscript-comment);
 }
@@ -24,63 +26,76 @@
   color: var(--ficscript-method);
 }
 
-.token.punctuation {
-  color: #999;
+/* TODO: switch to just using standard tokens wherever possible */
+
+/* Prism.js standard tokens */
+
+.token.string {
+  color: var(--ficscript-string);
 }
 
-.token.namespace {
-  opacity: .7;
+.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog
+{
+  color: var(--ficscript-comment);
 }
 
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol {
-  color: #0cf;
+.token.punctuation
+{
+  color: var(--ficscript-brackets);
 }
 
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin {
-  color: yellow;
+.token.attr-name,.token.deleted,.token.namespace,.token.tag
+
+{
+  color: var(--ficscript-variable);
 }
 
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.token.variable,
-.token.inserted {
-  color: yellowgreen;
+.token.function-name
+{
+  color: var(--ficscript-method);
 }
 
-.token.atrule,
-.token.attr-value,
-.token.keyword {
-  color: deeppink;
+.token.boolean,.token.function,.token.number
+{
+  color: var(--ficscript-method);
 }
 
-.token.regex,
-.token.important {
-  color: orange;
+.token.class-name,.token.constant,.token.property,.token.symbol
+{
+  color: var(--ficscript-variable);
 }
 
-.token.important,
-.token.bold {
-  font-weight: bold;
-}
-.token.italic {
-  font-style: italic;
+.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector
+{
+  color: var(--ficscript-accessors);
 }
 
-.token.entity {
-  cursor: help;
+.token.attr-value,.token.char,.token.regex,.token.string,.token.variable
+{
+  color: var(--ficscript-string);
 }
 
-.token.deleted {
-  color: red;
+.token.entity,.token.operator,.token.url
+{
+  color: var(--markdown-link)
+}
+
+.token.bold,.token.important
+{
+  font-weight:700
+}
+
+.token.italic
+{
+  font-style:italic
+}
+
+.token.entity
+{
+  cursor:help
+}
+
+.token.inserted
+{
+  color:green
 }

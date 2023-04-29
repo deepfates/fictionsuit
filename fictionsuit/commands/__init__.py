@@ -14,3 +14,4 @@ from .discord_only import DiscordOnly
 from .research import Research
 from .scripting import Scripting
 from .text import Text
+from .webui import WebUi

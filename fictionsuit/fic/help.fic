@@ -15,11 +15,11 @@ into help
 
 # gpt4 with all command docs & scripting syntax, for more advanced questions
 load_fic $FIC/help/big_brain.fic as g4
-. g4 help instance = <g4>
+.g4 help instance = <g4>
 
 def_fic default ---
     arg :query
-    .res = <g4 help instance+> {query}
+    .res = <g4 help instance> {query}
     <g4 help instance-> 2
     return .res
     --

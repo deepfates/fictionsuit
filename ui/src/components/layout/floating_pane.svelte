@@ -1,18 +1,20 @@
 <!-- A window pane, containing anything or nothing. -->
 
-<script context="module">
+<script context="module" lang="ts">
     /**
-     * @type {({z_index: number, container: HTMLDivElement, onUpdate: (z_index: number) => void})[]}
+     * @type
      */
-    export let instances = [];
+    export let instances: ({z_index: number, container: HTMLDivElement, onUpdate: ((z_index: number) => void)})[] = [];
 </script>
 
-<script>
+<script lang="ts">
     import { onMount } from "svelte";
     import { onDestroy } from "svelte";
+    import { receivers, transmitters } from "../../wiring";
 
-    import DragHandle from "./drag_handle.svelte";
+    import DragHandle from "../general/drag_handle.svelte";
     import Emptiness from "./emptiness.svelte";
+    import { tick } from "svelte";
 
     export let width = 300;
     export let height = 200;
@@ -23,45 +25,52 @@
     export let title = "Untitled";
     export let scale = "1em";
 
+    export let content: HTMLElement | null = null;
+
     // The exported values are only used for initialization
     let w = 0;
     let h = 0;
     let z_index = 10;
 
-    /**
-     * @type {HTMLDivElement}
-     */
-    let container;
+    let container: HTMLDivElement;
+    let contentParent: HTMLElement;
 
     let container_position = "";
     let container_size = "";
     let body_style = "";
 
-    setPosition(x, y);
-    resize(width, height);
 
     let title_style = ``;
 
-    /**
-     * 
-     * @param {string | number | null} x
-     * @param {string | number | null} y
-     */
-    function setPosition(x, y) {
+    resize(width, height);
+
+    function setPosition(x: string | number | null, y: string | number | null) {
         let left, top;
         
         if (typeof(x) === "number") {
-            left = `calc(min(max(${x}px, 0%), 100% - ${w}px))`;
+            left = `calc(max(min(${x}px, 100% - ${container.clientWidth}px), 0%))`;
         } else {
-            left = `calc(min(max(${x}, 0%), 100% - ${w}px))`;
+            left = `calc(max(min(${x}, 100% - ${container.clientWidth}px), 0%))`;
         }
         if (typeof(y) === "number") {
-            top = `calc(min(max(${y}px, 0%), 100% - ${h}px))`;
+            top = `calc(max(min(${y}px, 100% - ${container.clientHeight}px), 0%))`;
         } else {
-            top = `calc(min(max(${y}, 0%), 100% - ${h}px))`;
+            top = `calc(max(min(${y}, 100% - ${container.clientHeight}px), 0%))`;
         }
 
         container_position = `left: ${left}; top: ${top};`;
+
+        tick().then(() => {
+            let transceivers = childTransceivers();
+            transceivers.receivers.forEach(receiver => {
+                for (let transmitter in transmitters) {
+                    transmitters[transmitter].rerender();
+                }
+            });
+            transceivers.transmitters.forEach(id => {
+                transmitters[id].rerender();
+            });
+        });
     }
 
     function getOffset() {
@@ -78,12 +87,7 @@
         }
     }
 
-    /**
-     * 
-     * @param {string | number | null} width
-     * @param {string | number | null} height
-     */
-    function resize(width, height) {
+    function resize(width: string | number | null, height: string | number | null) {
         let left, top, wLimit, hLimit;
         if (container === undefined) {
             left = 0;
@@ -121,18 +125,14 @@
             h = Math.min(h, hLimit - top);
         }
 
-        let width_style = `calc(max(${w}px, 5em))`;
-        let height_style = `calc(max(${h}px, 3.5em))`;
+        let width_style = `calc(min(max(${w}px, 15em), 100%))`;
+        let height_style = `calc(min(max(${h}px, 10em), 100%))`;
 
         container_size = `width: ${width_style}; height: ${height_style};`;
-        body_style = `height: calc(max(${h}px - 1.5em, 2em));`;
+        body_style = `height: calc(min(max(${h}px - 1.5em, 10em), 100% - 1.5em));`;
     }
 
-    /**
-     * 
-     * @param {MouseEvent} event 
-     */
-    function takeFront(event) {
+    function takeFront(event: MouseEvent) {
         let old_index = z_index;
         instances.forEach((pane, i) => {
             if (pane.container === container) {
@@ -145,14 +145,29 @@
         });
     }
 
-    /**
-     * 
-     * @param {MouseEvent} event 
-     */
-    function headerMouseDown(event) {
+    function headerMouseDown(event: MouseEvent) {
         if (event.button === 1) {
             container.parentNode?.removeChild(container);
         }
+    }
+
+    function childTransceivers(element: Element = container) {
+        let receivers: string[] = [];
+        let transmitters: string[] = [];
+
+        Array.from(element.children).forEach(child => {
+            if (child.id.startsWith("RECEIVER-")) {
+                receivers.push(child.id);
+            }
+            if (child.id.startsWith("TRANSMITTER-")) {
+                transmitters.push(child.id);
+            }
+            let recurseResult = childTransceivers(child);
+            receivers.push(...recurseResult.receivers);
+            transmitters.push(...recurseResult.transmitters);
+        });
+
+        return { receivers, transmitters };
     }
 
     let dh_offset = 15;
@@ -166,12 +181,17 @@
     onMount(() => {
         z_index = instances.length + 11;
         instances.push({z_index, container, onUpdate});
+
+        if (content !== null) {
+            while (contentParent.firstChild !== null) contentParent.removeChild(contentParent.firstChild);
+            contentParent.appendChild(content);
+        }
+
+        resize(width, height);
+        setPosition(x, y);
     });
 
-    /**
-     * @param {number} new_z_index
-     */
-    function onUpdate(new_z_index) {
+    function onUpdate(new_z_index: number) {
         z_index = new_z_index;
     }
 
@@ -199,7 +219,7 @@
             </div>
         </DragHandle>
         <div class=pane-body style={body_style}>
-            <div class=pane-content>
+            <div class=pane-content bind:this={contentParent}>
                 <slot>
                     <Emptiness />
                 </slot>
@@ -238,14 +258,14 @@
         position: absolute;
         background-color: var(--pane-header);
         width: 100%; 
-        height: 1.5em;
+        height: 1.7em;
     }
 
     .pane-title {
         color: var(--pane-title);
-        font: 1em monospace;
+        font-size: 1em;
         position: absolute; 
-        top: 0.22em; 
+        top: 0.35em; 
         left: 0.5em; 
         max-width: calc(100% - 2.5em); 
         overflow: hidden; 
@@ -255,9 +275,8 @@
 
     .pane-body {
         position: absolute;
-        overflow: hidden;
         width: 100%;
-        top: 1.5em;
+        top: 1.7em;
     }
 
     .pane-content {
@@ -304,9 +323,9 @@
 
     .drag-handle {
         position: absolute;
-        left: calc(100% - 1.5em);
-        width: 1.5em;
-        height: 1.5em;
+        left: calc(100% - 1.7em);
+        width: 1.7em;
+        height: 1.7em;
         user-select: none;
         cursor: move;
     }

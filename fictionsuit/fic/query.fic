@@ -8,7 +8,7 @@ args :text, :query
 <chat c>
 
 <system @ c> I answer questions about segments of text.
-<c> Here is some text:\n{text}
+<c+> Here is some text:\n{text}
 <assistant @ c> I am ready to answer your question about the text.
 
-return <c+> {query}
+return <c> {query}
