@@ -32,7 +32,7 @@
 
 
 <div class="outer-container">
-    <Receiver {onReceive} />
+    <Receiver schemas={["command"]} {onReceive} />
     <div class="inner-container">
         <span>TODO: a field to let your choose the session id</span>
     </div>

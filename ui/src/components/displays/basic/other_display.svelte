@@ -1,10 +1,18 @@
 <script lang="ts">
+    import ScriptDisplay from "./script_display.svelte";
+
     export let message: Other;
+
+    let asJson: Script;
+
+    $: {
+        if (message !== undefined) {
+            asJson = { "schema": "script", "language": "javascript", "code": message.description, "source_file": "" };
+        }
+    }
 </script>
 
-<div class=display-container>
-    <pre class=display>Object:<br/>{message.description}</pre>
-</div>
+<ScriptDisplay message={asJson} />
 
 <style>
     .display-container {

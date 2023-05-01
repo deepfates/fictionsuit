@@ -203,9 +203,11 @@
             });
         }
     }
+
+    let id: string = "WORKSPACE-" + crypto.randomUUID();
 </script>
 
-<div class=workspace
+<div class=workspace {id}
     bind:this={workspace}>
     <div class=backdrop 
         on:contextmenu={onMenuOpen}
@@ -252,8 +254,8 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: calc(100% - 2px);
-        height: calc(100% - 1px);
+        width: 100%;
+        height: 100%;
     }
 
     .hidden {

@@ -17,12 +17,14 @@ import time
 class BlueskyClient:
     def __init__(
         self,
+        username: str = config.BSKY_USERNAME,
+        password: str = config.BSKY_PASSWORD,
         #    system: System,
         #    command_prefix=config.COMMAND_PREFIX
     ):
         # self.system = system
         # self.command_prefix = command_prefix
-        self.session = Session(config.BSKY_USERNAME, config.BSKY_PASSWORD)
+        self.session = Session(username, password)
 
     def notification_count(self):
         headers = {"Authorization": "Bearer " + self.session.ATP_AUTH_TOKEN}

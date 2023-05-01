@@ -4,6 +4,8 @@
     import { transmitters, receivers } from "../../wiring";
     import { onDestroy } from "svelte";
 
+    export let schemas: string[] = ["any"];
+
     let dragging = false;
     let dragHandleBaseStyle = "width: 0.5em; height: 0.5em; border-radius: 50%; background-color: green; cursor: pointer; z-index: 3;"
     let dragHandleStyle = dragHandleBaseStyle;
@@ -13,7 +15,7 @@
     let handleY = 0;
     let controlOffset = 0;
 
-    let connections: {signal: (message: Message) => void, x: number, y: number, offset: number, element: HTMLElement }[] = [];
+    let connections: {signal: (message: Message) => void, x: number, y: number, offset: number, element: HTMLElement, id: string }[] = [];
 
     export function send(message: Message) {
         for (let connection of connections) {
@@ -33,7 +35,7 @@
         handleY = 0;
 
         controlOffset = 0.5 * Math.abs(handleX);
-        if (controlOffset < 5) controlOffset = 5;
+        if (controlOffset < 0) controlOffset = 0;
     }
 
     function onDragEnd() {
@@ -49,6 +51,12 @@
         if (id === null) return;
         if (receivers[id] === undefined) return;
 
+        let acceptedSchemas = receivers[id].schemas;
+        if (!acceptedSchemas.includes("any")) {
+            console.log(schemas, acceptedSchemas)
+            if (!schemas.every(schema => acceptedSchemas.includes(schema))) return;
+        }
+
         connections.push({...receivers[id], "x": handleX, "y": handleY, "offset": controlOffset})
 
         connections = connections;
@@ -58,7 +66,7 @@
         connections = connections;
     }
 
-    function svgPathVariables(receiver: HTMLElement) {
+    function svgPathVariables(receiver: HTMLElement, id: string) {
         let receiverRect = receiver.getBoundingClientRect();
         let containerRect = container.getBoundingClientRect();
 
@@ -66,9 +74,9 @@
         let y = receiverRect.top - container.clientHeight - containerRect.top + 2 * fontsize;
 
         let offset = 0.5 * Math.abs(x);
-        if (offset < 5) offset = 5;
+        if (offset < 120) offset = 120;
 
-        return {x, y, offset};
+        return {x, y, offset, id};
     }
 
     function onDrag(x: number | string | null, y: number | string | null) {
@@ -86,7 +94,7 @@
         handleY = y - container.clientHeight + 2 * fontsize;
 
         controlOffset = 0.5 * Math.abs(handleX);
-        if (controlOffset < 5) controlOffset = 5;
+        if (controlOffset < 0) controlOffset = 0;
     }
 
     function getFontSize() {
@@ -105,7 +113,7 @@
     let container: HTMLElement;
 
     onMount(() => {
-        transmitters[id] = { "element": container, "rerender": updateWires };
+        transmitters[id] = { "element": container, "rerender": updateWires, "connections": connections };
         getFontSize();
     });
 
@@ -137,33 +145,45 @@
         return result;
     }
 
-    let connectionDisplayData: { x: number, y: number, offset: number }[] = []
+    function onPathClick(id: string) {
+        let index = connections.findIndex((connection) => connection.id === id);
+        if (index === -1) {
+            // Impossible -- unless something has gone horribly wrong
+            return;
+        }
+
+        connections.splice(index, 1);
+        connections = connections;
+    }
+
+    let connectionDisplayData: { x: number, y: number, offset: number, id: string }[] = []
 
     $: {
         connectionDisplayData = [];
         for (let connection of connections) {
-            connectionDisplayData.push(svgPathVariables(connection.element));
+            connectionDisplayData.push(svgPathVariables(connection.element, connection.id));
         }
     }
 </script>
 
 <div {id} style="position: relative; height: 100%; width: 100%;" bind:this={container}>
-    <div class=transmitter {...$$restProps} style={dragging ? "" : "visibility: hidden;"} />
+    <div class="transmitter {schemas.join(' ')}" {...$$restProps} style={dragging ? "" : "visibility: hidden;"} />
 
     {#if dragging}
         <svg xmlns="http://www.w3.org/2000/svg" style="overflow: visible; position: absolute; top: calc(100% - 1.5em); left: calc(100% - 1em); z-index: 3; pointer-events: none;">
-            <path d="M {0} {0} C {controlOffset} {0}, {handleX - controlOffset} {handleY}, {handleX} {handleY}" stroke="green" stroke-width="4" fill="none" style="pointer-events: auto;" />
+            <path d="M {0} {0} C {controlOffset} {0}, {handleX - controlOffset} {handleY}, {handleX} {handleY}" class="connection {schemas.join(' ')}" stroke-width="4" fill="none" style="pointer-events: auto;" />
         </svg>
     {/if}
 
     {#each connectionDisplayData as connection}
         <svg xmlns="http://www.w3.org/2000/svg" style="overflow: visible; position: absolute; top: calc(100% - 1.5em); left: calc(100% - 1em); z-index: 3; pointer-events: none;">
-            <path d="M {0} {0} C {connection.offset} {0}, {connection.x - connection.offset} {connection.y}, {connection.x} {connection.y}" stroke="blue" stroke-width="4" fill="none" style="pointer-events: auto;" />
+            <path d="M {0} {0} C {connection.offset} {0}, {connection.x - connection.offset} {connection.y}, {connection.x} {connection.y}" class="connection {schemas.join(' ')}" stroke-width="4" fill="none" style="pointer-events: auto;" />
+            <path d="M {0} {0} C {connection.offset} {0}, {connection.x - connection.offset} {connection.y}, {connection.x} {connection.y}" class="connection-selector" stroke-width="10" fill="none" style="pointer-events: auto;" on:mousedown={(event) => {if (event.button===1) {onPathClick(connection.id)}}} />
         </svg>
     {/each}
 
     <DragHandle {onDragStart} {onDrag} {onDragEnd} {getOffset} style={dragging ? dragHandleStyle : ""}>
-        <div class=transmitter {...$$restProps} style={dragging ? "visibility: hidden;" : ""}>
+        <div class="transmitter {schemas.join(' ')}" {...$$restProps} style={dragging ? "visibility: hidden;" : ""}>
         </div>
     </DragHandle>
 </div>
@@ -178,6 +198,35 @@
         width: 1em;
         border-radius: 50%;
         cursor: pointer;
-        z-index: 3;
+        z-index: 100;
+    }
+
+    .transmitter.any {
+        background-color: var(--wire-any);
+    }
+
+    .transmitter.command {
+        background-color: var(--wire-command);
+    }
+
+    .connection {
+        stroke: red;
+        z-index: -10;
+    }
+
+    .connection.any {
+        stroke: var(--wire-any);
+    }
+
+    .connection.command {
+        stroke: var(--wire-command);
+    }
+
+    .connection-selector {
+        stroke: transparent;
+    }
+
+    .connection-selector:hover {
+        stroke: #FFF5;
     }
 </style>

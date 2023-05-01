@@ -20,6 +20,9 @@ body {
     --drag-handle: rgba(255, 255, 255, 0.5);
 
 
+    --wire-any: #1b5757;
+    --wire-command: purple;
+
     --code-editor-background: #021616;
     
     --ficscript-comment: #30A330;

@@ -8,7 +8,7 @@
     import Workspace from "../components/layout/workspace.svelte";
     import Display from "../components/nodes/display.svelte";
     import ScriptInput from "../components/nodes/inputs/script_input.svelte";
-    import FicApi from "../components/nodes/fic_api.svelte";
+    import Execute from "../components/nodes/execute.svelte";
     import Feed from "../components/nodes/feed.svelte";
 </script>
 
@@ -22,8 +22,8 @@
             <FloatingPane title="Display" x=45em y=5em>
                 <Display />
             </FloatingPane>
-            <FloatingPane title="API" x=5em y=45em>
-                <FicApi />
+            <FloatingPane title="Execute" x=5em y=45em>
+                <Execute />
             </FloatingPane>
             <FloatingPane title="Feed" x=45em y=45em>
                 <Feed />

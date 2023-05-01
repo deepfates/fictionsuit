@@ -2,6 +2,8 @@
     import { onMount, onDestroy } from "svelte";
     import { receivers } from "../../wiring";
 
+    export let schemas: string[] = ["any"];
+
     export let onReceive: (message: Message) => void = m => { console.log(`Received message with schema ${m.schema}.`); };
 
     let id: string = "RECEIVER-" + crypto.randomUUID();
@@ -9,7 +11,7 @@
     let element: HTMLDivElement;
 
     onMount(() => {
-        receivers[id] = { "signal": onReceive, "element": element };
+        receivers[id] = { "signal": onReceive, "element": element, "schemas": schemas, "id": id };
     });
 
     onDestroy(() => {
@@ -19,7 +21,7 @@
 
 <div bind:this={element} class=container {...$$restProps}>
     <div {id} class=dish>
-        <div class=receiver />
+        <div class="receiver {schemas.join(' ')}" />
     </div>
 </div>
 
@@ -56,5 +58,14 @@
         height: 1em;
         border-radius: 50%;
         cursor: pointer;
+        z-index: 100;
+    }
+
+    .receiver.any {
+        background-color: var(--wire-any);
+    }
+
+    .receiver.command {
+        background-color: var(--wire-command);
     }
 </style>
