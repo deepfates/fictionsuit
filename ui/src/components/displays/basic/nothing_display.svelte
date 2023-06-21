@@ -1,4 +1,6 @@
 <script lang="ts">
+    import Emptiness from "../../layout/emptiness.svelte";
+
     export let message: Nothing;
 
     export let context = "command_response";
@@ -8,20 +10,21 @@
     {#if context == "command_response"}
         <pre class=display># <span>Finished with no return value.</span></pre>
     {:else}
-        <pre class=display></pre>
+        <Emptiness fillable={false} />
     {/if}
 </div>
 
 <style>
     .display-container {
-        display: block;
+        display: inline-block;
         position: relative;
         margin: 0;
         padding: 0;
         border: 0;
         width: 100%;
-        padding-bottom: 1em;
-        background-color: var(--code-editor-background);
+        height: 100%;
+        padding-bottom: 0.75em;
+        line-height: 1.5;
     }
 
     .display {

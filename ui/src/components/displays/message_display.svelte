@@ -5,24 +5,32 @@
     import ScriptDisplay from "./basic/script_display.svelte";
     import OtherDisplay from "./basic/other_display.svelte";
     import NothingDisplay from "./basic/nothing_display.svelte";
+    import ScopeDisplay from "./basic/scope_display.svelte";
+    import ImageDisplay from "./basic/image_display.svelte";
 
     export let message: Message = { schema: "nothing" };
     export let height: string | null = null;
 
+
     export let context = "command_response";
+
+    export let padding = 0.5;
 
     const displays: {[key: string]: any} = {
         "text": TextDisplay,
         "script": ScriptDisplay,
         "command": ScriptDisplay,
         "failure": FailureDisplay,
+        "scope": ScopeDisplay,
         "other": OtherDisplay,
-        "nothing": NothingDisplay
+        "nothing": NothingDisplay,
+        "image_bytes": ImageDisplay
     }
 
     let props = {
-        message: message,
-        context: context
+        message,
+        context,
+        padding
     }
 
     let component: any = null;
@@ -30,8 +38,9 @@
     onMount(() => {
         component = displays[message.schema];
         props = {
-            message: message,
-            context: context
+            message,
+            context,
+            padding
         }
     });
 
@@ -39,8 +48,9 @@
         if (message !== undefined) {
             component = displays[message.schema];
             props = {
-                message: message,
-                context: context
+                message,
+                context,
+                padding
             }
         }
     }
@@ -55,20 +65,41 @@
 
 </script>
 
-<div class=command style={commandStyle}>
+<div class="message animate-open" style={commandStyle}>
     <svelte:component this={component} {...props} />
 </div>
 
 
 <style>
-    .command {
+    .message {
+        display: inline-block;
         position: relative;
-        border: 2px solid var(--pane-divider);
-        width: calc(100% - 0.5em - 4px);
-        margin-bottom: 0.25em;
+        /*border: 2px solid var(--pane-divider);
         border-radius: 0.5em;
+        */
+        /* width: calc(100% - 0.5em - 4px); */
+        width: 100%;
+        height: 100%;
         overflow: hidden;
         color: red;
+        line-height: 0;
+    }
+
+    .animate-open {
+        /* animation: open 2s ease-in-out; */
+    }
+
+    @keyframes open {
+        0% {
+            max-height: 0;
+        }
+        100% {
+            max-height: 500em;
+        }
+    }
+
+    .message:not(:last-child) {
+        margin-bottom: 0.25em;
     }
 
     ::-webkit-scrollbar {

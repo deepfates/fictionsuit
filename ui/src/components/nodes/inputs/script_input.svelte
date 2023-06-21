@@ -192,7 +192,7 @@
             bind:this={code_display_content_element} />
     </pre>
 
-    <Transmitter schemas={["command"]} bind:this={transmitter} />
+    <Transmitter schemas={["command"]} bind:this={transmitter} style="right: -1.5em;" />
 </div>
 
 <svelte:head>

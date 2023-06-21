@@ -1,4 +1,3 @@
-
 from ..core.user_message import UserMessage
 from .command_group import CommandGroup
 

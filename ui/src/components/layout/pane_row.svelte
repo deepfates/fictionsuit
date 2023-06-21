@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import DragHandle from "../general/drag_handle.svelte";
     import Emptiness from "./emptiness.svelte";
 
@@ -86,6 +86,78 @@
             y: 0, // don't care
         };
     }
+
+function onDividerClickA(event: MouseEvent) {
+    if (event.button !== 1) return;
+    
+    let hasCenter = centerPercent > 0;
+
+    let leftEmpty = left_slot.children[0].classList.contains('emptiness');
+    
+    if (hasCenter) {
+        let centerEmpty = center_slot.children[0].classList.contains('emptiness');
+        if (!leftEmpty && !centerEmpty) return;
+        if (centerEmpty) {
+            leftPercent += centerPercent;
+            centerPercent = 0;
+            return;
+        }
+
+        while (left_slot.firstChild) {
+            left_slot.removeChild(left_slot.firstChild!);
+        }
+        while (center_slot.firstChild) {
+            let child = center_slot.removeChild(center_slot.firstChild);
+            left_slot!.appendChild(child);
+        }
+
+        leftPercent += centerPercent;
+        centerPercent = 0;
+    } else {
+        let parent = container.parentElement;
+        if (leftEmpty) {
+            while (right_slot.firstChild) {
+                let child = right_slot.removeChild(right_slot.firstChild);
+                parent!.appendChild(child);
+            }
+            parent!.removeChild(container);
+        }
+        else if (right_slot.children[0].classList.contains('emptiness')) {
+            while (left_slot.firstChild) {
+                let child = left_slot.removeChild(left_slot.firstChild);
+                parent!.appendChild(child);
+            }
+            parent!.removeChild(container);
+        }
+    }
+}
+
+function onDividerClickB(event: MouseEvent) {
+    if (event.button !== 1) return;
+    
+    // This function can only ever be called when there is a center slot
+
+    let rightEmpty = right_slot.children[0].classList.contains('emptiness');
+    
+    let centerEmpty = center_slot.children[0].classList.contains('emptiness');
+    if (!rightEmpty && !centerEmpty) return;
+    if (centerEmpty) {
+        rightPercent += centerPercent;
+        centerPercent = 0;
+        return;
+    }
+
+    while (right_slot.firstChild) {
+        right_slot.removeChild(right_slot.firstChild!);
+    }
+    while (center_slot.firstChild) {
+        let child = center_slot.removeChild(center_slot.firstChild);
+        right_slot!.appendChild(child);
+    }
+
+    rightPercent += centerPercent;
+    centerPercent = 0;
+}
 </script>
 
 <div class="row-container" {...$$restProps} bind:this={container}>
@@ -98,7 +170,7 @@
     {#if dividers}
         <div class="pane-divider">
             <DragHandle onDrag={onDragA} getOffset={getOffsetA} >
-                <div class="pane-resize" />
+                <div on:mousedown={onDividerClickA} class="pane-resize" />
             </DragHandle>
         </div>
     {/if}
@@ -112,7 +184,7 @@
         {#if dividers}
             <div class="pane-divider">
                 <DragHandle onDrag={onDragB} getOffset={getOffsetB} >
-                    <div class="pane-resize" />
+                    <div on:mousedown={onDividerClickB} class="pane-resize" />
                 </DragHandle>
             </div>
         {/if}
@@ -143,13 +215,14 @@
         top: 0;
         right: 0;
         bottom: 0;
+        overflow: hidden;
     }
 
     .pane-divider {
         position: relative;
         flex: 0 0 1px;
-        top: 0;
-        bottom: 0;
+        top: 1em;
+        height: calc(100% - 2em);
         background-color: var(--pane-divider);
         overflow: visible;
         z-index: 1;

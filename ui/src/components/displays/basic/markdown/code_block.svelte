@@ -23,4 +23,23 @@
     }
 </script>
 
-<ScriptDisplay message={script} />
+<div class=container>
+    <ScriptDisplay message={script} padding={0} />
+</div>
+
+<style>
+    .container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        line-height: 0;
+        border-left: 1px solid var(--pane-divider);
+        border-top: 1px solid var(--pane-divider);
+        padding-left: 0.5em;
+        padding-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+</style>

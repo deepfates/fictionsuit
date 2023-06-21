@@ -21,14 +21,16 @@
 
 <style>
     .display-container {
-        display: block;
+        display: inline-block;
         position: relative;
         margin: 0;
         padding: 0;
         border: 0;
         width: 100%;
-        padding-bottom: 1em;
-        background-color: var(--text-background);
+        height: 100%;
+        padding-bottom: 0.75em;
+        line-height: 0;
+        background-color: var(--code-editor-background);
     }
 
     .display {
@@ -41,6 +43,7 @@
         word-wrap: break-word;
         overflow: auto;
         white-space: pre-wrap;
+        line-height: 0;
     }
 
     /* Identical to scrollbar styling of script_input.svelte. consider extracting to site.css */

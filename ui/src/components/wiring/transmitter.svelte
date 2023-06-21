@@ -1,10 +1,11 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import DragHandle from "../general/drag_handle.svelte";
-    import { transmitters, receivers } from "../../wiring";
-    import { onDestroy } from "svelte";
-
+    import coordinator from "../../coordinator";
+    
     export let schemas: string[] = ["any"];
+    
+    export let style: string = "";
 
     let dragging = false;
     let dragHandleBaseStyle = "width: 0.5em; height: 0.5em; border-radius: 50%; background-color: green; cursor: pointer; z-index: 3;"
@@ -15,11 +16,9 @@
     let handleY = 0;
     let controlOffset = 0;
 
-    let connections: {signal: (message: Message) => void, x: number, y: number, offset: number, element: HTMLElement, id: string }[] = [];
-
     export function send(message: Message) {
-        for (let connection of connections) {
-            connection.signal(message);
+        for (let connection of coordinator.transmitters[id].connections) {
+            connection.onSignal(message);
         }
     }
 
@@ -46,27 +45,20 @@
         let x = handleX + container.clientWidth + rect.left - 1 * fontsize;
         let y = handleY + container.clientHeight + rect.top - 1 * fontsize;
 
-        let id = idAtLocation(x, y);
+        let receiverId = coordinator.idAtLocation(x, y, coordinator.prefixes.receiver);
 
-        if (id === null) return;
-        if (receivers[id] === undefined) return;
+        if (receiverId === null) return;
+        if (coordinator.receivers[receiverId] === undefined) return;
 
-        let acceptedSchemas = receivers[id].schemas;
+        let acceptedSchemas = coordinator.receivers[receiverId].schemas;
         if (!acceptedSchemas.includes("any")) {
-            console.log(schemas, acceptedSchemas)
             if (!schemas.every(schema => acceptedSchemas.includes(schema))) return;
         }
 
-        connections.push({...receivers[id], "x": handleX, "y": handleY, "offset": controlOffset})
-
-        connections = connections;
+        coordinator.connect(id, receiverId);
     }
 
-    export function updateWires() {
-        connections = connections;
-    }
-
-    function svgPathVariables(receiver: HTMLElement, id: string) {
+    function svgPathVariables(receiver: Element, id: string) {
         let receiverRect = receiver.getBoundingClientRect();
         let containerRect = container.getBoundingClientRect();
 
@@ -80,7 +72,7 @@
     }
 
     function onDrag(x: number | string | null, y: number | string | null) {
-        let position = `left: calc(${x}px + 0.25em); top: calc(${y}px + 0.25em);`;
+        let position = `left: calc(${x}px + 0.75em); top: calc(${y}px + 1.25em);`;
         dragHandleStyle = `${dragHandleBaseStyle} ${position} position: absolute;`
 
         if (typeof x !== "number") {
@@ -108,79 +100,38 @@
         }
     }
 
-    let id: string = "TRANSMITTER-" + crypto.randomUUID();
+    let id: string = coordinator.prefixes.transmitter + "-" + crypto.randomUUID();
 
     let container: HTMLElement;
 
     onMount(() => {
-        transmitters[id] = { "element": container, "rerender": updateWires, "connections": connections };
+        coordinator.registerTransmitter(id, container, () => { foo = true; }, schemas, []);
         getFontSize();
     });
 
-    onDestroy(() => {
-        delete transmitters[id];
-    });
-
-    function idAtLocation(x: number, y: number): string | null {
-        var stack = [];
-        var el;
-        var result = null;
-        do {
-            el = document.elementFromPoint(x, y);
-            if (el === null) {
-                break;
-            }
-            if (el.id.startsWith("RECEIVER-")) {
-                result = el.id;
-                break;
-            }
-            stack.push(el);
-            el.classList.add('pointerEventsNone');
-        }while(el.tagName !== 'HTML');
-
-        // clean up
-        for(var i  = 0; i < stack.length; i += 1)
-            stack[i].classList.remove('pointerEventsNone');
-
-        return result;
-    }
-
-    function onPathClick(id: string) {
-        let index = connections.findIndex((connection) => connection.id === id);
-        if (index === -1) {
-            // Impossible -- unless something has gone horribly wrong
-            return;
-        }
-
-        connections.splice(index, 1);
-        connections = connections;
-    }
-
     let connectionDisplayData: { x: number, y: number, offset: number, id: string }[] = []
 
+    let foo = false;
+
     $: {
-        connectionDisplayData = [];
-        for (let connection of connections) {
-            connectionDisplayData.push(svgPathVariables(connection.element, connection.id));
+        if (foo && coordinator.transmitters[id] !== undefined) {
+            foo = false;
+            connectionDisplayData = [];
+            for (let connection of coordinator.transmitters[id].connections) {
+                connectionDisplayData.push(svgPathVariables(connection.element, connection.id));
+            }
         }
     }
 </script>
 
-<div {id} style="position: relative; height: 100%; width: 100%;" bind:this={container}>
+<div {id} class="container" bind:this={container} {style}>
     <div class="transmitter {schemas.join(' ')}" {...$$restProps} style={dragging ? "" : "visibility: hidden;"} />
 
     {#if dragging}
-        <svg xmlns="http://www.w3.org/2000/svg" style="overflow: visible; position: absolute; top: calc(100% - 1.5em); left: calc(100% - 1em); z-index: 3; pointer-events: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" style="overflow: visible; position: absolute; top: calc(100% - 0.5em); left: calc(100% - 0.5em); z-index: 3; pointer-events: none;">
             <path d="M {0} {0} C {controlOffset} {0}, {handleX - controlOffset} {handleY}, {handleX} {handleY}" class="connection {schemas.join(' ')}" stroke-width="4" fill="none" style="pointer-events: auto;" />
         </svg>
     {/if}
-
-    {#each connectionDisplayData as connection}
-        <svg xmlns="http://www.w3.org/2000/svg" style="overflow: visible; position: absolute; top: calc(100% - 1.5em); left: calc(100% - 1em); z-index: 3; pointer-events: none;">
-            <path d="M {0} {0} C {connection.offset} {0}, {connection.x - connection.offset} {connection.y}, {connection.x} {connection.y}" class="connection {schemas.join(' ')}" stroke-width="4" fill="none" style="pointer-events: auto;" />
-            <path d="M {0} {0} C {connection.offset} {0}, {connection.x - connection.offset} {connection.y}, {connection.x} {connection.y}" class="connection-selector" stroke-width="10" fill="none" style="pointer-events: auto;" on:mousedown={(event) => {if (event.button===1) {onPathClick(connection.id)}}} />
-        </svg>
-    {/each}
 
     <DragHandle {onDragStart} {onDrag} {onDragEnd} {getOffset} style={dragging ? dragHandleStyle : ""}>
         <div class="transmitter {schemas.join(' ')}" {...$$restProps} style={dragging ? "visibility: hidden;" : ""}>
@@ -189,11 +140,16 @@
 </div>
 
 <style>
+    .container {
+        position: absolute;
+        height: 1em;
+        width: 1em;
+        z-index: 3;
+    }
+
     .transmitter {
         background-color: red;
         position: absolute;
-        bottom: 1em;
-        right: 0.5em;
         height: 1em;
         width: 1em;
         border-radius: 50%;

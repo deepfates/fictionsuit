@@ -23,6 +23,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/wicg-file-system-access": "^2020.9.6",
 		"feather-icons": "^4.29.0",
 		"prismjs": "^1.29.0",
 		"svelte-markdown": "^0.2.3"

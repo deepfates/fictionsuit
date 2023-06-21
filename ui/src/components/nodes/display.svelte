@@ -15,11 +15,11 @@
 
 
 <div class="outer-container">
-    <Receiver {onReceive} />
+    <Receiver {onReceive} style="left: -1.5em" />
     <div class="inner-container">
         <MessageDisplay {message} context="passthrough" height=100% />
     </div>
-    <Transmitter bind:this={transmitter} />
+    <Transmitter bind:this={transmitter} style="right: -1.5em" />
 </div>
 
 
@@ -31,7 +31,7 @@
         border: 0;
         width: 100%;
         height: 100%;
-        background-color: var(--pane-backdrop);
+        /* background-color: var(--pane-backdrop); */
     }
 
     .inner-container {
@@ -39,10 +39,14 @@
         margin: 0;
         padding: 0;
         border: 0;
-        top: 0.5em;
-        left: 2em;
-        width: calc(100% - 3em - 4px);
-        height: calc(100% - 1em);
-        background-color: var(--pane-backdrop);
+        /* top: 0.5em;
+        left: 1em;
+        width: calc(100% - 1em - 4px);
+        height: calc(100% - 1em); */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* background-color: var(--pane-backdrop); */
     }
 </style>

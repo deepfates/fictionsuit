@@ -86,6 +86,78 @@
             y: container.offsetTop + container.clientHeight * (topPercent + middlePercent + .2) / 100
         };
     }
+
+    function onDividerClickA(event: MouseEvent) {
+        if (event.button !== 1) return;
+        
+        let hasMiddle = middlePercent > 0;
+
+        let topEmpty = top_slot.children[0].classList.contains('emptiness');
+        
+        if (hasMiddle) {
+            let middleEmpty = middle_slot.children[0].classList.contains('emptiness');
+            if (!topEmpty && !middleEmpty) return;
+            if (middleEmpty) {
+                topPercent += middlePercent;
+                middlePercent = 0;
+                return;
+            }
+
+            while (top_slot.firstChild) {
+                top_slot.removeChild(top_slot.firstChild!);
+            }
+            while (middle_slot.firstChild) {
+                let child = middle_slot.removeChild(middle_slot.firstChild);
+                top_slot!.appendChild(child);
+            }
+
+            topPercent += middlePercent;
+            middlePercent = 0;
+        } else {
+            let parent = container.parentElement;
+            if (topEmpty) {
+                while (bottom_slot.firstChild) {
+                    let child = bottom_slot.removeChild(bottom_slot.firstChild);
+                    parent!.appendChild(child);
+                }
+                parent!.removeChild(container);
+            }
+            else if (bottom_slot.children[0].classList.contains('emptiness')) {
+                while (top_slot.firstChild) {
+                    let child = top_slot.removeChild(top_slot.firstChild);
+                    parent!.appendChild(child);
+                }
+                parent!.removeChild(container);
+            }
+        }
+    }
+
+    function onDividerClickB(event: MouseEvent) {
+        if (event.button !== 1) return;
+        
+        // This function can only ever be called when there is a middle slot
+
+        let bottomEmpty = bottom_slot.children[0].classList.contains('emptiness');
+        
+        let middleEmpty = middle_slot.children[0].classList.contains('emptiness');
+        if (!bottomEmpty && !middleEmpty) return;
+        if (middleEmpty) {
+            bottomPercent += middlePercent;
+            middlePercent = 0;
+            return;
+        }
+
+        while (bottom_slot.firstChild) {
+            bottom_slot.removeChild(bottom_slot.firstChild!);
+        }
+        while (middle_slot.firstChild) {
+            let child = middle_slot.removeChild(middle_slot.firstChild);
+            bottom_slot!.appendChild(child);
+        }
+
+        bottomPercent += middlePercent;
+        middlePercent = 0;
+    }
 </script>
 
 <div class="column-container" {...$$restProps} bind:this={container}>
@@ -98,7 +170,7 @@
     {#if dividers}
         <div class="pane-divider">
             <DragHandle onDrag={onDragA} getOffset={getOffsetA} >
-                <div class="pane-resize" />
+                <div on:mousedown={onDividerClickA} class="pane-resize" />
             </DragHandle>
         </div>
     {/if}
@@ -112,7 +184,7 @@
         {#if dividers}
             <div class="pane-divider">
                 <DragHandle onDrag={onDragB} getOffset={getOffsetB} >
-                    <div class="pane-resize" />
+                    <div on:mousedown={onDividerClickB} class="pane-resize" />
                 </DragHandle>
             </div>
         {/if}
@@ -143,13 +215,14 @@
         top: 0;
         right: 0;
         bottom: 0;
+        overflow: hidden;
     }
 
     .pane-divider {
         position: relative;
         flex: 0 0 1px;
-        top: 0;
-        bottom: 0;
+        left: 1em;
+        width: calc(100% - 2em);
         background-color: var(--pane-divider);
         overflow: visible;
         z-index: 1;

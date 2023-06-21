@@ -71,7 +71,9 @@ def rsnap(string: str, delimiter: str) -> tuple[str, str]:
 
 class VarFormatter(string.Formatter):
     def get_field(self, field_name, args, kwargs):
-        return super().get_field(" > ".join(x.strip() for x in field_name.split(".")), args, kwargs)
+        return super().get_field(
+            " > ".join(x.strip() for x in field_name.split(".")), args, kwargs
+        )
 
 
 class Scripting(CommandGroup):

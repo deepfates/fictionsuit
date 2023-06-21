@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ...core.user_message import UserMessage
 
 

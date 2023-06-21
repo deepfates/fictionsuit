@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from uuid import uuid4
+from .schematize import schematize
+
 
 class Scope:
     def __init__(
@@ -8,7 +11,19 @@ class Scope:
         self.parent = parent
         self.vars = vars if vars else {}
         self.name = name
+        self.id = uuid4()
         self._has_defaulting_args = False
+
+    def sm_schematize(self):
+        vars = {k: schematize(self.vars[k]) for k in self.vars}
+
+        return {
+            "schema": "scope",
+            "name": self.name,
+            "content": vars,
+            "parent_id": self.parent.id if self.parent else None,
+            "id": self.id,
+        }
 
     def full_name(self):
         if self.name is None:

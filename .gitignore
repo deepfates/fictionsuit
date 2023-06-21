@@ -2,4 +2,5 @@
 disco/
 __pycache__/
 documents/**/*
+models/**/*
 fictionsuit/.fic

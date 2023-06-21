@@ -95,7 +95,7 @@
      */
     let code_display_content_element;
 
-    export let padding = 0.5;
+    export let padding = 0;
 
     export let font_size = "1em";
 
@@ -142,12 +142,11 @@
 </script>
     
 <div class=display-container
-    style="font-size: {font_size} !important;">
+    style="font-size: {font_size} !important; padding-bottom: {padding * 1.5}em;">
     <div class=backdrop></div>
-    <pre class="code-display" style={code_style} aria-hidden=true bind:this={code_display_element}>
-        <code class="language-{language} code-display-content"
-            bind:this={code_display_content_element}>{message.schema === "command" ? message.command : message.code}</code>
-    </pre>
+    <pre class="code-display" style={code_style} aria-hidden=true bind:this={code_display_element}
+        ><code class="language-{language} code-display-content"
+            bind:this={code_display_content_element}>{message.schema === "command" ? message.command : message.code}</code></pre>
 </div>
 
 <svelte:head>
@@ -159,15 +158,14 @@
     /* adapted from https://css-tricks.com/creating-an-editable-textarea-that-supports-syntax-highlighted-code/ */
     
     .display-container {
-        display: block;
+        display: inline-block;
         position: relative;
         margin: 0;
         padding: 0;
         border: 0;
         width: 100%;
-        height: auto;
-        padding-bottom: 1em;
-        background-color: var(--code-editor-background);
+        height: 100%;
+        line-height: 0;
     }
 
     .backdrop {
@@ -189,8 +187,6 @@
         padding: 0;
         margin: 0;
         border: 0;
-        top: 0.5em;
-        left: 0.5em;
         width: calc(100% - 1em);
         word-wrap: break-word;
         white-space: pre-wrap;

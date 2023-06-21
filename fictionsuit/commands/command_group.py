@@ -16,7 +16,8 @@ class CommandNotFound:
 
 
 class CommandHandled:
-    pass
+    def sm_schematize(self):
+        return {"schema": "nothing"}
 
 
 class CommandReply(str):

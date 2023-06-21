@@ -9,21 +9,21 @@ body {
     --code-font: Consolas, 'Fira Code', Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
     font-family: var(--code-font);
 
-    --workspace-background: #051616;
+    --workspace-background: #EEFFFF;
     /* --workspace-background: #CCEEFF; */
     /* --workspace-grid: rgba(0, 0, 0, 0.3); */
-    --workspace-grid: #1b575757;
+    --workspace-grid: #1b575725;
 
     --pane-header: #1b575757;
     --pane-border: #1b5757;
     --pane-divider: #1b5757;
     --pane-backdrop: transparent;
-    --pane-title: #CCEEFF;
+    --pane-title: #051616;
     --pane-background: #02161640;
 
-    background-color: #051616;
+    background-color: var(--workspace-background);
 
-    --drag-handle: rgba(255, 255, 255, 0.5);
+    --drag-handle: transparent;
 
 
     --wire-any: #1b5757;
@@ -36,14 +36,14 @@ body {
     --ficscript-brackets: #4d5bd4;
     --ficscript-accessors: #4d5bd4;
     --ficscript-string: #ffeecc;
-    --ficscript-variable: #00CCFF;
+    --ficscript-variable: #0051ff;
     --ficscript-method: #AA77FF;
     --ficscript-failure: #FF3b3b;
 
-    --plaintext: #CEDDFF;
-    --text-background: #022222;
+    --plaintext: #051616;
+    --text-background: red;
 
-    --markdown-code: #003e3e;
+    --markdown-code: #BBDDDD;
     --markdown-link: #309FFF;
 }
 

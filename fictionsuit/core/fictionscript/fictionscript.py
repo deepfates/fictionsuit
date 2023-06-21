@@ -25,6 +25,14 @@ class FictionScript:
                 else:
                     self.args.append(arg_line[4:].split("=", maxsplit=1)[0].strip())
 
+    def sm_schematize(self):
+        return {
+            "schema": "script",
+            "language": "fictionscript",
+            "code": "\n".join(self.lines),
+            "source_file": self.source if self.source else self.name,
+        }
+
     async def sm_inspect(self, _):
         top_comments = []
         for line in self.lines:

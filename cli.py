@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 from fictionsuit.commands import Methods, Debug, Research, Text
+from fictionsuit.commands.mpt import MPT
 from fictionsuit.core import BasicCommandSystem, TextIOClient
 
 
@@ -19,7 +20,7 @@ def main():
     )
     args = parser.parse_args()
 
-    command_groups = [Debug(), Research(), Methods(), Text()]
+    command_groups = [Debug(), Research(), Methods(), Text(), MPT()]
 
     system = BasicCommandSystem(
         command_groups,

@@ -8,14 +8,16 @@
 
 <style>
     .display-container {
-        display: block;
+        display: inline-block;
         position: relative;
         margin: 0;
         padding: 0;
         border: 0;
         width: 100%;
-        padding-bottom: 1em;
+        height: 100%;
+        padding-bottom: 0.75em;
         background-color: var(--code-editor-background);
+        line-height: 1.5;
     }
 
     .display {

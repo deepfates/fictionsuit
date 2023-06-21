@@ -10,11 +10,11 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { onDestroy } from "svelte";
-    import { receivers, transmitters } from "../../wiring";
 
     import DragHandle from "../general/drag_handle.svelte";
     import Emptiness from "./emptiness.svelte";
     import { tick } from "svelte";
+    import coordinator from "../../coordinator";
 
     export let width = 300;
     export let height = 200;
@@ -60,17 +60,29 @@
 
         container_position = `left: ${left}; top: ${top};`;
 
-        tick().then(() => {
-            let transceivers = childTransceivers();
-            transceivers.receivers.forEach(receiver => {
-                for (let transmitter in transmitters) {
-                    transmitters[transmitter].rerender();
-                }
-            });
-            transceivers.transmitters.forEach(id => {
-                transmitters[id].rerender();
-            });
+        tick().then(triggerUpdate);
+    }
+
+    function triggerUpdate() {
+        let transceivers = coordinator.childTransceivers(container);
+            
+        transceivers.receivers.forEach(receiver => {
+            for (let transmitter of coordinator.receivers[receiver].connections) {
+                transmitter.dirty = true;
+            }
         });
+        transceivers.transmitters.forEach(id => {
+            coordinator.transmitters[id].dirty = true;
+        });
+
+        let workspaceElement = coordinator.seekParent(container, coordinator.prefixes.workspace);
+
+        if (workspaceElement !== null) {
+            let workspace = coordinator.workspaces[workspaceElement.id];
+            if (workspace?.renderWires !== null) {
+                workspace.renderWires();
+            }
+        }
     }
 
     function getOffset() {
@@ -125,11 +137,13 @@
             h = Math.min(h, hLimit - top);
         }
 
-        let width_style = `calc(min(max(${w}px, 15em), 100%))`;
-        let height_style = `calc(min(max(${h}px, 10em), 100%))`;
+        let width_style = `calc(min(max(${w}px, 8em), 100%))`;
+        let height_style = `calc(min(max(${h}px, 5em), 100%))`;
 
         container_size = `width: ${width_style}; height: ${height_style};`;
-        body_style = `height: calc(min(max(${h}px - 1.5em, 10em), 100% - 1.5em));`;
+        body_style = `height: calc(min(max(${h}px - 1.5em, 5em), 100% - 1.5em));`;
+
+        tick().then(triggerUpdate);
     }
 
     function takeFront(event: MouseEvent) {
@@ -147,27 +161,25 @@
 
     function headerMouseDown(event: MouseEvent) {
         if (event.button === 1) {
+            let transceivers = coordinator.childTransceivers(container);
+            for (const id of transceivers.receivers) {
+                coordinator.removeReceiver(id);
+            }
+            for (const id of transceivers.transmitters) {
+                coordinator.removeTransmitter(id);
+            }
+            
+            let workspaceElement = coordinator.seekParent(container, coordinator.prefixes.workspace);
+            
+            if (workspaceElement !== null) {
+                let workspace = coordinator.workspaces[workspaceElement.id];
+                if (workspace?.renderWires !== null) {
+                    workspace.renderWires();
+                }
+            }
+            
             container.parentNode?.removeChild(container);
         }
-    }
-
-    function childTransceivers(element: Element = container) {
-        let receivers: string[] = [];
-        let transmitters: string[] = [];
-
-        Array.from(element.children).forEach(child => {
-            if (child.id.startsWith("RECEIVER-")) {
-                receivers.push(child.id);
-            }
-            if (child.id.startsWith("TRANSMITTER-")) {
-                transmitters.push(child.id);
-            }
-            let recurseResult = childTransceivers(child);
-            receivers.push(...recurseResult.receivers);
-            transmitters.push(...recurseResult.transmitters);
-        });
-
-        return { receivers, transmitters };
     }
 
     let dh_offset = 15;
@@ -258,7 +270,9 @@
         position: absolute;
         background-color: var(--pane-header);
         width: 100%; 
+        border-radius: 0.75em 0.75em 0 0; 
         height: 1.7em;
+        right: 0;
     }
 
     .pane-title {
@@ -266,7 +280,7 @@
         font-size: 1em;
         position: absolute; 
         top: 0.35em; 
-        left: 0.5em; 
+        left: 1.5em;
         max-width: calc(100% - 2.5em); 
         overflow: hidden; 
         white-space: nowrap;
@@ -277,6 +291,7 @@
         position: absolute;
         width: 100%;
         top: 1.7em;
+        border-bottom: 1px solid var(--pane-border);
     }
 
     .pane-content {
@@ -323,7 +338,7 @@
 
     .drag-handle {
         position: absolute;
-        left: calc(100% - 1.7em);
+        right: 1em;
         width: 1.7em;
         height: 1.7em;
         user-select: none;

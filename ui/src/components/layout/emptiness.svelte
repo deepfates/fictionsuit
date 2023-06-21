@@ -9,8 +9,11 @@
     import FicsuitSession from "../ficsuit_session.svelte";
     import SimpleMenu from "../general/simple_menu.svelte";
 
+    export let fillable = true;
+
     function onMenuOpen(event: MouseEvent) {
         if (event.button !== 2) return;
+        if (!fillable) return;
 
         showLayoutMenu = false;
         showCreateMenu = false;
@@ -172,8 +175,9 @@
         position: absolute;
         width: 100%;
         height: 100%;
-        background-color: var(--pane-backdrop);
         z-index: 0;
+        user-select: none;
+        /* background: radial-gradient(var(--pane-background), var(--pane-background) 30%, #FF00FF00 100%); */
     }
 
     .nothing {

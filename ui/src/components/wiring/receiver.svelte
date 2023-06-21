@@ -1,25 +1,27 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import { receivers } from "../../wiring";
+    import coordinator, { type Transmitter } from "../../coordinator";
 
     export let schemas: string[] = ["any"];
 
+    export let style: string = "";
+
     export let onReceive: (message: Message) => void = m => { console.log(`Received message with schema ${m.schema}.`); };
 
-    let id: string = "RECEIVER-" + crypto.randomUUID();
+    let id: string = coordinator.prefixes.receiver + "-" + crypto.randomUUID();
 
     let element: HTMLDivElement;
 
     onMount(() => {
-        receivers[id] = { "signal": onReceive, "element": element, "schemas": schemas, "id": id };
+        coordinator.registerReceiver(id, element, schemas, onReceive, []);
     });
 
     onDestroy(() => {
-        delete receivers[id];
+        coordinator.removeReceiver(id);
     });
 </script>
 
-<div bind:this={element} class=container {...$$restProps}>
+<div bind:this={element} class=container {style} {...$$restProps}>
     <div {id} class=dish>
         <div class="receiver {schemas.join(' ')}" />
     </div>
@@ -27,13 +29,9 @@
 
 <style>
     .container {
-        background-color: blue;
         position: absolute;
-        top: 1em;
-        left: 0.5em;
         height: 1em;
         width: 1em;
-        border-radius: 50%;
         z-index: 3;
     }
 

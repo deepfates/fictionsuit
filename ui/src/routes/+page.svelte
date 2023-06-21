@@ -10,6 +10,7 @@
     import ScriptInput from "../components/nodes/inputs/script_input.svelte";
     import Execute from "../components/nodes/execute.svelte";
     import Feed from "../components/nodes/feed.svelte";
+    import Emptiness from "../components/layout/emptiness.svelte";
 </script>
 
 <div style="position: absolute; width: 100%; height: 100%;">
@@ -19,12 +20,10 @@
             <FloatingPane title="Input" x=5em y=5em>
                 <ScriptInput />
             </FloatingPane>
-            <FloatingPane title="Display" x=45em y=5em>
-                <Display />
+            <FloatingPane title="Debug" x=45em y=5em>
+                <Debug />
             </FloatingPane>
-            <FloatingPane title="Execute" x=5em y=45em>
-                <Execute />
-            </FloatingPane>
+            <Execute x=5em y=45em />
             <FloatingPane title="Feed" x=45em y=45em>
                 <Feed />
             </FloatingPane>

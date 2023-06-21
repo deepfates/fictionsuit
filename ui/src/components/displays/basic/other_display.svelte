@@ -12,17 +12,21 @@
     }
 </script>
 
-<ScriptDisplay message={asJson} />
+<div class=display-container>
+    <ScriptDisplay message={asJson} padding={0} />
+</div>
 
 <style>
     .display-container {
-        display: block;
+        display: inline-block;
         position: relative;
         margin: 0;
         padding: 0;
         border: 0;
+        top: 0.5em;
+        left: 0.5em;
+        padding-bottom: 0.75em;
         width: 100%;
-        padding-bottom: 1em;
         background-color: var(--code-editor-background);
     }
 
@@ -30,7 +34,6 @@
         position: relative;
         padding: 0;
         margin: 0;
-        top: 0.5em;
         left: 0.5em;
         width: calc(100% - 1em);
         word-wrap: break-word;

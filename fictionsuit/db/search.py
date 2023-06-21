@@ -2,7 +2,8 @@
 from ..utils import split_text, get_embeddings
 from .. import config
 import numpy as np
-import faiss
+
+# import faiss
 import ast
 
 from .supa_client import init_supa_client

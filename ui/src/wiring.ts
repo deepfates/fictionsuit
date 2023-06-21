@@ -17,4 +17,7 @@ interface Card {
     output_schemas: string[][];
 }
 
+
+
+
 export { receivers, transmitters };

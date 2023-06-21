@@ -54,14 +54,19 @@ class BlueskyClient:
             headers=headers,
         )
         if resp.ok:
-            mark_seen = {"seenAt": self._time()}
-            requests.post(
-                self.session.ATP_HOST + f"/xrpc/app.bsky.notification.updateSeen",
-                headers=headers,
-                json=mark_seen,
-            )
-
-            return resp.json()["notifications"]
+            # mark_seen = {"seenAt": self._time()}
+            # requests.post(
+            #     self.session.ATP_HOST + f"/xrpc/app.bsky.notification.updateSeen",
+            #     headers=headers,
+            #     json=mark_seen,
+            # )
+            return {  # TODO: the reason this isn't working is because the api is returning it as a schema: other of itself. i think. idfk
+                # also, in the api, remove the json prettifier stuff.
+                "schema": "script",
+                "code": resp.text,
+                "language": "json",
+                "source_file": "",
+            }
 
     def _time(self):
         timestamp = datetime.datetime.now(datetime.timezone.utc)

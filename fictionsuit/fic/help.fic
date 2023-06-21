@@ -46,5 +46,5 @@ def_fic default ---
 # Give the user a guide to the various sources of help available to them
 return echo Help---
 You can type `help {{command}}` if you just want information about a command.
-Use `<help> {query}` to ask a gpt-4 instance an advanced question about commands and scripting. Be warned: this uses a lot of tokens! Expect questions to be ~25 cents each.
+Use `<help> {{query}}` to ask a gpt-4 instance an advanced question about commands and scripting. Be warned: this uses a lot of tokens! Expect questions to be ~25 cents each.
 --

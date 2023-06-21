@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
+from fictionsuit.core.fictionscript.schematize import schematize
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 
@@ -37,7 +38,7 @@ class ApiClient:
             allow_origins=["http://localhost:5173"],
             allow_credentials=True,
             allow_methods=["*"],
-            allow_headers=["*"]
+            allow_headers=["*"],
         )
 
         @app.post("/fic")
@@ -54,16 +55,7 @@ class ApiClient:
             if result is None or isinstance(result, CommandHandled):
                 return {"schema": "nothing"}
 
-            if isinstance(result, CommandFailure):
-                return {"schema": "failure", "explanation": result}
-
-            if isinstance(result, str):
-                return {"schema": "text", "value": result}
-
-            if isinstance(result, FictionScript):
-                return {"schema": "script", "code": "\n".join(result.lines)}
-
-            return {"schema": "other", "description": f"{result}"}
+            return schematize(result)
 
         asyncio.run(serve(app, Config()))
 

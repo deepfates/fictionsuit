@@ -1,15 +1,33 @@
 <script lang="ts">
-    import Blue from "./blue.svelte";
-    import Green from "./green.svelte";
-    import Red from "./red.svelte";
-
-    export let Color: "red" | "green" | "blue" = "red";
-
-    let elementByColor: { [key: string]: any } = {
-        "red": Red,
-        "green": Green,
-        "blue": Blue
-    };
+    async function files() {
+        try {
+            const directoryHandle = await window.showDirectoryPicker();
+            const entries = []
+            for await (const entry of directoryHandle.values()) {
+                entries.push(entry);
+            }
+            console.log(entries);
+        } catch (error) {
+            console.error('Unable to open directory:', error);
+        }
+    }
 </script>
 
-<svelte:component this={elementByColor[Color]} />
+<div>
+    <button on:mousedown={files}>Files</button>
+</div>
+
+<style>
+    div {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    button {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+</style>

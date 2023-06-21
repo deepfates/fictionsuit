@@ -2,6 +2,7 @@ import discord
 
 from fictionsuit.api_wrap import DiscordBotClient
 from fictionsuit.commands import Methods, Debug, DiscordOnly, Research, Text
+from fictionsuit.commands.mpt import MPT
 from fictionsuit.core import BasicCommandSystem
 
 
@@ -10,7 +11,7 @@ def main():
     intents.message_content = True
     intents.members = True
 
-    command_groups = [Debug(), Research(), Methods(), Text(), DiscordOnly()]
+    command_groups = [Debug(), Research(), Methods(), Text(), DiscordOnly(), MPT()]
 
     system = BasicCommandSystem(
         command_groups,
